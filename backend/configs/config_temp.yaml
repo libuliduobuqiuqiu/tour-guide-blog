@@ -1,0 +1,15 @@
+server:
+  port: 8080
+
+database:
+  dsn: "root:root/@tcp(127.0.0.1:3306)/tour_guide?charset=utf8mb4&parseTime=True&loc=Local"
+
+upload:
+  path: "./uploads"
+  max_size: 10485760 # 10MB
+  allow_types: [".jpg", ".jpeg", ".png", ".gif"]
+
+redis:
+  addr: "127.0.0.1:6379"
+  password: ""
+  db: 0
