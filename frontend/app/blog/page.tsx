@@ -8,6 +8,7 @@ export default async function BlogPage() {
   } catch (error) {
     console.error('Failed to fetch posts:', error);
   }
+  const HOST = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
   return (
     <div className="max-w-7xl mx-auto py-12 px-4">
@@ -18,7 +19,11 @@ export default async function BlogPage() {
             <article key={post.id} className="flex flex-col md:flex-row gap-6 bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
               <div 
                 className="w-full md:w-48 h-48 bg-gray-200 bg-cover bg-center flex-shrink-0" 
-                style={{ backgroundImage: post.cover_image ? `url(${post.cover_image})` : 'none' }}
+                style={{ 
+                  backgroundImage: post.cover_image 
+                    ? `url(${post.cover_image.startsWith('http') ? post.cover_image : `${HOST}${post.cover_image.startsWith('/') ? '' : '/'}${post.cover_image}`})` 
+                    : 'none' 
+                }}
               >
                 {!post.cover_image && <div className="flex items-center justify-center h-full text-gray-400">No Image</div>}
               </div>

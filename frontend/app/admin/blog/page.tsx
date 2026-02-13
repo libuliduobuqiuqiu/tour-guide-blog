@@ -121,82 +121,80 @@ export default function BlogAdmin() {
       </div>
 
       {isEditing && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-8">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold">{currentPost.id ? 'Edit Post' : 'New Post'}</h2>
-              <button onClick={() => setIsEditing(false)} className="text-gray-500 hover:text-gray-700">
-                <X size={24} />
-              </button>
-            </div>
+        <div className="mt-8 bg-white rounded-xl shadow-sm p-8">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-bold">{currentPost.id ? 'Edit Post' : 'New Post'}</h2>
+            <button onClick={() => setIsEditing(false)} className="text-gray-500 hover:text-gray-700">
+              <X size={24} />
+            </button>
+          </div>
 
-            <form onSubmit={handleSave} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
-                  <input
-                    type="text"
-                    required
-                    value={currentPost.title || ''}
-                    onChange={(e) => setCurrentPost({ ...currentPost, title: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Author</label>
-                  <input
-                    type="text"
-                    required
-                    value={currentPost.author || ''}
-                    onChange={(e) => setCurrentPost({ ...currentPost, author: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Cover Image</label>
-                  <ImageUpload
-                    value={currentPost.cover_image}
-                    onChange={(url) => setCurrentPost({ ...currentPost, cover_image: url })}
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Excerpt</label>
-                  <textarea
-                    rows={2}
-                    value={currentPost.excerpt || ''}
-                    onChange={(e) => setCurrentPost({ ...currentPost, excerpt: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                    placeholder="Short summary of the post..."
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Content</label>
-                <Editor
-                  value={currentPost.content || ''}
-                  onChange={(val) => setCurrentPost({ ...currentPost, content: val })}
+          <form onSubmit={handleSave} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                <input
+                  type="text"
+                  required
+                  value={currentPost.title || ''}
+                  onChange={(e) => setCurrentPost({ ...currentPost, title: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                 />
               </div>
-
-              <div className="flex justify-end gap-4 mt-8">
-                <button
-                  type="button"
-                  onClick={() => setIsEditing(false)}
-                  className="px-6 py-2 border rounded-lg hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400"
-                >
-                  {loading ? 'Saving...' : 'Save Post'}
-                </button>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Author</label>
+                <input
+                  type="text"
+                  required
+                  value={currentPost.author || ''}
+                  onChange={(e) => setCurrentPost({ ...currentPost, author: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                />
               </div>
-            </form>
-          </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Cover Image</label>
+                <ImageUpload
+                  value={currentPost.cover_image}
+                  onChange={(url) => setCurrentPost({ ...currentPost, cover_image: url })}
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Excerpt</label>
+                <textarea
+                  rows={2}
+                  value={currentPost.excerpt || ''}
+                  onChange={(e) => setCurrentPost({ ...currentPost, excerpt: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="Short summary of the post..."
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Content</label>
+              <Editor
+                value={currentPost.content || ''}
+                onChange={(val) => setCurrentPost({ ...currentPost, content: val })}
+              />
+            </div>
+
+            <div className="flex justify-end gap-4 mt-8">
+              <button
+                type="button"
+                onClick={() => setIsEditing(false)}
+                className="px-6 py-2 border rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400"
+              >
+                {loading ? 'Saving...' : 'Save Post'}
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </div>

@@ -86,7 +86,7 @@ export default function CarouselsAdmin() {
       </div>
 
       {(editing || isCreating) && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-xl w-full max-w-lg">
             <h2 className="text-xl font-bold mb-6">{editing?.id === 0 ? 'Add Carousel' : 'Edit Carousel'}</h2>
             <form onSubmit={handleSave} className="space-y-4">
@@ -162,7 +162,7 @@ export default function CarouselsAdmin() {
                 <div className="flex items-center justify-center h-full text-gray-400">No Image</div>
               )}
               {!item.is_active && (
-                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white font-bold">
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center text白色 font-bold">
                   Inactive
                 </div>
               )}

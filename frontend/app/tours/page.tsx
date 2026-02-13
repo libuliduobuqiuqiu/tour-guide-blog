@@ -8,6 +8,7 @@ export default async function ToursPage() {
   } catch (error) {
     console.error('Failed to fetch tours:', error);
   }
+  const HOST = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
   return (
     <div className="max-w-7xl mx-auto py-12 px-4">
@@ -18,7 +19,11 @@ export default async function ToursPage() {
             <div key={tour.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
               <div 
                 className="h-48 bg-gray-200 bg-cover bg-center" 
-                style={{ backgroundImage: tour.cover_image ? `url(${tour.cover_image})` : 'none' }}
+                style={{ 
+                  backgroundImage: tour.cover_image 
+                    ? `url(${tour.cover_image.startsWith('http') ? tour.cover_image : `${HOST}${tour.cover_image.startsWith('/') ? '' : '/'}${tour.cover_image}`})` 
+                    : 'none' 
+                }}
               >
                 {!tour.cover_image && <div className="flex items-center justify-center h-full text-gray-400">No Image</div>}
               </div>
