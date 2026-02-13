@@ -1,10 +1,11 @@
 import { fetchPost } from '@/lib/api';
 import { notFound } from 'next/navigation';
 
-export default async function BlogPostPage({ params }: { params: { id: string } }) {
+export default async function BlogPostPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   let post;
   try {
-    post = await fetchPost(params.id);
+    post = await fetchPost(String(id));
   } catch (error) {
     console.error('Failed to fetch post:', error);
     return notFound();

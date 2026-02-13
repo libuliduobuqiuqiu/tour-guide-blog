@@ -1,7 +1,7 @@
 package routers
 
 import (
-	"tour-guide-blog-backend/internal/api/middleware"
+	"tour-guide-blog-backend/api/middleware"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"

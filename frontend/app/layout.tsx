@@ -7,8 +7,8 @@ import Footer from "@/components/Footer";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Janet's Tours - Chongqing & Chengdu",
-  description: "Your professional tour guide in Chongqing & Chengdu",
+  title: "Janet's Tours - Guangzhou",
+  description: "Your professional tour guide in Guangzhou",
 };
 
 export default function RootLayout({

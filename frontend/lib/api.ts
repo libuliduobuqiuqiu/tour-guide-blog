@@ -1,4 +1,5 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+const API_HOST = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+const API_BASE_URL = API_HOST.endsWith('/api') ? API_HOST : `${API_HOST}/api`;
 
 export async function fetchTours() {
   const res = await fetch(`${API_BASE_URL}/tours`);
@@ -43,5 +44,11 @@ export async function sendContactMessage(data: any) {
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error('Failed to send message');
+  return res.json();
+}
+
+export async function fetchConfig(key: string) {
+  const res = await fetch(`${API_BASE_URL}/config/${key}`, { next: { revalidate: 60 } });
+  if (!res.ok) throw new Error('Failed to fetch config');
   return res.json();
 }

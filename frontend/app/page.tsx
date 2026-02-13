@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { fetchTours, fetchCarousels, fetchReviews } from '@/lib/api';
+import { fetchTours, fetchCarousels, fetchReviews, fetchConfig } from '@/lib/api';
 import HeroCarousel from '@/components/HeroCarousel';
 import ReviewsCarousel from '@/components/ReviewsCarousel';
 
@@ -8,8 +8,8 @@ export default async function Home() {
   let carousels = [];
   let reviews = [];
   let settings = {
-    home_hero_title: 'Professional Tour Guide in Chongqing & Chengdu',
-    home_hero_subtitle: 'Discover the hidden gems of Southwest China with Janet.'
+    home_hero_title: 'Professional Tour Guide in Guangzhou',
+    home_hero_subtitle: 'Explore the Pearl River and vibrant Cantonese culture.'
   };
 
   try {
@@ -17,14 +17,12 @@ export default async function Home() {
       fetchTours(),
       fetchCarousels().catch(() => []),
       fetchReviews().catch(() => []),
-      fetch('http://localhost:8080/api/config/site_settings', { next: { revalidate: 60 } }).then(res => res.json()).catch(() => null)
+      fetchConfig('site_settings').catch(() => null)
     ]);
     tours = toursData.slice(0, 3);
     if (carouselsData) carousels = carouselsData;
     if (reviewsData) reviews = reviewsData;
-    if (settingsRes) {
-      settings = JSON.parse(settingsRes);
-    }
+    if (settingsRes) settings = settingsRes
   } catch (error) {
     console.error('Failed to fetch data:', error);
   }

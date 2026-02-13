@@ -1,10 +1,11 @@
 import { fetchTour } from '@/lib/api';
 import { notFound } from 'next/navigation';
 
-export default async function TourDetailPage({ params }: { params: { id: string } }) {
+export default async function TourDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   let tour;
   try {
-    tour = await fetchTour(params.id);
+    tour = await fetchTour(String(id));
   } catch (error) {
     console.error('Failed to fetch tour:', error);
     return notFound();

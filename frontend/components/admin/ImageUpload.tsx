@@ -22,7 +22,7 @@ export default function ImageUpload({ value, onChange, className = '' }: ImageUp
 
     setLoading(true);
     try {
-      const res = await api.post('/upload', formData, {
+      const res = await api.post('/admin/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       // Assuming the backend returns { url: "/uploads/..." }
@@ -55,8 +55,7 @@ export default function ImageUpload({ value, onChange, className = '' }: ImageUp
       <div className="flex items-center gap-4">
         {value && (
           <div className="w-24 h-24 relative rounded-lg overflow-hidden border border-gray-200">
-             {/* Use img tag for simplicity to avoid Next.js Image domain config issues for now */}
-            <img src={`http://localhost:8080${value}`} alt="Preview" className="w-full h-full object-cover" />
+            <img src={`${(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080')}${value}`} alt="Preview" className="w-full h-full object-cover" />
           </div>
         )}
         <label className="cursor-pointer bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
