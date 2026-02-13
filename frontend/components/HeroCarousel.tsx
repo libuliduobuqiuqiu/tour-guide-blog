@@ -21,6 +21,7 @@ interface HeroCarouselProps {
 
 export default function HeroCarousel({ items, defaultSettings }: HeroCarouselProps) {
   const [current, setCurrent] = useState(0);
+  const HOST = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
   useEffect(() => {
     if (items.length <= 1) return;
@@ -61,7 +62,7 @@ export default function HeroCarousel({ items, defaultSettings }: HeroCarouselPro
           <div 
             className="w-full h-full bg-cover bg-center"
             style={{ 
-              backgroundImage: item.image_url ? `url(${item.image_url.startsWith('http') ? item.image_url : `http://localhost:8080${item.image_url}`})` : 'none' 
+              backgroundImage: item.image_url ? `url(${item.image_url.startsWith('http') ? item.image_url : `${HOST}${item.image_url}`})` : 'none' 
             }}
           >
             <div className="absolute inset-0 bg-black bg-opacity-40"></div>

@@ -1,7 +1,7 @@
 package routers
 
 import (
-	"tour-guide-blog-backend/internal/api/handlers"
+	"tour-guide-blog-backend/api/handlers"
 
 	"github.com/gin-gonic/gin"
 )

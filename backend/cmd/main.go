@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
-	"tour-guide-blog-backend/internal/api/routers"
+	"tour-guide-blog-backend/api/routers"
 	"tour-guide-blog-backend/internal/dao"
 	"tour-guide-blog-backend/internal/seed"
 
