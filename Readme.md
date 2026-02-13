@@ -30,7 +30,7 @@
 - Node.js 20+ 与 npm（或 pnpm、yarn）
 - MySQL 8.x（本地或远程）
 
-### 后端服务（backend）
+### 使用 Makefile 启动与迁移
 
 1) 创建数据库（示例）
 
@@ -42,7 +42,22 @@ mysql -u root -p
 CREATE DATABASE tour_guide DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 ```
 
-2) 准备配置文件
+2) 运行数据库迁移（初始化表结构）
+
+支持通过 Makefile 执行迁移（默认脚本位于 [001_init.sql](file:///Users/linshukai/data/MyRepo/tour-guide-blog/backend/migrations/001_init.sql)）：
+
+```bash
+# 以本地数据库为例（按需替换参数）
+make migrate \
+  DB_HOST=127.0.0.1 \
+  DB_PORT=3306 \
+  DB_USER=root \
+  DB_PASS=你的密码 \
+  DB_NAME=tour_guide \
+  MIGRATION_FILE=backend/migrations/001_init.sql
+```
+
+3) 准备后端配置文件
 
 ```bash
 cd /Users/linshukai/data/MyRepo/tour-guide-blog/backend
@@ -53,53 +68,33 @@ cp configs/config_temp.yaml configs/config.yaml
   `root:root@tcp(127.0.0.1:3306)/tour_guide?charset=utf8mb4&parseTime=True&loc=Local`
 - 可以调整 `server.port`（默认 `8080`）与 `upload.path`（静态文件目录）
 
-3) 拉取依赖并启动开发
+4) 启动后端服务（开发）
 
 ```bash
-cd /Users/linshukai/data/MyRepo/tour-guide-blog/backend
-go mod download
-go run ./cmd/main.go
+# 使用 Makefile 一键启动
+make backend
 ```
 
 - 后端默认监听：`http://localhost:8080`
 - 静态上传目录：`/uploads`（由配置项 `upload.path` 指向）
 
-4) 生产构建与运行（示例）
+5) 启动前端服务（开发）
 
 ```bash
-cd /Users/linshukai/data/MyRepo/tour-guide-blog/backend
-go build -o server ./cmd/main.go
-./server
+# 设置后端地址并启动（可按需覆盖）
+make frontend NEXT_PUBLIC_API_URL=http://localhost:8080
 ```
 
-### 前端应用（frontend）
+前端默认运行在：`http://localhost:3000`。前端通过 `NEXT_PUBLIC_API_URL` 访问后端，且在 [next.config.ts](file:///Users/linshukai/data/MyRepo/tour-guide-blog/frontend/next.config.ts#L4-L14) 中重写了 `/uploads/*` 到后端地址，保证图片等静态资源可同源访问。
 
-1) 安装依赖
+### 常规前端操作（可选）
 
 ```bash
 cd /Users/linshukai/data/MyRepo/tour-guide-blog/frontend
 npm install
 ```
 
-2) 配置后端地址（开发）
-
-- 前端会从环境变量 `NEXT_PUBLIC_API_URL` 读取后端地址，默认使用 `http://localhost:8080`
-- 推荐在启动前设置：
-
-```bash
-export NEXT_PUBLIC_API_URL=http://localhost:8080
-```
-
-3) 启动开发模式
-
-```bash
-cd /Users/linshukai/data/MyRepo/tour-guide-blog/frontend
-npm run dev
-```
-
-- 前端默认运行在：`http://localhost:3000`
-
-4) 生产构建与启动
+生产构建与启动：
 
 ```bash
 cd /Users/linshukai/data/MyRepo/tour-guide-blog/frontend
@@ -131,7 +126,8 @@ npm run start
 ## 开发提示
 
 - 配置文件路径固定为 `configs/config.yaml`（由 Viper 读取）
-- 首次启动会进行自动迁移（GORM），并种子初始化评论数据
+- 若使用 GORM 自动迁移以外的手动迁移，可通过 Makefile 的 `migrate` 目标执行 SQL
+- 首次启动包含基础数据种子（如轮播图与示例评论），参见 [seed.go](file:///Users/linshukai/data/MyRepo/tour-guide-blog/backend/internal/seed/seed.go#L45-L63)
 - 上传目录由配置 `upload.path` 决定，同时通过 `/uploads` 提供静态访问
 - 若需要更严格的认证，请将当前的 `mock-token` 替换为 JWT 或其他方案
 

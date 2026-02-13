@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -23,6 +24,14 @@ export default function HeroCarousel({ items, defaultSettings }: HeroCarouselPro
   const [current, setCurrent] = useState(0);
   const HOST = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
+  const normalizeImageUrl = (url: string) => {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    if (url.startsWith('/uploads')) return url;
+    const trimmed = url.replace(/^\/?uploads\//, '');
+    return `/uploads/${trimmed}`;
+  };
+
   useEffect(() => {
     if (items.length <= 1) return;
     const timer = setInterval(() => {
@@ -38,7 +47,7 @@ export default function HeroCarousel({ items, defaultSettings }: HeroCarouselPro
   if (items.length === 0) {
     return (
       <section className="w-full h-[70vh] bg-[url('/hero.jpg')] bg-cover bg-center flex items-center justify-center relative">
-        <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+        <div className="absolute inset-0 bg-black/40"></div>
         <div className="relative z-10 text-center text-white px-4">
           <h1 className="text-5xl md:text-6xl font-bold mb-6">{defaultSettings.title}</h1>
           <p className="text-xl md:text-2xl mb-10 max-w-2xl mx-auto">{defaultSettings.subtitle}</p>
@@ -59,13 +68,18 @@ export default function HeroCarousel({ items, defaultSettings }: HeroCarouselPro
             index === current ? 'opacity-100 z-10' : 'opacity-0 z-0'
           }`}
         >
-          <div 
-            className="w-full h-full bg-cover bg-center"
-            style={{ 
-              backgroundImage: item.image_url ? `url(${item.image_url.startsWith('http') ? item.image_url : `${HOST}${item.image_url}`})` : 'none' 
-            }}
-          >
-            <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+          <div className="w-full h-full relative">
+            {item.image_url && (
+              <Image
+                src={normalizeImageUrl(item.image_url)}
+                alt={item.title}
+                fill
+                unoptimized
+                className="absolute inset-0 object-cover"
+                priority
+              />
+            )}
+            <div className="absolute inset-0 bg-black/40"></div>
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center text-white px-4 max-w-4xl">
                 <h1 className="text-5xl md:text-6xl font-bold mb-6 drop-shadow-lg">{item.title}</h1>
