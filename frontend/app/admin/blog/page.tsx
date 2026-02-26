@@ -56,7 +56,9 @@ export default function BlogAdmin() {
       setIsEditing(false);
       fetchPosts();
     } catch (err) {
-      console.error('Failed to save post');
+      const message = err instanceof Error ? err.message : 'Failed to save post';
+      console.error('Failed to save post', err);
+      alert(message);
     } finally {
       setLoading(false);
     }

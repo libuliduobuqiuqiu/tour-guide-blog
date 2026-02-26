@@ -4,18 +4,19 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 
 export function useAuth() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
-    return Boolean(localStorage.getItem('admin_token'));
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!isAuthenticated && !pathname.includes('/admin/login')) {
+    const token = localStorage.getItem('admin_token');
+    const authenticated = Boolean(token);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsAuthenticated(authenticated);
+    if (!authenticated && !pathname.includes('/admin/login')) {
       router.push('/admin/login');
     }
-  }, [isAuthenticated, pathname, router]);
+  }, [pathname, router]);
 
   const login = (token: string) => {
     localStorage.setItem('admin_token', token);

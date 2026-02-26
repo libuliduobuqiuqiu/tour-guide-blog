@@ -66,7 +66,8 @@ export default function CarouselsAdmin() {
       setIsCreating(false);
       fetchCarousels();
     } catch (err) {
-      alert('Failed to save');
+      const message = err instanceof Error ? err.message : 'Failed to save';
+      alert(message);
     }
   };
 

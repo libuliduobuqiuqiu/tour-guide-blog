@@ -57,7 +57,9 @@ export default function ToursAdmin() {
       setIsEditing(false);
       fetchTours();
     } catch (err) {
-      console.error('Failed to save tour');
+      const message = err instanceof Error ? err.message : 'Failed to save tour';
+      console.error('Failed to save tour', err);
+      alert(message);
     } finally {
       setLoading(false);
     }

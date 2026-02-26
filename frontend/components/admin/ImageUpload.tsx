@@ -46,7 +46,7 @@ export default function ImageUpload({ value, file, onFileChange, className = '' 
             <input
               type="file"
               className="hidden"
-              accept="image/*"
+              accept=".jpg,.jpeg,.png,.gif,.webp"
               onChange={(e) => {
                 const selectedFile = e.target.files?.[0] || null;
                 onFileChange(selectedFile);

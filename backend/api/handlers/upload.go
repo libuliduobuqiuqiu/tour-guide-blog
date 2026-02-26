@@ -21,17 +21,32 @@ func UploadImage(c *gin.Context) {
 	}
 
 	// 检查文件类型
-	ext := strings.ToLower(filepath.Ext(file.Filename))
+	ext := strings.ToLower(strings.TrimSpace(filepath.Ext(file.Filename)))
 	allowTypes := viper.GetStringSlice("upload.allow_types")
-	allowed := false
+	if len(allowTypes) == 0 {
+		allowTypes = []string{".jpg", ".jpeg", ".png", ".gif", ".webp"}
+	}
+
+	normalizedAllowTypes := make(map[string]struct{}, len(allowTypes))
 	for _, t := range allowTypes {
-		if t == ext {
-			allowed = true
-			break
+		normalized := strings.ToLower(strings.TrimSpace(t))
+		if normalized == "" {
+			continue
 		}
+		if !strings.HasPrefix(normalized, ".") {
+			normalized = "." + normalized
+		}
+		normalizedAllowTypes[normalized] = struct{}{}
+	}
+
+	allowed := false
+	if _, ok := normalizedAllowTypes[ext]; ok {
+		allowed = true
 	}
 	if !allowed {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "File type not allowed"})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "File type not allowed, supported: jpg, jpeg, png, gif, webp",
+		})
 		return
 	}
 

@@ -7,7 +7,7 @@ database:
 upload:
   path: "./uploads"
   max_size: 10485760 # 10MB
-  allow_types: [".jpg", ".jpeg", ".png", ".gif"]
+  allow_types: [".jpg", ".jpeg", ".png", ".gif", ".webp"]
 
 redis:
   addr: "127.0.0.1:6379"

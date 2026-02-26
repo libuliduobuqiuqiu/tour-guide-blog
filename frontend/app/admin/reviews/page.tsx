@@ -77,7 +77,8 @@ export default function ReviewsAdmin() {
       setIsCreating(false);
       fetchReviews();
     } catch (err) {
-      alert('Failed to save');
+      const message = err instanceof Error ? err.message : 'Failed to save';
+      alert(message);
     }
   };
 
