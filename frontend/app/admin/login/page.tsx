@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import axios from 'axios';
 import api from '@/lib/axios';
 
 export default function AdminLoginPage() {
@@ -20,8 +21,12 @@ export default function AdminLoginPage() {
       const res = await api.post('/admin/login', { username, password });
       localStorage.setItem('admin_token', res.data.token);
       router.push('/admin');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Login failed');
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        setError((err.response?.data as { error?: string } | undefined)?.error || 'Login failed');
+      } else {
+        setError('Login failed');
+      }
     } finally {
       setLoading(false);
     }

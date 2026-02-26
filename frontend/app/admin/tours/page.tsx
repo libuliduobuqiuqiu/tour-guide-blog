@@ -5,11 +5,13 @@ import api from '@/lib/axios';
 import { Plus, Pencil, Trash2, X } from 'lucide-react';
 import Editor from '@/components/admin/Editor';
 import ImageUpload from '@/components/admin/ImageUpload';
+import { uploadAdminImage } from '@/lib/admin-upload';
 
 interface Tour {
   id: number;
   title: string;
   description: string;
+  content: string;
   price: number;
   duration: string;
   location: string;
@@ -20,6 +22,7 @@ export default function ToursAdmin() {
   const [tours, setTours] = useState<Tour[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [currentTour, setCurrentTour] = useState<Partial<Tour>>({});
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -39,11 +42,18 @@ export default function ToursAdmin() {
     e.preventDefault();
     setLoading(true);
     try {
-      if (currentTour.id) {
-        await api.put(`/admin/tours/${currentTour.id}`, currentTour);
-      } else {
-        await api.post('/admin/tours', currentTour);
+      let payload: Partial<Tour> = { ...currentTour };
+      if (coverImageFile) {
+        const uploadedUrl = await uploadAdminImage(coverImageFile);
+        payload = { ...payload, cover_image: uploadedUrl };
       }
+
+      if (currentTour.id) {
+        await api.put(`/admin/tours/${currentTour.id}`, payload);
+      } else {
+        await api.post('/admin/tours', payload);
+      }
+      setCoverImageFile(null);
       setIsEditing(false);
       fetchTours();
     } catch (err) {
@@ -70,6 +80,7 @@ export default function ToursAdmin() {
         <button
           onClick={() => {
             setCurrentTour({});
+            setCoverImageFile(null);
             setIsEditing(true);
           }}
           className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
@@ -99,6 +110,7 @@ export default function ToursAdmin() {
                   <button
                     onClick={() => {
                       setCurrentTour(tour);
+                      setCoverImageFile(null);
                       setIsEditing(true);
                     }}
                     className="text-blue-600 hover:text-blue-800"
@@ -173,7 +185,8 @@ export default function ToursAdmin() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Cover Image</label>
                 <ImageUpload
                   value={currentTour.cover_image}
-                  onChange={(url) => setCurrentTour({ ...currentTour, cover_image: url })}
+                  file={coverImageFile}
+                  onFileChange={setCoverImageFile}
                 />
               </div>
               <div className="md:col-span-2">
@@ -190,8 +203,8 @@ export default function ToursAdmin() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Itinerary / Content</label>
               <Editor
-                value={(currentTour as any).content || ''}
-                onChange={(val) => setCurrentTour({ ...currentTour, content: val } as any)}
+                value={currentTour.content || ''}
+                onChange={(val) => setCurrentTour({ ...currentTour, content: val })}
               />
             </div>
 

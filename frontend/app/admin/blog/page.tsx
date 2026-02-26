@@ -5,6 +5,7 @@ import api from '@/lib/axios';
 import { Plus, Pencil, Trash2, X } from 'lucide-react';
 import Editor from '@/components/admin/Editor';
 import ImageUpload from '@/components/admin/ImageUpload';
+import { uploadAdminImage } from '@/lib/admin-upload';
 
 interface Post {
   id: number;
@@ -20,6 +21,7 @@ export default function BlogAdmin() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [currentPost, setCurrentPost] = useState<Partial<Post>>({});
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -39,11 +41,18 @@ export default function BlogAdmin() {
     e.preventDefault();
     setLoading(true);
     try {
-      if (currentPost.id) {
-        await api.put(`/admin/posts/${currentPost.id}`, currentPost);
-      } else {
-        await api.post('/admin/posts', currentPost);
+      let payload: Partial<Post> = { ...currentPost };
+      if (coverImageFile) {
+        const uploadedUrl = await uploadAdminImage(coverImageFile);
+        payload = { ...payload, cover_image: uploadedUrl };
       }
+
+      if (currentPost.id) {
+        await api.put(`/admin/posts/${currentPost.id}`, payload);
+      } else {
+        await api.post('/admin/posts', payload);
+      }
+      setCoverImageFile(null);
       setIsEditing(false);
       fetchPosts();
     } catch (err) {
@@ -70,6 +79,7 @@ export default function BlogAdmin() {
         <button
           onClick={() => {
             setCurrentPost({ author: 'Janet' });
+            setCoverImageFile(null);
             setIsEditing(true);
           }}
           className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
@@ -101,6 +111,7 @@ export default function BlogAdmin() {
                   <button
                     onClick={() => {
                       setCurrentPost(post);
+                      setCoverImageFile(null);
                       setIsEditing(true);
                     }}
                     className="text-blue-600 hover:text-blue-800"
@@ -155,7 +166,8 @@ export default function BlogAdmin() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Cover Image</label>
                 <ImageUpload
                   value={currentPost.cover_image}
-                  onChange={(url) => setCurrentPost({ ...currentPost, cover_image: url })}
+                  file={coverImageFile}
+                  onFileChange={setCoverImageFile}
                 />
               </div>
               <div className="md:col-span-2">

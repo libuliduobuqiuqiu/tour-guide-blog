@@ -16,18 +16,19 @@ interface Contact {
 export default function ContactsAdmin() {
   const [contacts, setContacts] = useState<Contact[]>([]);
 
-  useEffect(() => {
-    fetchContacts();
-  }, []);
-
-  const fetchContacts = async () => {
+  async function fetchContacts() {
     try {
       const res = await api.get('/admin/contacts');
       setContacts(res.data);
     } catch (err) {
       console.error('Failed to fetch contacts');
     }
-  };
+  }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchContacts();
+  }, []);
 
   const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this message?')) return;

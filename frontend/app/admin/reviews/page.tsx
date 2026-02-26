@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import api from '@/lib/axios';
 import { Plus, Trash2, Edit2, Star, Wand2 } from 'lucide-react';
 import ImageUpload from '@/components/admin/ImageUpload';
+import { uploadAdminImage } from '@/lib/admin-upload';
 
 interface Review {
   id: number;
@@ -18,20 +19,22 @@ interface Review {
 export default function ReviewsAdmin() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [editing, setEditing] = useState<Review | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [isCreating, setIsCreating] = useState(false);
 
-  useEffect(() => {
-    fetchReviews();
-  }, []);
-
-  const fetchReviews = async () => {
+  async function fetchReviews() {
     try {
       const res = await api.get('/admin/reviews');
       setReviews(res.data);
     } catch (err) {
       console.error(err);
     }
-  };
+  }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchReviews();
+  }, []);
 
   const handleGenerate = async () => {
     try {
@@ -58,11 +61,18 @@ export default function ReviewsAdmin() {
     if (!editing) return;
 
     try {
-      if (editing.id === 0) {
-        await api.post('/admin/reviews', editing);
-      } else {
-        await api.put(`/admin/reviews/${editing.id}`, editing);
+      let payload: Review = { ...editing };
+      if (avatarFile) {
+        const uploadedUrl = await uploadAdminImage(avatarFile);
+        payload = { ...payload, avatar: uploadedUrl };
       }
+
+      if (editing.id === 0) {
+        await api.post('/admin/reviews', payload);
+      } else {
+        await api.put(`/admin/reviews/${editing.id}`, payload);
+      }
+      setAvatarFile(null);
       setEditing(null);
       setIsCreating(false);
       fetchReviews();
@@ -81,6 +91,7 @@ export default function ReviewsAdmin() {
       sort_order: 0,
       is_active: true
     });
+    setAvatarFile(null);
     setIsCreating(true);
   };
 
@@ -124,7 +135,8 @@ export default function ReviewsAdmin() {
                 <label className="block text-sm font-medium mb-1">Avatar</label>
                 <ImageUpload
                   value={editing?.avatar}
-                  onChange={url => setEditing({ ...editing!, avatar: url })}
+                  file={avatarFile}
+                  onFileChange={setAvatarFile}
                 />
               </div>
               <div>
@@ -168,7 +180,7 @@ export default function ReviewsAdmin() {
               <div className="flex justify-end gap-2 mt-6">
                 <button
                   type="button"
-                  onClick={() => { setEditing(null); setIsCreating(false); }}
+                  onClick={() => { setEditing(null); setIsCreating(false); setAvatarFile(null); }}
                   className="px-4 py-2 border rounded hover:bg-gray-50"
                 >
                   Cancel
@@ -208,7 +220,7 @@ export default function ReviewsAdmin() {
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={() => setEditing(item)}
+                  onClick={() => { setEditing(item); setAvatarFile(null); }}
                   className="text-blue-600 hover:text-blue-800"
                 >
                   <Edit2 size={16} />
@@ -221,7 +233,7 @@ export default function ReviewsAdmin() {
                 </button>
               </div>
             </div>
-            <p className="text-gray-600 text-sm mb-4 line-clamp-3">"{item.content}"</p>
+            <p className="text-gray-600 text-sm mb-4 line-clamp-3">&quot;{item.content}&quot;</p>
             <div className="flex justify-between items-center text-xs text-gray-400">
               <span>Order: {item.sort_order}</span>
               <span>{item.is_active ? 'Active' : 'Inactive'}</span>
