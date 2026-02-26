@@ -1,0 +1,1 @@
+ALTER TABLE `posts` ADD COLUMN `author` VARCHAR(100) NULL AFTER `content`;

@@ -31,6 +31,7 @@ func newPost(db *gorm.DB, opts ...gen.DOOption) post {
 	_post.Title = field.NewString(tableName, "title")
 	_post.Summary = field.NewString(tableName, "summary")
 	_post.Content = field.NewString(tableName, "content")
+	_post.Author = field.NewString(tableName, "author")
 	_post.CoverImage = field.NewString(tableName, "cover_image")
 	_post.Category = field.NewString(tableName, "category")
 	_post.Tags = field.NewString(tableName, "tags")
@@ -51,6 +52,7 @@ type post struct {
 	Title      field.String
 	Summary    field.String
 	Content    field.String
+	Author     field.String
 	CoverImage field.String
 	Category   field.String
 	Tags       field.String
@@ -77,6 +79,7 @@ func (p *post) updateTableName(table string) *post {
 	p.Title = field.NewString(table, "title")
 	p.Summary = field.NewString(table, "summary")
 	p.Content = field.NewString(table, "content")
+	p.Author = field.NewString(table, "author")
 	p.CoverImage = field.NewString(table, "cover_image")
 	p.Category = field.NewString(table, "category")
 	p.Tags = field.NewString(table, "tags")
@@ -99,11 +102,12 @@ func (p *post) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (p *post) fillFieldMap() {
-	p.fieldMap = make(map[string]field.Expr, 10)
+	p.fieldMap = make(map[string]field.Expr, 11)
 	p.fieldMap["id"] = p.ID
 	p.fieldMap["title"] = p.Title
 	p.fieldMap["summary"] = p.Summary
 	p.fieldMap["content"] = p.Content
+	p.fieldMap["author"] = p.Author
 	p.fieldMap["cover_image"] = p.CoverImage
 	p.fieldMap["category"] = p.Category
 	p.fieldMap["tags"] = p.Tags

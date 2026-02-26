@@ -27,12 +27,16 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
         <h1 className="text-4xl md:text-5xl font-bold mt-4 mb-6">{post.title}</h1>
         <div className="text-gray-500 flex items-center justify-center gap-4">
           <span>{new Date(post.created_at).toLocaleDateString()}</span>
-          <span>•</span>
-          <div className="flex gap-2">
-            {post.tags.split(',').map((tag: string) => (
-              <span key={tag} className="bg-gray-100 px-2 py-1 rounded text-xs">#{tag.trim()}</span>
-            ))}
-          </div>
+          {post.tags && (
+            <>
+              <span>•</span>
+              <div className="flex gap-2">
+                {post.tags.split(',').map((tag: string) => (
+                  <span key={tag} className="bg-gray-100 px-2 py-1 rounded text-xs">#{tag.trim()}</span>
+                ))}
+              </div>
+            </>
+          )}
         </div>
         </header>
 
@@ -49,9 +53,11 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
       <div className="mx-auto max-w-5xl px-4 md:px-6 lg:px-8">
         <footer className="mt-16 pt-8 border-t border-gray-100">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white text-xl font-bold">J</div>
+            <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white text-xl font-bold">
+              {post.author ? post.author.charAt(0).toUpperCase() : 'A'}
+            </div>
             <div>
-              <div className="font-bold">Janet</div>
+              <div className="font-bold">{post.author || 'Anonymous'}</div>
               <div className="text-sm text-gray-500">Professional Tour Guide & Travel Blogger</div>
             </div>
           </div>

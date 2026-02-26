@@ -9,9 +9,13 @@ type PostService struct{}
 
 var Post = &PostService{}
 
-func (s *PostService) List() ([]*model.Post, error) {
+func (s *PostService) List(tag string) ([]*model.Post, error) {
 	p := query.Post
-	return p.Order(p.CreatedAt.Desc()).Find()
+	q := p.Order(p.CreatedAt.Desc())
+	if tag != "" {
+		q = q.Where(p.Tags.Like("%" + tag + "%"))
+	}
+	return q.Find()
 }
 
 func (s *PostService) GetByID(id uint) (*model.Post, error) {

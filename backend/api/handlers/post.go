@@ -10,7 +10,8 @@ import (
 )
 
 func ListPosts(c *gin.Context) {
-	posts, err := service.Post.List()
+	tag := c.Query("tag")
+	posts, err := service.Post.List(tag)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

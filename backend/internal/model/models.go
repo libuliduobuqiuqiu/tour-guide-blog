@@ -27,6 +27,7 @@ type Post struct {
 	Title      string         `gorm:"size:255;not null" json:"title"`
 	Summary    string         `gorm:"size:500" json:"summary"`
 	Content    string         `gorm:"type:longtext" json:"content"`
+	Author     string         `gorm:"size:100" json:"author"`
 	CoverImage string         `gorm:"size:255" json:"cover_image"`
 	Category   string         `gorm:"size:100" json:"category"`
 	Tags       string         `gorm:"size:255" json:"tags"` // 以逗号分隔的标签

@@ -13,8 +13,11 @@ export async function fetchTour(id: string) {
   return res.json();
 }
 
-export async function fetchPosts() {
-  const res = await fetch(`${API_BASE_URL}/posts`);
+export async function fetchPosts(tag?: string) {
+  const url = tag 
+    ? `${API_BASE_URL}/posts?tag=${encodeURIComponent(tag)}`
+    : `${API_BASE_URL}/posts`;
+  const res = await fetch(url);
   if (!res.ok) throw new Error('Failed to fetch posts');
   return res.json();
 }
