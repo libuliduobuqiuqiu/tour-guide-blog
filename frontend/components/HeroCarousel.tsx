@@ -22,7 +22,8 @@ interface HeroCarouselProps {
 
 export default function HeroCarousel({ items, defaultSettings }: HeroCarouselProps) {
   const [current, setCurrent] = useState(0);
-  const HOST = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+  const [scrollY, setScrollY] = useState(0);
+  const [viewportHeight, setViewportHeight] = useState(900);
 
   const normalizeImageUrl = (url: string) => {
     if (!url) return '';
@@ -40,92 +41,116 @@ export default function HeroCarousel({ items, defaultSettings }: HeroCarouselPro
     return () => clearInterval(timer);
   }, [items.length]);
 
-  const next = () => setCurrent((prev) => (prev + 1) % items.length);
-  const prev = () => setCurrent((prev) => (prev - 1 + items.length) % items.length);
+  useEffect(() => {
+    let ticking = false;
+    const onResize = () => setViewportHeight(window.innerHeight);
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        setScrollY(window.scrollY);
+        ticking = false;
+      });
+    };
+    onResize();
+    onScroll();
+    window.addEventListener('resize', onResize);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, []);
 
-  // Fallback to default static hero if no carousel items
-  if (items.length === 0) {
-    return (
-      <section className="w-full h-[70vh] bg-[url('/hero.jpg')] bg-cover bg-center flex items-center justify-center relative">
-        <div className="absolute inset-0 bg-black/40"></div>
-        <div className="relative z-10 text-center text-white px-4">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6">{defaultSettings.title}</h1>
-          <p className="text-xl md:text-2xl mb-10 max-w-2xl mx-auto">{defaultSettings.subtitle}</p>
-          <Link href="/tours" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full text-lg font-bold transition-all transform hover:scale-105">
-            Start Your Journey
-          </Link>
-        </div>
-      </section>
-    );
-  }
+  const carouselItems = items.length > 0 ? items : [{ id: 0, title: defaultSettings.title, image_url: '/hero.jpg', link_url: '/tours' }];
+  const next = () => setCurrent((prev) => (prev + 1) % carouselItems.length);
+  const prev = () => setCurrent((prev) => (prev - 1 + carouselItems.length) % carouselItems.length);
+  const activeIndex = carouselItems.length > 0 ? current % carouselItems.length : 0;
+
+  const minHeroHeight = viewportHeight < 768 ? 84 : 108;
+  const shrinkDistance = Math.max(360, viewportHeight * 0.7);
+  const shrinkProgress = Math.min(1, Math.max(0, scrollY / shrinkDistance));
+  const heroHeight = viewportHeight - (viewportHeight - minHeroHeight) * shrinkProgress;
+  const heroScale = 1 - 0.08 * shrinkProgress;
 
   return (
-    <section className="w-full h-[70vh] relative group overflow-hidden">
-      {items.map((item, index) => (
-        <div
-          key={item.id}
-          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-            index === current ? 'opacity-100 z-10' : 'opacity-0 z-0'
-          }`}
-        >
-          <div className="w-full h-full relative">
-            {item.image_url && (
-              <Image
-                src={normalizeImageUrl(item.image_url)}
-                alt={item.title}
-                fill
-                unoptimized
-                className="absolute inset-0 object-cover"
-                priority
-              />
-            )}
-            <div className="absolute inset-0 bg-black/40"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center text-white px-4 max-w-4xl">
-                <h1 className="text-5xl md:text-6xl font-bold mb-6 drop-shadow-lg">{item.title}</h1>
-                {/* Use default subtitle or maybe we should have subtitle in carousel model? For now, use title only or default subtitle */}
-                <p className="text-xl md:text-2xl mb-10 max-w-2xl mx-auto drop-shadow-md">
-                   {/* If we want to show the global subtitle, we can pass it, but maybe better to keep it clean */}
-                </p>
-                {item.link_url && (
-                  <Link href={item.link_url} className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full text-lg font-bold transition-all transform hover:scale-105 inline-block">
-                    Explore
-                  </Link>
+    <section
+      className="w-full relative overflow-hidden group"
+      style={{
+        height: `${heroHeight}px`,
+        transition: 'height 80ms linear',
+        willChange: 'height'
+      }}
+    >
+      <div className="w-full h-full relative">
+          {carouselItems.map((item, index) => (
+            <div
+              key={item.id}
+              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                index === activeIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
+              }`}
+            >
+              <div className="w-full h-full relative">
+                {item.image_url && (
+                  <Image
+                    src={normalizeImageUrl(item.image_url)}
+                    alt={item.title || defaultSettings.title}
+                    fill
+                    unoptimized
+                    className="absolute inset-0 object-cover"
+                    priority={index === 0}
+                  />
                 )}
+                <div className="absolute inset-0 bg-[linear-gradient(160deg,rgba(6,18,42,0.6)_0%,rgba(5,25,55,0.35)_55%,rgba(4,10,30,0.55)_100%)]"></div>
               </div>
             </div>
-          </div>
-        </div>
-      ))}
+          ))}
 
-      {items.length > 1 && (
-        <>
-          <button 
-            onClick={prev}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100"
-          >
-            <ChevronLeft size={32} />
-          </button>
-          <button 
-            onClick={next}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100"
-          >
-            <ChevronRight size={32} />
-          </button>
-          
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
-            {items.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setCurrent(idx)}
-                className={`w-3 h-3 rounded-full transition-all ${
-                  idx === current ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/80'
-                }`}
-              />
-            ))}
+          <div className="absolute inset-0 z-20 flex items-center justify-center px-4">
+            <div className="text-center text-white max-w-4xl" style={{ transform: `scale(${heroScale})`, transition: 'transform 120ms linear' }}>
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 drop-shadow-lg">{carouselItems[activeIndex]?.title || defaultSettings.title}</h1>
+              <p className="text-base sm:text-lg md:text-2xl mb-8 max-w-2xl mx-auto drop-shadow-md">{defaultSettings.subtitle}</p>
+              <Link
+                href={carouselItems[activeIndex]?.link_url || '/tours'}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-lg font-bold transition-all transform hover:scale-105 inline-block"
+              >
+                Explore
+              </Link>
+            </div>
           </div>
-        </>
-      )}
+
+          {carouselItems.length > 1 && (
+            <>
+              <button
+                onClick={prev}
+                className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-30 bg-white/20 hover:bg-white/40 text-white p-2 md:p-3 rounded-full backdrop-blur-sm transition-all opacity-90 md:opacity-0 md:group-hover:opacity-100"
+                aria-label="Previous slide"
+              >
+                <ChevronLeft size={30} />
+              </button>
+              <button
+                onClick={next}
+                className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-30 bg-white/20 hover:bg-white/40 text-white p-2 md:p-3 rounded-full backdrop-blur-sm transition-all opacity-90 md:opacity-0 md:group-hover:opacity-100"
+                aria-label="Next slide"
+              >
+                <ChevronRight size={30} />
+              </button>
+
+              <div className="absolute bottom-5 md:bottom-8 left-1/2 -translate-x-1/2 z-30 flex gap-2 md:gap-3">
+                {carouselItems.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrent(idx)}
+                    className={`h-2.5 md:h-3 rounded-full transition-all ${
+                      idx === activeIndex ? 'bg-white w-8 md:w-10' : 'bg-white/50 hover:bg-white/80 w-2.5 md:w-3'
+                    }`}
+                    aria-label={`Go to slide ${idx + 1}`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+      </div>
     </section>
   );
 }

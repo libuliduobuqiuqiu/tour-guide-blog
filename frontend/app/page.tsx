@@ -47,7 +47,8 @@ export default async function Home() {
       />
 
       {/* Featured Tours */}
-      <section className="max-w-7xl mx-auto py-20 px-4 w-full">
+      <section className="w-full border-t border-slate-200/80 bg-white/70">
+        <div className="max-w-7xl mx-auto py-20 px-4">
         <h2 className="text-4xl md:text-5xl font-semibold text-center mb-4 tracking-wide">Featured Tours</h2>
         <p className="text-slate-600 text-center mb-12">Curated routes with local insights and premium service.</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -82,10 +83,11 @@ export default async function Home() {
             </div>
           )}
         </div>
+        </div>
       </section>
 
       {/* Why Choose Me */}
-      <section className="w-full bg-[linear-gradient(180deg,#f8fbff_0%,#edf4ff_100%)] py-20">
+      <section className="w-full border-t border-slate-200/80 bg-[linear-gradient(180deg,#f8fbff_0%,#edf4ff_100%)] py-20">
         <div className="max-w-7xl mx-auto px-4">
           <h2 className="text-4xl md:text-5xl font-semibold text-center mb-16 tracking-wide">Why Choose Me?</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -116,7 +118,7 @@ export default async function Home() {
 
       {/* Reviews Section */}
       <ReviewsCarousel items={reviews} />
-      <div className="w-full flex justify-center pb-16 bg-blue-50">
+      <div className="w-full border-t border-slate-200/80 flex justify-center pb-16 pt-4 bg-blue-50">
         <Link href="/reviews" className="btn-primary px-6 py-3">
           View All Guest Reviews →
         </Link>
