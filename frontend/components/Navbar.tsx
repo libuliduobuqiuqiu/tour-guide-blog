@@ -11,20 +11,20 @@ const Navbar = () => {
             </Link>
           </div>
           <div className="hidden md:flex items-center space-x-8">
-            <Link href="/" className="text-gray-700 hover:text-blue-600 transition-colors">
-              首页
-            </Link>
             <Link href="/tours" className="text-gray-700 hover:text-blue-600 transition-colors">
-              行程
+              Tours
             </Link>
             <Link href="/blog" className="text-gray-700 hover:text-blue-600 transition-colors">
-              博客
+              Blog
+            </Link>
+            <Link href="/reviews" className="text-gray-700 hover:text-blue-600 transition-colors">
+              Guest Reviews
             </Link>
             <Link href="/about" className="text-gray-700 hover:text-blue-600 transition-colors">
-              关于我
+              About
             </Link>
             <Link href="/contact" className="text-gray-700 hover:text-blue-600 transition-colors">
-              联系
+              Contact
             </Link>
           </div>
         </div>

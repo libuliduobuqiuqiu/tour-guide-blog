@@ -22,18 +22,18 @@ func seedReviews() {
 	}
 
 	reviews := []model.Review{
-		{Username: "Alice Chen", Content: "Wonderful experience in Guangzhou. The Pearl River night cruise was stunning.", Rating: 5, IsActive: true},
-		{Username: "John Li", Content: "Cantonese food tour was the best. Learned so much and ate even more.", Rating: 5, IsActive: true},
-		{Username: "Maria Garcia", Content: "Very professional guide. The old Xiguan houses were fascinating.", Rating: 5, IsActive: true},
-		{Username: "David Kim", Content: "Flexible itinerary and great local suggestions around Beijing Road.", Rating: 4, IsActive: true},
-		{Username: "Sophie Martin", Content: "Chimelong safari trip was unforgettable. Thank you!", Rating: 5, IsActive: true},
-		{Username: "Michael Brown", Content: "Clear communication and very friendly. Highly recommended.", Rating: 5, IsActive: true},
-		{Username: "Emily Wilson", Content: "Loved the historical walk through Liwan and Shamian Island.", Rating: 5, IsActive: true},
-		{Username: "James Lee", Content: "Great value and comfortable transport.", Rating: 4, IsActive: true},
-		{Username: "Sarah Johnson", Content: "Will book again when we return to Guangzhou.", Rating: 5, IsActive: true},
-		{Username: "Robert Taylor", Content: "A true local expert. Found hidden gems we would miss.", Rating: 5, IsActive: true},
-		{Username: "Linda Davis", Content: "Patient and knowledgeable. Perfect for families.", Rating: 5, IsActive: true},
-		{Username: "William Anderson", Content: "The city skyline at night was spectacular.", Rating: 5, IsActive: true},
+		{Username: "Alice Chen", Country: "Singapore", ReviewDate: "2025-01-12", TourRoute: "Pearl River Night Cruise", Host: "Janet", Content: "Wonderful experience in Guangzhou. The Pearl River night cruise was stunning.", Rating: 5, IsActive: true},
+		{Username: "John Li", Country: "Canada", ReviewDate: "2025-01-18", TourRoute: "Cantonese Food Tour", Host: "Janet", Content: "Cantonese food tour was the best. Learned so much and ate even more.", Rating: 5, IsActive: true},
+		{Username: "Maria Garcia", Country: "Spain", ReviewDate: "2025-02-02", TourRoute: "Shamian Island Heritage Walk", Host: "Janet", Content: "Very professional guide. The old Xiguan houses were fascinating.", Rating: 5, IsActive: true},
+		{Username: "David Kim", Country: "South Korea", ReviewDate: "2025-02-16", TourRoute: "Beijing Road City Walk", Host: "Janet", Content: "Flexible itinerary and great local suggestions around Beijing Road.", Rating: 4, IsActive: true},
+		{Username: "Sophie Martin", Country: "France", ReviewDate: "2025-03-08", TourRoute: "Chimelong Safari Day Trip", Host: "Janet", Content: "Chimelong safari trip was unforgettable. Thank you!", Rating: 5, IsActive: true},
+		{Username: "Michael Brown", Country: "United States", ReviewDate: "2025-03-21", TourRoute: "Old Town + Food Night", Host: "Janet", Content: "Clear communication and very friendly. Highly recommended.", Rating: 5, IsActive: true},
+		{Username: "Emily Wilson", Country: "Australia", ReviewDate: "2025-04-07", TourRoute: "Liwan & Shamian Historical Walk", Host: "Janet", Content: "Loved the historical walk through Liwan and Shamian Island.", Rating: 5, IsActive: true},
+		{Username: "James Lee", Country: "Malaysia", ReviewDate: "2025-04-23", TourRoute: "Guangzhou Highlights Tour", Host: "Janet", Content: "Great value and comfortable transport.", Rating: 4, IsActive: true},
+		{Username: "Sarah Johnson", Country: "United Kingdom", ReviewDate: "2025-05-06", TourRoute: "Canton Tower & Riverfront", Host: "Janet", Content: "Will book again when we return to Guangzhou.", Rating: 5, IsActive: true},
+		{Username: "Robert Taylor", Country: "United States", ReviewDate: "2025-05-28", TourRoute: "Hidden Alleys Culture Walk", Host: "Janet", Content: "A true local expert. Found hidden gems we would miss.", Rating: 5, IsActive: true},
+		{Username: "Linda Davis", Country: "New Zealand", ReviewDate: "2025-06-10", TourRoute: "Family Friendly City Tour", Host: "Janet", Content: "Patient and knowledgeable. Perfect for families.", Rating: 5, IsActive: true},
+		{Username: "William Anderson", Country: "Ireland", ReviewDate: "2025-06-24", TourRoute: "Guangzhou Night Skyline Tour", Host: "Janet", Content: "The city skyline at night was spectacular.", Rating: 5, IsActive: true},
 	}
 
 	if err := dao.DB.Create(&reviews).Error; err != nil {

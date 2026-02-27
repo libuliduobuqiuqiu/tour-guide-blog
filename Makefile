@@ -12,6 +12,9 @@ MIGRATION_FILE ?= backend/migrations/001_init.sql
 
 # 启动后端服务（开发）
 backend:
+	go env -w CGO_ENABLED=0
+	go env -w GOOS=linux
+	go env -w GOARCH=amd64
 	cd backend && go run ./cmd/main.go
 
 # 启动前端服务（开发）

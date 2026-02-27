@@ -107,6 +107,11 @@ export default async function Home() {
 
       {/* Reviews Section */}
       <ReviewsCarousel items={reviews} />
+      <div className="w-full flex justify-center pb-16 bg-blue-50">
+        <Link href="/reviews" className="text-blue-600 font-semibold hover:underline">
+          View All Guest Reviews →
+        </Link>
+      </div>
 
       {/* Contact CTA */}
     </div>

@@ -1,8 +1,8 @@
  'use client';
  
- import { useMemo, useCallback } from 'react';
- import DOMPurify from 'dompurify';
- import { marked } from 'marked';
+import { useMemo, useCallback } from 'react';
+import createDOMPurify from 'dompurify';
+import { marked } from 'marked';
  
  interface TocItem {
    id: string;
@@ -22,8 +22,8 @@
      .replace(/[^a-z0-9\-]/g, '');
  }
  
- export default function ContentRenderer({ content }: { content: string }) {
-   const { html, toc } = useMemo(() => {
+export default function ContentRenderer({ content }: { content: string }) {
+  const { html, toc } = useMemo(() => {
      let rawHtml = content || '';
      if (!isHtml(rawHtml)) {
        marked.setOptions({ breaks: true });
@@ -52,9 +52,13 @@
        return `<h${level}${newAttrs} id="${id}">${inner}</h${level}>`;
      });
  
-     const sanitized = DOMPurify.sanitize(enhancedHtml, { USE_PROFILES: { html: true } });
-     return { html: sanitized, toc: tocItems };
-   }, [content]);
+    // `dompurify` exports a factory in this project setup, so create an instance from `window`.
+    const sanitizer = typeof window !== 'undefined' ? createDOMPurify(window) : null;
+    const sanitized = sanitizer
+      ? sanitizer.sanitize(enhancedHtml, { USE_PROFILES: { html: true } })
+      : enhancedHtml;
+    return { html: sanitized, toc: tocItems };
+  }, [content]);
  
    const scrollToId = useCallback((id: string) => {
      const el = document.getElementById(id);

@@ -78,6 +78,10 @@ type Carousel struct {
 type Review struct {
 	ID          uint      `gorm:"primaryKey" json:"id"`
 	Username    string    `gorm:"size:100;not null" json:"username"`
+	Country     string    `gorm:"size:100" json:"country"`
+	ReviewDate  string    `gorm:"type:date" json:"review_date"`
+	TourRoute   string    `gorm:"size:255" json:"tour_route"`
+	Host        string    `gorm:"size:100" json:"host"`
 	Content     string    `gorm:"type:text;not null" json:"content"`
 	Avatar      string    `gorm:"size:255" json:"avatar"`
 	Rating      int       `gorm:"default:5" json:"rating"` // 1-5 stars
