@@ -13,11 +13,18 @@ BUNDLE_FILE ?=
 
 .PHONY: backend frontend migrate bundle import-bundle
 
-# 启动后端服务（开发）
+# 启动后端服务（开发）Amd环境
 backend:
 	go env -w CGO_ENABLED=0
 	go env -w GOOS=linux
 	go env -w GOARCH=amd64
+	cd backend && go run ./cmd/main.go
+
+# 启动后端服务（开发）Arm环境
+mac:
+	go env -w CGO_ENABLED=0
+	go env -w GOOS=darwin
+	go env -w GOARCH=arm64
 	cd backend && go run ./cmd/main.go
 
 # 启动前端服务（开发）
