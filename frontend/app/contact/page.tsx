@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { sendContactMessage } from '@/lib/api';
+import { MapPin, Mail, MessageCircle } from 'lucide-react';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -26,31 +27,32 @@ export default function Contact() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-12 px-4">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold mb-4">Contact Me</h1>
-        <p className="text-gray-600">Have questions or want to plan a custom tour? Drop me a message!</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-        <div className="md:col-span-1 space-y-8">
-          <div>
-            <h3 className="text-lg font-bold mb-2">📍 Location</h3>
-            <p className="text-gray-600">Chongqing & Chengdu, China</p>
-          </div>
-          <div>
-            <h3 className="text-lg font-bold mb-2">📧 Email</h3>
-            <p className="text-gray-600">janet@tourguide.com</p>
-          </div>
-          <div>
-            <h3 className="text-lg font-bold mb-2">💬 Social Media</h3>
-            <p className="text-gray-600">WeChat: JanetTravels</p>
-            <p className="text-gray-600">WhatsApp: +86 123 4567 8900</p>
-          </div>
+    <div className="py-12 md:py-16 bg-[linear-gradient(180deg,#f7fbff_0%,#edf5ff_100%)] min-h-[calc(100vh-64px)]">
+      <div className="max-w-5xl mx-auto px-4 md:px-6 lg:px-8">
+        <div className="text-center mb-12 fade-up">
+          <h1 className="text-4xl md:text-5xl font-semibold mb-4 tracking-wide text-slate-900">Contact Me</h1>
+          <p className="text-slate-600 text-lg">Have questions or want to plan a custom tour? Drop me a message.</p>
         </div>
 
-        <div className="md:col-span-2">
-          <form onSubmit={handleSubmit} className="space-y-6 bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="md:col-span-1 space-y-4">
+            <div className="elevated-card p-5">
+              <h3 className="text-lg font-semibold mb-2 flex items-center gap-2"><MapPin size={18} className="text-blue-700" /> Location</h3>
+              <p className="text-slate-600">Chongqing & Chengdu, China</p>
+            </div>
+            <div className="elevated-card p-5">
+              <h3 className="text-lg font-semibold mb-2 flex items-center gap-2"><Mail size={18} className="text-blue-700" /> Email</h3>
+              <p className="text-slate-600">janet@tourguide.com</p>
+            </div>
+            <div className="elevated-card p-5">
+              <h3 className="text-lg font-semibold mb-2 flex items-center gap-2"><MessageCircle size={18} className="text-blue-700" /> Social</h3>
+              <p className="text-slate-600">WeChat: JanetTravels</p>
+              <p className="text-slate-600">WhatsApp: +86 123 4567 8900</p>
+            </div>
+          </div>
+
+          <div className="md:col-span-2">
+          <form onSubmit={handleSubmit} className="space-y-6 elevated-card p-8 fade-up">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-semibold mb-2">Name</label>
@@ -59,7 +61,7 @@ export default function Contact() {
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  className="w-full px-4 py-3"
                   placeholder="Your Name"
                 />
               </div>
@@ -70,7 +72,7 @@ export default function Contact() {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  className="w-full px-4 py-3"
                   placeholder="your@email.com"
                 />
               </div>
@@ -82,7 +84,7 @@ export default function Contact() {
                 required
                 value={formData.subject}
                 onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                className="w-full px-4 py-3"
                 placeholder="How can I help you?"
               />
             </div>
@@ -93,7 +95,7 @@ export default function Contact() {
                 rows={5}
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                className="w-full px-4 py-3"
                 placeholder="Tell me more about your travel plans..."
               ></textarea>
             </div>
@@ -101,20 +103,21 @@ export default function Contact() {
             <button
               type="submit"
               disabled={status === 'loading'}
-              className={`w-full py-3 rounded-lg font-bold text-white transition-all ${
-                status === 'loading' ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+              className={`w-full py-3 ${
+                status === 'loading' ? 'bg-gray-400 cursor-not-allowed text-white rounded-xl' : 'btn-primary'
               }`}
             >
               {status === 'loading' ? 'Sending...' : 'Send Message'}
             </button>
 
             {status === 'success' && (
-              <p className="text-green-600 text-center font-semibold">Message sent successfully! I'll get back to you soon.</p>
+              <p className="text-green-600 text-center font-semibold">Message sent successfully! I&apos;ll get back to you soon.</p>
             )}
             {status === 'error' && (
               <p className="text-red-600 text-center font-semibold">Failed to send message. Please try again later.</p>
             )}
           </form>
+          </div>
         </div>
       </div>
     </div>

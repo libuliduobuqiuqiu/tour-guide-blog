@@ -3,8 +3,16 @@ import { fetchTours, fetchCarousels, fetchReviews, fetchConfig } from '@/lib/api
 import HeroCarousel from '@/components/HeroCarousel';
 import ReviewsCarousel from '@/components/ReviewsCarousel';
 
+interface Tour {
+  id: number;
+  title: string;
+  description: string;
+  cover_image?: string;
+  price: number;
+}
+
 export default async function Home() {
-  let tours = [];
+  let tours: Tour[] = [];
   let carousels = [];
   let reviews = [];
   let settings = {
@@ -40,27 +48,28 @@ export default async function Home() {
 
       {/* Featured Tours */}
       <section className="max-w-7xl mx-auto py-20 px-4 w-full">
-        <h2 className="text-4xl font-bold text-center mb-12">Featured Tours</h2>
+        <h2 className="text-4xl md:text-5xl font-semibold text-center mb-4 tracking-wide">Featured Tours</h2>
+        <p className="text-slate-600 text-center mb-12">Curated routes with local insights and premium service.</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {tours.length > 0 ? (
-            tours.map((tour: any) => (
-              <div key={tour.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+            tours.map((tour) => (
+              <div key={tour.id} className="elevated-card overflow-hidden fade-up">
                 <div 
-                  className="h-48 bg-gray-200 bg-cover bg-center" 
+                  className="h-52 bg-gray-200 bg-cover bg-center" 
                   style={{ 
                     backgroundImage: tour.cover_image 
                       ? `url(${tour.cover_image.startsWith('http') ? tour.cover_image : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${tour.cover_image.startsWith('/') ? '' : '/'}${tour.cover_image}`})` 
-                      : 'none' 
+                      : "url('https://images.unsplash.com/photo-1535598745644-bc791f07d6a5?auto=format&fit=crop&w=1200&q=80')" 
                   }}
                 >
                   {!tour.cover_image && <div className="flex items-center justify-center h-full text-gray-400">No Image</div>}
                 </div>
                 <div className="p-6">
-                  <h3 className="text-xl font-bold mb-2">{tour.title}</h3>
-                  <p className="text-gray-600 mb-4 line-clamp-2">{tour.description}</p>
+                  <h3 className="text-xl font-semibold mb-2 text-slate-900">{tour.title}</h3>
+                  <p className="text-slate-600 mb-4 line-clamp-2">{tour.description}</p>
                   <div className="flex justify-between items-center">
-                    <span className="text-blue-600 font-bold">${tour.price} / person</span>
-                    <Link href={`/tours/${tour.id}`} className="text-blue-600 hover:underline">
+                    <span className="text-blue-700 font-semibold">${tour.price} / person</span>
+                    <Link href={`/tours/${tour.id}`} className="btn-secondary px-3 py-1.5 text-sm">
                       View Details →
                     </Link>
                   </div>
@@ -76,30 +85,30 @@ export default async function Home() {
       </section>
 
       {/* Why Choose Me */}
-      <section className="w-full bg-gray-50 py-20">
+      <section className="w-full bg-[linear-gradient(180deg,#f8fbff_0%,#edf4ff_100%)] py-20">
         <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center mb-16">Why Choose Me?</h2>
+          <h2 className="text-4xl md:text-5xl font-semibold text-center mb-16 tracking-wide">Why Choose Me?</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-all">
+            <div className="elevated-card p-8">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-6 text-blue-600">
                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
               </div>
-              <h3 className="text-xl font-bold mb-4">Local Expert</h3>
-              <p className="text-gray-600">Born and raised in Chongqing, I know every corner of this city and the best spots for authentic experiences.</p>
+              <h3 className="text-xl font-semibold mb-4">Local Expert</h3>
+              <p className="text-slate-600">Born and raised in Chongqing, I know every corner of this city and the best spots for authentic experiences.</p>
             </div>
-            <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-all">
+            <div className="elevated-card p-8">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6 text-green-600">
                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
               </div>
-              <h3 className="text-xl font-bold mb-4">Flexible Itinerary</h3>
-              <p className="text-gray-600">Customized tour plans based on your interests and pace. No rush, just pure enjoyment.</p>
+              <h3 className="text-xl font-semibold mb-4">Flexible Itinerary</h3>
+              <p className="text-slate-600">Customized tour plans based on your interests and pace. No rush, just pure enjoyment.</p>
             </div>
-            <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-all">
+            <div className="elevated-card p-8">
               <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-6 text-purple-600">
                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
               </div>
-              <h3 className="text-xl font-bold mb-4">Personalized Service</h3>
-              <p className="text-gray-600">I treat every guest like a friend, ensuring you have a comfortable and memorable trip.</p>
+              <h3 className="text-xl font-semibold mb-4">Personalized Service</h3>
+              <p className="text-slate-600">I treat every guest like a friend, ensuring you have a comfortable and memorable trip.</p>
             </div>
           </div>
         </div>
@@ -108,7 +117,7 @@ export default async function Home() {
       {/* Reviews Section */}
       <ReviewsCarousel items={reviews} />
       <div className="w-full flex justify-center pb-16 bg-blue-50">
-        <Link href="/reviews" className="text-blue-600 font-semibold hover:underline">
+        <Link href="/reviews" className="btn-primary px-6 py-3">
           View All Guest Reviews →
         </Link>
       </div>

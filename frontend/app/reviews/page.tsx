@@ -23,11 +23,11 @@ export default async function GuestReviewsPage() {
   }
 
   return (
-    <div className="py-12 md:py-16 bg-gray-50 min-h-[calc(100vh-64px)]">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
-        <header className="mb-10">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900">Guest Reviews</h1>
-          <p className="mt-3 text-gray-600 text-lg">
+    <div className="py-12 md:py-16 bg-[linear-gradient(180deg,#f7fbff_0%,#edf5ff_100%)] min-h-[calc(100vh-64px)]">
+      <div className="max-w-[1400px] mx-auto px-3 md:px-4 lg:px-6">
+        <header className="mb-10 fade-up">
+          <h1 className="text-4xl md:text-5xl font-semibold text-slate-900 tracking-wide">Guest Reviews</h1>
+          <p className="mt-3 text-slate-600 text-lg">
             Read detailed feedback from travelers about routes, service quality, and host experience.
           </p>
         </header>

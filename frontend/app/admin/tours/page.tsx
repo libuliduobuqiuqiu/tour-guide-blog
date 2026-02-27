@@ -78,21 +78,21 @@ export default function ToursAdmin() {
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold">Manage Tours</h1>
+        <h1 className="text-2xl font-semibold tracking-wide">Manage Tours</h1>
         <button
           onClick={() => {
             setCurrentTour({});
             setCoverImageFile(null);
             setIsEditing(true);
           }}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          className="flex items-center gap-2 btn-primary px-4 py-2"
         >
           <Plus size={20} />
           New Tour
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div className="admin-panel overflow-hidden">
         <table className="w-full text-left">
           <thead className="bg-gray-50 border-b">
             <tr>
@@ -133,7 +133,7 @@ export default function ToursAdmin() {
       </div>
 
       {isEditing && (
-        <div className="mt-8 bg-white rounded-xl shadow-sm p-8">
+        <div className="mt-8 admin-panel p-8">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-bold">{currentTour.id ? 'Edit Tour' : 'New Tour'}</h2>
             <button onClick={() => setIsEditing(false)} className="text-gray-500 hover:text-gray-700">
@@ -214,14 +214,14 @@ export default function ToursAdmin() {
               <button
                 type="button"
                 onClick={() => setIsEditing(false)}
-                className="px-6 py-2 border rounded-lg hover:bg-gray-50"
+                className="px-6 py-2 btn-secondary"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+                className="px-6 py-2 btn-primary disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 {loading ? 'Saving...' : 'Save Tour'}
               </button>

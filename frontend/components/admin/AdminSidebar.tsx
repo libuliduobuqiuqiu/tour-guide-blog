@@ -2,14 +2,15 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  LayoutDashboard, 
-  Map, 
-  BookOpen, 
-  Settings, 
-  MessageSquare, 
+import {
+  LayoutDashboard,
+  Map,
+  BookOpen,
+  Settings,
+  MessageSquare,
   LogOut,
-  User
+  User,
+  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 
@@ -28,12 +29,16 @@ export default function AdminSidebar() {
   const { logout } = useAuth();
 
   return (
-    <div className="w-64 bg-gray-900 text-white flex flex-col min-h-screen">
-      <div className="p-6 border-b border-gray-800">
-        <h1 className="text-xl font-bold flex items-center gap-2">
-          <User className="text-blue-500" />
+    <div className="w-20 md:w-64 text-white flex flex-col min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-blue-950 shadow-2xl">
+      <div className="p-6 border-b border-white/10">
+        <h1 className="text-xl font-semibold tracking-wide items-center gap-2 hidden md:flex">
+          <User className="text-sky-400" />
           Janet Admin
         </h1>
+        <p className="text-xs text-slate-400 mt-2 items-center gap-1 hidden md:flex">
+          <Sparkles size={12} />
+          Dashboard Workspace
+        </p>
       </div>
 
       <nav className="flex-1 p-4 space-y-2">
@@ -43,26 +48,26 @@ export default function AdminSidebar() {
             <Link
               key={item.name}
               href={item.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                 isActive 
-                  ? 'bg-blue-600 text-white' 
-                  : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                  ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-900/40' 
+                  : 'text-slate-300 hover:bg-white/10 hover:text-white'
               }`}
             >
               <item.icon size={20} />
-              <span>{item.name}</span>
+              <span className="font-medium hidden md:inline">{item.name}</span>
             </Link>
           );
         })}
       </nav>
 
-      <div className="p-4 border-t border-gray-800">
+      <div className="p-4 border-t border-white/10">
         <button
           onClick={logout}
-          className="flex items-center gap-3 px-4 py-3 w-full text-gray-400 hover:bg-gray-800 hover:text-white rounded-lg transition-colors"
+          className="flex items-center gap-3 px-4 py-3 w-full text-slate-300 hover:bg-white/10 hover:text-white rounded-xl transition-all"
         >
           <LogOut size={20} />
-          <span>Logout</span>
+          <span className="font-medium hidden md:inline">Logout</span>
         </button>
       </div>
     </div>

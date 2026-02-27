@@ -55,11 +55,11 @@ export default function SettingsAdmin() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-8">Site Settings</h1>
+      <h1 className="text-2xl font-semibold tracking-wide mb-8">Site Settings</h1>
 
       <form onSubmit={handleSave} className="space-y-8">
-        <section className="bg-white rounded-xl shadow-sm p-8">
-          <h2 className="text-lg font-bold mb-6 border-b pb-2 text-blue-600">Home Page (Hero Section)</h2>
+        <section className="admin-panel p-8">
+          <h2 className="text-lg font-semibold mb-6 border-b pb-2 text-blue-700">Home Page (Hero Section)</h2>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Hero Title</label>
@@ -67,7 +67,7 @@ export default function SettingsAdmin() {
                 type="text"
                 value={settings.home_hero_title}
                 onChange={(e) => setSettings({ ...settings, home_hero_title: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full px-4 py-2"
               />
             </div>
             <div>
@@ -76,28 +76,28 @@ export default function SettingsAdmin() {
                 rows={2}
                 value={settings.home_hero_subtitle}
                 onChange={(e) => setSettings({ ...settings, home_hero_subtitle: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full px-4 py-2"
               />
             </div>
           </div>
         </section>
 
-        <section className="bg-white rounded-xl shadow-sm p-8">
-          <h2 className="text-lg font-bold mb-6 border-b pb-2 text-green-600">About Me</h2>
+        <section className="admin-panel p-8">
+          <h2 className="text-lg font-semibold mb-6 border-b pb-2 text-green-700">About Me</h2>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Introduction Content</label>
             <textarea
               rows={6}
               value={settings.about_content}
               onChange={(e) => setSettings({ ...settings, about_content: e.target.value })}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full px-4 py-2"
               placeholder="Tell your story..."
             />
           </div>
         </section>
 
-        <section className="bg-white rounded-xl shadow-sm p-8">
-          <h2 className="text-lg font-bold mb-6 border-b pb-2 text-purple-600">Contact Information</h2>
+        <section className="admin-panel p-8">
+          <h2 className="text-lg font-semibold mb-6 border-b pb-2 text-indigo-700">Contact Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
@@ -105,7 +105,7 @@ export default function SettingsAdmin() {
                 type="email"
                 value={settings.contact_email}
                 onChange={(e) => setSettings({ ...settings, contact_email: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full px-4 py-2"
               />
             </div>
             <div>
@@ -114,7 +114,7 @@ export default function SettingsAdmin() {
                 type="text"
                 value={settings.contact_phone}
                 onChange={(e) => setSettings({ ...settings, contact_phone: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full px-4 py-2"
               />
             </div>
             <div>
@@ -123,7 +123,7 @@ export default function SettingsAdmin() {
                 type="text"
                 value={settings.wechat_id}
                 onChange={(e) => setSettings({ ...settings, wechat_id: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full px-4 py-2"
               />
             </div>
           </div>
@@ -133,7 +133,7 @@ export default function SettingsAdmin() {
           <button
             type="submit"
             disabled={loading}
-            className="flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all disabled:bg-gray-400"
+            className="flex items-center gap-2 px-8 py-3 btn-primary disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             {loading ? <RefreshCcw className="animate-spin" size={20} /> : <Save size={20} />}
             {loading ? 'Saving...' : 'Save All Settings'}

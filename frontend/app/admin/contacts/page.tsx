@@ -42,11 +42,11 @@ export default function ContactsAdmin() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-8">User Messages</h1>
+      <h1 className="text-2xl font-semibold tracking-wide mb-8">User Messages</h1>
 
       <div className="grid grid-cols-1 gap-6">
         {contacts.map((contact) => (
-          <div key={contact.id} className="bg-white rounded-xl shadow-sm p-6 relative group">
+          <div key={contact.id} className="admin-panel p-6 relative group">
             <button
               onClick={() => handleDelete(contact.id)}
               className="absolute top-4 right-4 text-gray-400 hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100"
@@ -72,14 +72,14 @@ export default function ContactsAdmin() {
               </div>
             </div>
 
-            <div className="bg-gray-50 p-4 rounded-lg text-gray-700 whitespace-pre-wrap">
+            <div className="bg-gray-50 p-4 rounded-xl text-gray-700 whitespace-pre-wrap">
               {contact.message}
             </div>
           </div>
         ))}
 
         {contacts.length === 0 && (
-          <div className="text-center py-20 bg-white rounded-xl text-gray-500">
+          <div className="text-center py-20 admin-panel text-gray-500">
             No messages yet.
           </div>
         )}

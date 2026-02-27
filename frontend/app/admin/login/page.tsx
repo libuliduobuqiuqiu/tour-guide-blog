@@ -33,12 +33,13 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
-        <h1 className="text-2xl font-bold text-center mb-8">Admin Login</h1>
+    <div className="min-h-screen flex items-center justify-center px-4 bg-[radial-gradient(circle_at_14%_18%,rgba(14,165,233,0.28),transparent_33%),radial-gradient(circle_at_86%_2%,rgba(30,78,216,0.28),transparent_34%),linear-gradient(180deg,#f4f8ff_0%,#eef5ff_100%)]">
+      <div className="max-w-md w-full elevated-card p-8 fade-up">
+        <h1 className="text-3xl font-semibold text-center mb-2 tracking-wide">Admin Login</h1>
+        <p className="text-center text-slate-500 mb-8 text-sm">Manage tours, posts, reviews and contacts</p>
         
         {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm text-center">
+          <div className="bg-red-50 text-red-600 p-3 rounded-xl mb-6 text-sm text-center border border-red-100">
             {error}
           </div>
         )}
@@ -51,7 +52,7 @@ export default function AdminLoginPage() {
               required
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full px-4 py-3"
               placeholder="admin"
             />
           </div>
@@ -62,7 +63,7 @@ export default function AdminLoginPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full px-4 py-3"
               placeholder="••••••••"
             />
           </div>
@@ -70,8 +71,8 @@ export default function AdminLoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-3 rounded-lg font-bold text-white transition-all ${
-              loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+            className={`w-full py-3 font-semibold ${
+              loading ? 'bg-gray-400 cursor-not-allowed text-white rounded-xl' : 'btn-primary'
             }`}
           >
             {loading ? 'Logging in...' : 'Login'}

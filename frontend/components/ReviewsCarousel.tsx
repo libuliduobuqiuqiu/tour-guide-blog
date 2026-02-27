@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Star, ChevronLeft, ChevronRight, Quote } from 'lucide-react';
 
 interface Review {
@@ -13,6 +13,8 @@ interface Review {
 
 export default function ReviewsCarousel({ items }: { items: Review[] }) {
   const [current, setCurrent] = useState(0);
+  const next = useCallback(() => setCurrent((prev) => (prev + 1) % items.length), [items.length]);
+  const prev = () => setCurrent((prev) => (prev - 1 + items.length) % items.length);
 
   // Auto-scroll for reviews too, but maybe slower
   useEffect(() => {
@@ -21,10 +23,7 @@ export default function ReviewsCarousel({ items }: { items: Review[] }) {
       next();
     }, 6000);
     return () => clearInterval(timer);
-  }, [items.length]);
-
-  const next = () => setCurrent((prev) => (prev + 1) % items.length);
-  const prev = () => setCurrent((prev) => (prev - 1 + items.length) % items.length);
+  }, [items.length, next]);
 
   if (items.length === 0) return null;
 
@@ -36,18 +35,26 @@ export default function ReviewsCarousel({ items }: { items: Review[] }) {
   const currentItem = items[current];
 
   return (
-    <section className="w-full bg-blue-50 py-20">
+    <section className="w-full bg-[linear-gradient(180deg,#edf6ff_0%,#e6f2ff_100%)] py-20">
       <div className="max-w-4xl mx-auto px-4 text-center">
-        <h2 className="text-4xl font-bold mb-12">What Travelers Say</h2>
+        <h2 className="text-4xl md:text-5xl font-semibold mb-12 tracking-wide">What Travelers Say</h2>
         
-        <div className="relative bg-white rounded-2xl shadow-xl p-8 md:p-12">
+        <div className="relative elevated-card p-8 md:p-12 fade-up">
           <Quote size={48} className="text-blue-100 absolute top-8 left-8 -z-0" />
           
           <div className="relative z-10">
             <div className="flex justify-center mb-6">
               <div className="w-20 h-20 rounded-full bg-gray-200 overflow-hidden border-4 border-blue-50">
                 {currentItem.avatar ? (
-                  <img src={currentItem.avatar.startsWith('http') ? currentItem.avatar : `http://localhost:8080${currentItem.avatar}`} alt={currentItem.username} className="w-full h-full object-cover" />
+                  <img
+                    src={
+                      currentItem.avatar.startsWith('http')
+                        ? currentItem.avatar
+                        : `http://localhost:8080${currentItem.avatar}`
+                    }
+                    alt={currentItem.username}
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                    <div className="w-full h-full flex items-center justify-center text-xl font-bold text-gray-400 bg-gray-100">
                      {currentItem.username.charAt(0)}
@@ -56,7 +63,7 @@ export default function ReviewsCarousel({ items }: { items: Review[] }) {
               </div>
             </div>
             
-            <p className="text-xl md:text-2xl text-gray-700 mb-6 italic">"{currentItem.content}"</p>
+            <p className="text-xl md:text-2xl text-slate-700 mb-6 italic">&quot;{currentItem.content}&quot;</p>
             
             <div className="flex justify-center mb-4 text-yellow-500 gap-1">
               {Array.from({ length: 5 }).map((_, i) => (
@@ -69,15 +76,15 @@ export default function ReviewsCarousel({ items }: { items: Review[] }) {
 
           {items.length > 1 && (
             <>
-              <button 
+              <button
                 onClick={prev}
-                className="absolute left-4 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-blue-600 transition-colors"
+                className="absolute left-4 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-blue-600 transition-all hover:scale-110"
               >
                 <ChevronLeft size={32} />
               </button>
-              <button 
+              <button
                 onClick={next}
-                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-blue-600 transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-blue-600 transition-all hover:scale-110"
               >
                 <ChevronRight size={32} />
               </button>

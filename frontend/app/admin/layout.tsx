@@ -17,7 +17,7 @@ export default function AdminLayout({
   }
 
   if (isAuthenticated === null) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return <div className="min-h-screen flex items-center justify-center text-slate-600">Loading...</div>;
   }
 
   if (!isAuthenticated) {
@@ -25,10 +25,10 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="admin-shell flex min-h-screen">
       <AdminSidebar />
-      <main className="flex-1 p-8 overflow-y-auto max-h-screen">
-        <div className="max-w-6xl mx-auto">
+      <main className="flex-1 px-4 py-8 md:px-8 overflow-y-auto max-h-screen">
+        <div className="max-w-6xl mx-auto fade-up">
           {children}
         </div>
       </main>

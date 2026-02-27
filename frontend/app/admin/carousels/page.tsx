@@ -87,10 +87,10 @@ export default function CarouselsAdmin() {
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold">Manage Carousels</h1>
+        <h1 className="text-2xl font-semibold tracking-wide">Manage Carousels</h1>
         <button
           onClick={startCreate}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700"
+          className="btn-primary px-4 py-2 flex items-center gap-2"
         >
           <Plus size={20} />
           Add Carousel
@@ -99,8 +99,8 @@ export default function CarouselsAdmin() {
 
       {(editing || isCreating) && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-xl w-full max-w-lg">
-            <h2 className="text-xl font-bold mb-6">{editing?.id === 0 ? 'Add Carousel' : 'Edit Carousel'}</h2>
+          <div className="admin-panel p-8 rounded-xl w-full max-w-lg">
+            <h2 className="text-xl font-semibold mb-6">{editing?.id === 0 ? 'Add Carousel' : 'Edit Carousel'}</h2>
             <form onSubmit={handleSave} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Title</label>
@@ -149,13 +149,13 @@ export default function CarouselsAdmin() {
                 <button
                   type="button"
                   onClick={() => { setEditing(null); setIsCreating(false); setImageFile(null); }}
-                  className="px-4 py-2 border rounded hover:bg-gray-50"
+                  className="px-4 py-2 btn-secondary"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  className="px-4 py-2 btn-primary"
                 >
                   Save
                 </button>
@@ -167,7 +167,7 @@ export default function CarouselsAdmin() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {carousels.map(item => (
-          <div key={item.id} className="bg-white rounded-xl shadow overflow-hidden group">
+          <div key={item.id} className="admin-panel overflow-hidden group">
             <div className="h-48 bg-gray-200 relative">
               {item.image_url ? (
                 <img src={`http://localhost:8080${item.image_url}`} alt={item.title} className="w-full h-full object-cover" />
@@ -175,7 +175,7 @@ export default function CarouselsAdmin() {
                 <div className="flex items-center justify-center h-full text-gray-400">No Image</div>
               )}
               {!item.is_active && (
-                <div className="absolute inset-0 bg-black/50 flex items-center justify-center text白色 font-bold">
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-bold">
                   Inactive
                 </div>
               )}

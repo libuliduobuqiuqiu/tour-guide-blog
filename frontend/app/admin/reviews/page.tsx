@@ -119,18 +119,18 @@ export default function ReviewsAdmin() {
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold">Manage Reviews</h1>
+        <h1 className="text-2xl font-semibold tracking-wide">Manage Reviews</h1>
         <div className="flex gap-4">
           <button
             onClick={handleGenerate}
-            className="bg-purple-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-purple-700"
+            className="btn-secondary px-4 py-2 flex items-center gap-2"
           >
             <Wand2 size={20} />
             Generate Initial
           </button>
           <button
             onClick={startCreate}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700"
+            className="btn-primary px-4 py-2 flex items-center gap-2"
           >
             <Plus size={20} />
             Add Review
@@ -140,8 +140,8 @@ export default function ReviewsAdmin() {
 
       {(editing || isCreating) && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-          <div className="bg-white p-8 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-6">{editing?.id === 0 ? 'Add Review' : 'Edit Review'}</h2>
+          <div className="admin-panel p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-semibold mb-6">{editing?.id === 0 ? 'Add Review' : 'Edit Review'}</h2>
             <form onSubmit={handleSave} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -253,13 +253,13 @@ export default function ReviewsAdmin() {
                     setIsCreating(false);
                     setAvatarFile(null);
                   }}
-                  className="px-4 py-2 border rounded hover:bg-gray-50"
+                  className="px-4 py-2 btn-secondary"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  className="px-4 py-2 btn-primary"
                 >
                   Save
                 </button>
@@ -271,7 +271,7 @@ export default function ReviewsAdmin() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {reviews.map(item => (
-          <div key={item.id} className="bg-white rounded-xl shadow p-6">
+          <div key={item.id} className="admin-panel p-6">
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden">

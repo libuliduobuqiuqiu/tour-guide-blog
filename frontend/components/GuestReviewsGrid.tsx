@@ -15,8 +15,6 @@ interface Review {
   rating: number;
 }
 
-const HOST = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-
 function toDisplayDate(dateValue: string) {
   if (!dateValue) return 'N/A';
   const trimmed = dateValue.trim();
@@ -62,26 +60,13 @@ export default function GuestReviewsGrid({ items }: { items: Review[] }) {
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
         {items.map((item) => (
-          <article
-            key={item.id}
-            className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm hover:shadow-md transition-shadow"
-          >
+          <article key={item.id} className="elevated-card p-6 fade-up min-h-[320px] flex flex-col">
             <div className="flex items-start justify-between gap-3 mb-4">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden shrink-0">
-                  {item.avatar ? (
-                    <img
-                      src={item.avatar.startsWith('http') ? item.avatar : `${HOST}${item.avatar}`}
-                      alt={item.username}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-500 font-semibold">
-                      {item.username?.charAt(0)?.toUpperCase() || 'G'}
-                    </div>
-                  )}
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-700 to-sky-500 text-white overflow-hidden shrink-0 flex items-center justify-center font-semibold">
+                  {item.username?.charAt(0)?.toUpperCase() || 'G'}
                 </div>
                 <div className="min-w-0">
                   <h3 className="font-semibold text-gray-900 truncate">{item.username}</h3>
@@ -108,7 +93,7 @@ export default function GuestReviewsGrid({ items }: { items: Review[] }) {
 
             <button
               type="button"
-              className="mt-4 text-sm font-semibold text-blue-600 hover:text-blue-700"
+              className="btn-secondary px-3 py-1.5 text-sm self-start mt-auto"
               onClick={() => setSelectedId(item.id)}
             >
               View details
