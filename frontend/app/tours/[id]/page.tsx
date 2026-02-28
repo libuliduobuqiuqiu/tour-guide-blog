@@ -1,8 +1,8 @@
 import { fetchTour } from '@/lib/api';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
-import ContentRenderer from '@/components/ContentRenderer';
 import Link from 'next/link';
+import ContentRenderer from '@/components/ContentRenderer';
 
 export default async function TourDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -15,9 +15,8 @@ export default async function TourDetailPage({ params }: { params: Promise<{ id:
   }
 
   return (
-    <div className="py-12 md:py-16 bg-[linear-gradient(180deg,#f7fbff_0%,#edf5ff_100%)] min-h-[calc(100vh-64px)]">
-      <div className="mx-auto max-w-5xl px-4 md:px-6 lg:px-8">
-        <div className="w-full h-96 bg-gray-200 rounded-2xl mb-8 relative overflow-hidden elevated-card fade-up">
+    <div className="bg-[linear-gradient(180deg,#f7fbff_0%,#edf5ff_100%)] min-h-[calc(100vh-64px)]">
+      <div className="w-full h-[320px] md:h-[380px] bg-gray-200 relative overflow-hidden reveal-down">
         {tour.cover_image ? (
           <Image
             src={(tour.cover_image || '').startsWith('http') ? tour.cover_image : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${tour.cover_image.startsWith('/') ? '' : '/'}${tour.cover_image}`}
@@ -30,18 +29,19 @@ export default async function TourDetailPage({ params }: { params: Promise<{ id:
         ) : (
           <div className="flex items-center justify-center h-full text-gray-400">No Image</div>
         )}
-        </div>
-      
-        <div className="flex flex-col md:flex-row justify-between items-start mb-6 fade-up">
-        <h1 className="text-4xl md:text-5xl font-semibold tracking-wide text-slate-900">{tour.title}</h1>
-        <div className="mt-4 md:mt-0 text-2xl font-semibold text-blue-700">
-          ${tour.price} <span className="text-sm text-gray-500 font-normal">/ person</span>
-        </div>
+      </div>
+    
+      <div className="mx-auto max-w-6xl px-4 md:px-6 lg:px-8 pt-10">
+        <div className="flex flex-col md:flex-row justify-between items-start mb-6">
+          <h1 className="text-4xl md:text-5xl font-semibold tracking-wide text-slate-900">{tour.title}</h1>
+          <div className="mt-4 md:mt-0 text-2xl font-semibold text-blue-700">
+            ${tour.price} <span className="text-sm text-gray-500 font-normal">/ person</span>
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-4 mb-8 text-slate-600">
-        <span className="flex items-center rounded-full bg-white border border-blue-100 px-4 py-2">⏱️ {tour.duration}</span>
-        <span className="flex items-center rounded-full bg-white border border-blue-100 px-4 py-2">📍 {tour.location}</span>
+          <span className="flex items-center rounded-full bg-white border border-blue-100 px-4 py-2">⏱️ {tour.duration}</span>
+          <span className="flex items-center rounded-full bg-white border border-blue-100 px-4 py-2">📍 {tour.location}</span>
         </div>
       </div>
 

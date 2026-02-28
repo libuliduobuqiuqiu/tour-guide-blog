@@ -11,7 +11,9 @@ interface Post {
   id: number;
   title: string;
   content: string;
-  excerpt: string;
+  summary: string;
+  category: string;
+  tags: string;
   author: string;
   cover_image: string;
   created_at: string;
@@ -172,12 +174,32 @@ export default function BlogAdmin() {
                   onFileChange={setCoverImageFile}
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                <input
+                  type="text"
+                  value={currentPost.category || ''}
+                  onChange={(e) => setCurrentPost({ ...currentPost, category: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="e.g. Food, Travel, Culture"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+                <input
+                  type="text"
+                  value={currentPost.tags || ''}
+                  onChange={(e) => setCurrentPost({ ...currentPost, tags: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="food, local, tips"
+                />
+              </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Excerpt</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Summary</label>
                 <textarea
                   rows={2}
-                  value={currentPost.excerpt || ''}
-                  onChange={(e) => setCurrentPost({ ...currentPost, excerpt: e.target.value })}
+                  value={currentPost.summary || ''}
+                  onChange={(e) => setCurrentPost({ ...currentPost, summary: e.target.value })}
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                   placeholder="Short summary of the post..."
                 />
