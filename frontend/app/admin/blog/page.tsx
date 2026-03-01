@@ -109,7 +109,7 @@ export default function BlogAdmin() {
                 <td className="px-6 py-4">{post.title}</td>
                 <td className="px-6 py-4">{post.author}</td>
                 <td className="px-6 py-4 text-sm text-gray-500">
-                  {new Date(post.created_at).toLocaleDateString()}
+                  {new Date(post.created_at).toISOString().slice(0, 10)}
                 </td>
                 <td className="px-6 py-4 flex gap-3">
                   <button

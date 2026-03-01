@@ -69,7 +69,7 @@ const Footer = async () => {
         )}
 
         <p className="text-slate-300 text-sm tracking-wide">
-          © {new Date().getFullYear()} Janet Tours. All rights reserved.
+          © 2026 Janet Tours. All rights reserved.
         </p>
       </div>
     </footer>

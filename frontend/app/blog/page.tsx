@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { fetchPosts } from '@/lib/api';
+import { formatDate } from '@/lib/format';
 
 interface Post {
   id: number;
@@ -87,7 +88,7 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
                   )}
                 </div>
                 <div className="flex items-center justify-between text-sm text-slate-500 mt-auto pt-2">
-                  <span>{new Date(post.created_at).toLocaleDateString()}</span>
+                  <span>{formatDate(post.created_at)}</span>
                   <Link href={`/blog/${post.id}`} className="btn-secondary px-3 py-1.5 text-xs">
                     Read More →
                   </Link>

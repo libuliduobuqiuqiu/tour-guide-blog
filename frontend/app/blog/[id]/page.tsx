@@ -1,4 +1,5 @@
 import { fetchPost } from '@/lib/api';
+import { formatDate } from '@/lib/format';
 import { notFound } from 'next/navigation';
 import ContentRenderer from '@/components/ContentRenderer';
 
@@ -35,7 +36,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
             {post.category && (
               <span className="text-blue-700 font-semibold uppercase tracking-wider">{post.category}</span>
             )}
-            <span>{new Date(post.created_at).toLocaleDateString()}</span>
+            <span>{formatDate(post.created_at)}</span>
             {post.tags && (
               <div className="flex flex-wrap gap-2">
                 {post.tags.split(',').map((tag: string) => (

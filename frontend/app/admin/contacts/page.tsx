@@ -68,7 +68,7 @@ export default function ContactsAdmin() {
               </div>
               <div className="flex items-center gap-2">
                 <Calendar size={14} />
-                {new Date(contact.created_at).toLocaleString()}
+                {new Date(contact.created_at).toISOString().replace('T', ' ').slice(0, 19)}
               </div>
             </div>
 

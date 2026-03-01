@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { fetchTours, fetchCarousels, fetchPosts, fetchConfig } from '@/lib/api';
+import { formatDate } from '@/lib/format';
 import HeroCarousel from '@/components/HeroCarousel';
 import Reveal from '@/components/Reveal';
 
@@ -182,7 +183,7 @@ export default async function Home() {
                     <h3 className="text-xl font-semibold mb-2 text-slate-900">{post.title}</h3>
                     <p className="text-slate-600 mb-4 line-clamp-2">{post.summary}</p>
                     <div className="flex justify-between items-center text-sm text-slate-500">
-                      <span>{new Date(post.created_at).toLocaleDateString()}</span>
+                      <span>{formatDate(post.created_at)}</span>
                       <Link href={`/blog/${post.id}`} className="btn-secondary px-3 py-1.5 text-sm">
                         Read More →
                       </Link>
