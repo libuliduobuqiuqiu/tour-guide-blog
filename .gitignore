@@ -1,1 +1,5 @@
 backups/
+dist/
+frontend/.next/
+frontend/node_modules/
+backend/uploads/

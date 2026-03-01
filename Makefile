@@ -11,7 +11,20 @@ UPLOADS_DIR ?= backend/uploads
 BUNDLE_OUT_DIR ?= backups
 BUNDLE_FILE ?=
 
-.PHONY: backend frontend migrate bundle import-bundle
+SSH_HOST ?= 123.207.65.202
+SSH_USER ?= root
+SSH_PORT ?= 22
+REMOTE_DIR ?= /opt
+FRONTEND_PORT ?= 3000
+BACKEND_PORT ?= 8080
+REMOTE_DB_HOST ?= 127.0.0.1
+REMOTE_DB_PORT ?= 3306
+REMOTE_DB_USER ?= root
+REMOTE_DB_PASS ?=
+REMOTE_DB_NAME ?= tour_guide
+
+.PHONY: backend frontend migrate bundle import-bundle build-backend build-frontend package-backend package-frontend package upload \
+	upload-backend upload-frontend deploy deploy-backend deploy-frontend deploy-static remote-migrate dump-db upload-db remote-import-db deploy-db
 
 # 启动后端服务（开发）Amd环境
 backend:
@@ -30,6 +43,162 @@ mac:
 # 启动前端服务（开发）
 frontend:
 	cd frontend && NEXT_PUBLIC_API_URL=$(NEXT_PUBLIC_API_URL) npm run dev
+
+# 构建后端二进制（Linux amd64）
+build-backend:
+	@set -e; \
+	mkdir -p dist/backend; \
+	echo "Building backend..."; \
+	cd backend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ../dist/backend/tour-guide-backend ./cmd/main.go && cd ../;\
+	cp -a backend/configs dist/backend/; \
+	echo "Backend build output: dist/backend"
+
+# 构建前端（Next.js 生产构建）
+build-frontend:
+	@set -e; \
+	echo "Building frontend..."; \
+	cd frontend && NEXT_PUBLIC_API_URL=$(NEXT_PUBLIC_API_URL) npm ci && NEXT_PUBLIC_API_URL=$(NEXT_PUBLIC_API_URL) npm run build && cd ../; \
+	mkdir -p dist/frontend; \
+	cp -a frontend/.next dist/frontend/; \
+	cp -a frontend/public dist/frontend/; \
+	cp -a frontend/package.json dist/frontend/; \
+	if [ -f frontend/package-lock.json ]; then cp -a frontend/package-lock.json dist/frontend/; fi; \
+	if [ -f frontend/next.config.js ]; then cp -a frontend/next.config.js dist/frontend/; fi; \
+	echo "Frontend build output: dist/frontend"
+
+package-backend: build-backend
+	@set -e; \
+	mkdir -p dist; \
+	COPYFILE_DISABLE=1 tar -czf dist/backend.tar.gz -C dist/backend .; \
+	echo "Created dist/backend.tar.gz"
+
+package-frontend: build-frontend
+	@set -e; \
+	mkdir -p dist; \
+	COPYFILE_DISABLE=1 tar -czf dist/frontend.tar.gz -C dist/frontend .; \
+	echo "Created dist/frontend.tar.gz"
+
+package: package-backend package-frontend
+
+upload:
+	@set -e; \
+	if [ -z "$(SSH_HOST)" ] || [ -z "$(SSH_USER)" ]; then \
+		echo "Please set SSH_HOST and SSH_USER"; \
+		exit 1; \
+	fi; \
+	SSH_CMD="ssh -p $(SSH_PORT) -o StrictHostKeyChecking=accept-new"; \
+	$$SSH_CMD $(SSH_USER)@$(SSH_HOST) "mkdir -p $(REMOTE_DIR)"; \
+	scp -P $(SSH_PORT) -o StrictHostKeyChecking=accept-new dist/backend.tar.gz dist/frontend.tar.gz $(SSH_USER)@$(SSH_HOST):$(REMOTE_DIR)/; \
+	echo "Uploaded packages to $(SSH_USER)@$(SSH_HOST):$(REMOTE_DIR)"
+
+upload-backend:
+	@set -e; \
+	if [ -z "$(SSH_HOST)" ] || [ -z "$(SSH_USER)" ]; then \
+		echo "Please set SSH_HOST and SSH_USER"; \
+		exit 1; \
+	fi; \
+	SSH_CMD="ssh -p $(SSH_PORT) -o StrictHostKeyChecking=accept-new"; \
+	$$SSH_CMD $(SSH_USER)@$(SSH_HOST) "mkdir -p $(REMOTE_DIR)"; \
+	scp -P $(SSH_PORT) -o StrictHostKeyChecking=accept-new dist/backend.tar.gz $(SSH_USER)@$(SSH_HOST):$(REMOTE_DIR)/; \
+	echo "Uploaded backend package to $(SSH_USER)@$(SSH_HOST):$(REMOTE_DIR)"
+
+upload-frontend:
+	@set -e; \
+	if [ -z "$(SSH_HOST)" ] || [ -z "$(SSH_USER)" ]; then \
+		echo "Please set SSH_HOST and SSH_USER"; \
+		exit 1; \
+	fi; \
+	SSH_CMD="ssh -p $(SSH_PORT) -o StrictHostKeyChecking=accept-new"; \
+	$$SSH_CMD $(SSH_USER)@$(SSH_HOST) "mkdir -p $(REMOTE_DIR)"; \
+	scp -P $(SSH_PORT) -o StrictHostKeyChecking=accept-new dist/frontend.tar.gz $(SSH_USER)@$(SSH_HOST):$(REMOTE_DIR)/; \
+	echo "Uploaded frontend package to $(SSH_USER)@$(SSH_HOST):$(REMOTE_DIR)"
+
+deploy: package upload
+
+# 解包并更新远程后端
+deploy-backend: package-backend upload-backend
+	@set -e; \
+	SSH_CMD="ssh -p $(SSH_PORT) -o StrictHostKeyChecking=accept-new"; \
+	$$SSH_CMD $(SSH_USER)@$(SSH_HOST) "mkdir -p $(REMOTE_DIR)/backend && tar -xzf $(REMOTE_DIR)/backend.tar.gz -C $(REMOTE_DIR)/backend"; \
+	echo "Remote backend updated: $(REMOTE_DIR)/backend"
+
+# 解包并更新远程前端
+deploy-frontend: package-frontend upload-frontend
+	@set -e; \
+	SSH_CMD="ssh -p $(SSH_PORT) -o StrictHostKeyChecking=accept-new"; \
+	$$SSH_CMD $(SSH_USER)@$(SSH_HOST) "mkdir -p $(REMOTE_DIR)/frontend && tar -xzf $(REMOTE_DIR)/frontend.tar.gz -C $(REMOTE_DIR)/frontend"; \
+	echo "Remote frontend updated: $(REMOTE_DIR)/frontend"
+
+# 仅更新前端静态文件（public + .next/static）
+deploy-static: build-frontend
+	@set -e; \
+	mkdir -p dist; \
+	COPYFILE_DISABLE=1 tar -czf dist/frontend-static.tar.gz -C dist/frontend public .next/static; \
+	SSH_CMD="ssh -p $(SSH_PORT) -o StrictHostKeyChecking=accept-new"; \
+	scp -P $(SSH_PORT) -o StrictHostKeyChecking=accept-new dist/frontend-static.tar.gz $(SSH_USER)@$(SSH_HOST):$(REMOTE_DIR)/; \
+	$$SSH_CMD $(SSH_USER)@$(SSH_HOST) "mkdir -p $(REMOTE_DIR)/frontend && tar -xzf $(REMOTE_DIR)/frontend-static.tar.gz -C $(REMOTE_DIR)/frontend"; \
+	echo "Remote frontend static updated"
+
+# 远程执行 migrations
+remote-migrate:
+	@set -e; \
+	SSH_CMD="ssh -p $(SSH_PORT) -o StrictHostKeyChecking=accept-new"; \
+	$$SSH_CMD $(SSH_USER)@$(SSH_HOST) "set -e; \
+	if [ -z \"$(REMOTE_DB_PASS)\" ]; then \
+		MYSQL=\"mysql -h $(REMOTE_DB_HOST) -P $(REMOTE_DB_PORT) -u $(REMOTE_DB_USER)\"; \
+	else \
+		MYSQL=\"mysql -h $(REMOTE_DB_HOST) -P $(REMOTE_DB_PORT) -u $(REMOTE_DB_USER) -p$(REMOTE_DB_PASS)\"; \
+	fi; \
+	$$MYSQL $(REMOTE_DB_NAME) -e \"CREATE TABLE IF NOT EXISTS schema_migrations (filename VARCHAR(255) PRIMARY KEY, applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)\"; \
+	for file in $$(ls -1 $(REMOTE_DIR)/backend/migrations/*.sql 2>/dev/null | sort); do \
+		name=$$(basename $$file); \
+		applied=$$($$MYSQL -N -s $(REMOTE_DB_NAME) -e \"SELECT COUNT(1) FROM schema_migrations WHERE filename='$$name'\"); \
+		if [ \"$$applied\" = \"0\" ]; then \
+			echo \"Applying migration: $$name\"; \
+			$$MYSQL $(REMOTE_DB_NAME) < $$file; \
+			$$MYSQL $(REMOTE_DB_NAME) -e \"INSERT INTO schema_migrations(filename) VALUES('$$name')\"; \
+		else \
+			echo \"Skip migration (already applied): $$name\"; \
+		fi; \
+	done; \
+	echo \"Remote migrate completed.\""
+
+# 导出本地数据库到 dist/db_dump.sql
+dump-db:
+	@set -e; \
+	mkdir -p dist; \
+	if [ -z "$(DB_PASS)" ]; then \
+		MYSQLDUMP="mysqldump -h $(DB_HOST) -P $(DB_PORT) -u $(DB_USER)"; \
+	else \
+		MYSQLDUMP="mysqldump -h $(DB_HOST) -P $(DB_PORT) -u $(DB_USER) -p$(DB_PASS)"; \
+	fi; \
+	echo "Exporting database $(DB_NAME) to dist/db_dump.sql"; \
+	$$MYSQLDUMP --single-transaction --routines --events --triggers $(DB_NAME) > dist/db_dump.sql; \
+	echo "Database export completed."
+
+# 上传 SQL dump 到远程
+upload-db: dump-db
+	@set -e; \
+	scp -P $(SSH_PORT) -o StrictHostKeyChecking=accept-new dist/db_dump.sql $(SSH_USER)@$(SSH_HOST):$(REMOTE_DIR)/; \
+	echo "Uploaded dist/db_dump.sql to $(SSH_USER)@$(SSH_HOST):$(REMOTE_DIR)"
+
+# 远程导入 SQL dump（会覆盖同名数据库）
+remote-import-db: upload-db
+	@set -e; \
+	SSH_CMD="ssh -p $(SSH_PORT) -o StrictHostKeyChecking=accept-new"; \
+	$$SSH_CMD $(SSH_USER)@$(SSH_HOST) "set -e; \
+	if [ -z \"$(REMOTE_DB_PASS)\" ]; then \
+		MYSQL=\"mysql -h $(REMOTE_DB_HOST) -P $(REMOTE_DB_PORT) -u $(REMOTE_DB_USER)\"; \
+	else \
+		MYSQL=\"mysql -h $(REMOTE_DB_HOST) -P $(REMOTE_DB_PORT) -u $(REMOTE_DB_USER) -p$(REMOTE_DB_PASS)\"; \
+	fi; \
+	echo \"Importing $(REMOTE_DIR)/db_dump.sql into $(REMOTE_DB_NAME)...\"; \
+	$$MYSQL -e \"DROP DATABASE IF EXISTS \`$(REMOTE_DB_NAME)\`; CREATE DATABASE \`$(REMOTE_DB_NAME)\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\"; \
+	$$MYSQL $(REMOTE_DB_NAME) < $(REMOTE_DIR)/db_dump.sql; \
+	echo \"Remote DB import completed.\""
+
+# 一键导出并导入远程数据库
+deploy-db: remote-import-db
 
 # 根据 migrations 目录顺序执行未应用的迁移（仅执行一次）
 # Example: make migrate DB_HOST=127.0.0.1 DB_PORT=3306 DB_USER=root DB_PASS=123456 DB_NAME=tour_guide MIGRATIONS_DIR=backend/migrations

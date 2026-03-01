@@ -5,7 +5,6 @@ import (
 	"log"
 	"tour-guide-blog-backend/api/routers"
 	"tour-guide-blog-backend/internal/dao"
-	"tour-guide-blog-backend/internal/seed"
 
 	"github.com/spf13/viper"
 )
@@ -22,7 +21,7 @@ func main() {
 	dao.InitDB(dsn)
 
 	// 初始化数据
-	seed.Seed()
+	// seed.Seed()
 
 	// 初始化路由
 	r := routers.InitRouter()
