@@ -29,7 +29,7 @@ export default function AdminSidebar() {
   const { logout } = useAuth();
 
   return (
-    <div className="w-20 md:w-64 text-white flex flex-col min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-blue-950 shadow-2xl">
+    <div className="w-20 md:w-64 text-white flex flex-col min-h-screen sticky top-0 h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-blue-950 shadow-2xl">
       <div className="p-6 border-b border-white/10">
         <h1 className="text-xl font-semibold tracking-wide items-center gap-2 hidden md:flex">
           <User className="text-sky-400" />

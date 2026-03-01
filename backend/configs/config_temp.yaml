@@ -1,6 +1,15 @@
 server:
   port: 8080
 
+admin:
+  username: "admin"
+  # 可以填写明文密码，或使用 bcrypt hash
+  password: "admin"
+
+jwt:
+  secret: "change-me"
+  expire_hours: 24
+
 database:
   dsn: "root:root/@tcp(127.0.0.1:3306)/tour_guide?charset=utf8mb4&parseTime=True&loc=Local"
 

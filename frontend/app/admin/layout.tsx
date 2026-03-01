@@ -27,7 +27,7 @@ export default function AdminLayout({
   return (
     <div className="admin-shell flex min-h-screen">
       <AdminSidebar />
-      <main className="flex-1 px-4 py-8 md:px-8 overflow-y-auto max-h-screen">
+      <main className="flex-1 px-4 py-8 md:px-8">
         <div className="max-w-6xl mx-auto fade-up">
           {children}
         </div>

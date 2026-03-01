@@ -3,6 +3,7 @@ package middleware
 import (
 	"net/http"
 	"strings"
+	"tour-guide-blog-backend/internal/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,13 +17,21 @@ func Auth() gin.HandlerFunc {
 			return
 		}
 
-		// 简单校验：这里可以改为 JWT 校验
-		if !strings.HasPrefix(token, "Bearer ") || strings.TrimPrefix(token, "Bearer ") != "mock-token" {
+		if !strings.HasPrefix(token, "Bearer ") {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			c.Abort()
 			return
 		}
 
+		tokenStr := strings.TrimSpace(strings.TrimPrefix(token, "Bearer "))
+		claims, err := service.Auth.ParseToken(tokenStr)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.Abort()
+			return
+		}
+
+		c.Set("admin_username", claims.Subject)
 		c.Next()
 	}
 }
