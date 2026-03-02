@@ -184,16 +184,16 @@ remote-migrate:
 	else \
 		MYSQL=\"mysql -h $(REMOTE_DB_HOST) -P $(REMOTE_DB_PORT) -u $(REMOTE_DB_USER) -p$(REMOTE_DB_PASS)\"; \
 	fi; \
-	$$MYSQL $(REMOTE_DB_NAME) -e \"CREATE TABLE IF NOT EXISTS schema_migrations (filename VARCHAR(255) PRIMARY KEY, applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)\"; \
-	for file in $$(ls -1 $(REMOTE_DIR)/backend/migrations/*.sql 2>/dev/null | sort); do \
-		name=$$(basename $$file); \
-		applied=$$($$MYSQL -N -s $(REMOTE_DB_NAME) -e \"SELECT COUNT(1) FROM schema_migrations WHERE filename='$$name'\"); \
-		if [ \"$$applied\" = \"0\" ]; then \
-			echo \"Applying migration: $$name\"; \
-			$$MYSQL $(REMOTE_DB_NAME) < $$file; \
-			$$MYSQL $(REMOTE_DB_NAME) -e \"INSERT INTO schema_migrations(filename) VALUES('$$name')\"; \
+	\$$MYSQL $(REMOTE_DB_NAME) -e \"CREATE TABLE IF NOT EXISTS schema_migrations (filename VARCHAR(255) PRIMARY KEY, applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)\"; \
+	for file in \$$([ -d $(REMOTE_DIR)/backend/migrations ] && ls -1 $(REMOTE_DIR)/backend/migrations/*.sql 2>/dev/null | sort); do \
+		name=\$$(basename \$$file); \
+		applied=\$$(\$$MYSQL -N -s $(REMOTE_DB_NAME) -e \"SELECT COUNT(1) FROM schema_migrations WHERE filename='\$$name'\"); \
+		if [ \"\$$applied\" = \"0\" ]; then \
+			echo \"Applying migration: \$$name\"; \
+			\$$MYSQL $(REMOTE_DB_NAME) < \$$file; \
+			\$$MYSQL $(REMOTE_DB_NAME) -e \"INSERT INTO schema_migrations(filename) VALUES('\$$name')\"; \
 		else \
-			echo \"Skip migration (already applied): $$name\"; \
+			echo \"Skip migration (already applied): \$$name\"; \
 		fi; \
 	done; \
 	echo \"Remote migrate completed.\""
@@ -238,23 +238,22 @@ remote-import-data: upload-data
 	@set -e; \
 	SSH_CMD="ssh -p $(SSH_PORT) -o StrictHostKeyChecking=accept-new"; \
 	$$SSH_CMD $(SSH_USER)@$(SSH_HOST) "set -e; \
-	tmp_dir=/tmp/tour_guide_data_$$(date +%Y%m%d_%H%M%S); \
-	mkdir -p $$tmp_dir; \
-	tar -xzf $(REMOTE_DIR)/data.tar.gz -C $$tmp_dir; \
+	tmp_dir=/tmp/tour_guide_data_\$$(date +%Y%m%d_%H%M%S); \
+	mkdir -p \$$tmp_dir; \
+	tar -xzf $(REMOTE_DIR)/data.tar.gz -C \$$tmp_dir; \
 	if [ -z \"$(REMOTE_DB_PASS)\" ]; then \
 		MYSQL=\"mysql -h $(REMOTE_DB_HOST) -P $(REMOTE_DB_PORT) -u $(REMOTE_DB_USER)\"; \
 	else \
 		MYSQL=\"mysql -h $(REMOTE_DB_HOST) -P $(REMOTE_DB_PORT) -u $(REMOTE_DB_USER) -p$(REMOTE_DB_PASS)\"; \
 	fi; \
 	echo \"Importing DB into $(REMOTE_DB_NAME)...\"; \
-	$$MYSQL -e \"DROP DATABASE IF EXISTS \`$(REMOTE_DB_NAME)\`; CREATE DATABASE \`$(REMOTE_DB_NAME)\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\"; \
-	$$MYSQL $(REMOTE_DB_NAME) < $$tmp_dir/db_dump.sql; \
+	\$$MYSQL $(REMOTE_DB_NAME) < \$$tmp_dir/db_dump.sql; \
 	mkdir -p $(REMOTE_DIR)/backend/uploads; \
-	if [ -d $$tmp_dir/uploads ]; then \
+	if [ -d \$$tmp_dir/uploads ]; then \
 		rm -rf $(REMOTE_DIR)/backend/uploads/*; \
-		cp -a $$tmp_dir/uploads/. $(REMOTE_DIR)/backend/uploads/; \
+		cp -a \$$tmp_dir/uploads/. $(REMOTE_DIR)/backend/uploads/; \
 	fi; \
-	rm -rf $$tmp_dir; \
+	rm -rf \$$tmp_dir; \
 	systemctl restart $(BACKEND_SERVICE); \
 	echo \"Remote data import completed and backend restarted.\""
 
@@ -271,8 +270,8 @@ remote-import-db: upload-db
 		MYSQL=\"mysql -h $(REMOTE_DB_HOST) -P $(REMOTE_DB_PORT) -u $(REMOTE_DB_USER) -p$(REMOTE_DB_PASS)\"; \
 	fi; \
 	echo \"Importing $(REMOTE_DIR)/db_dump.sql into $(REMOTE_DB_NAME)...\"; \
-	$$MYSQL -e \"DROP DATABASE IF EXISTS \`$(REMOTE_DB_NAME)\`; CREATE DATABASE \`$(REMOTE_DB_NAME)\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\"; \
-	$$MYSQL $(REMOTE_DB_NAME) < $(REMOTE_DIR)/db_dump.sql; \
+	\$$MYSQL -e \"DROP DATABASE IF EXISTS \`$(REMOTE_DB_NAME)\`; CREATE DATABASE \`$(REMOTE_DB_NAME)\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\"; \
+	\$$MYSQL $(REMOTE_DB_NAME) < $(REMOTE_DIR)/db_dump.sql; \
 	systemctl restart $(BACKEND_SERVICE); \
 	echo \"Remote DB import completed.\""
 
