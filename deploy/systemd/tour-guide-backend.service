@@ -1,14 +1,20 @@
 [Unit]
 Description=Tour Guide Backend
-After=network.target
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 Type=simple
 WorkingDirectory=/opt/backend
+EnvironmentFile=-/etc/default/tour-guide-backend
+ExecStartPre=/usr/bin/test -f /opt/backend/configs/config.yaml
 ExecStart=/opt/backend/tour-guide-backend
 Restart=always
-RestartSec=3
+RestartSec=5
 Environment=GIN_MODE=release
+StandardOutput=journal
+StandardError=journal
+LimitNOFILE=65535
 
 [Install]
 WantedBy=multi-user.target

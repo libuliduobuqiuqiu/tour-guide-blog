@@ -17,6 +17,9 @@ SSH_PORT ?= 22
 REMOTE_DIR ?= /opt
 FRONTEND_PORT ?= 3000
 BACKEND_PORT ?= 8080
+BACKEND_SERVICE ?= tour-guide-backend
+FRONTEND_SERVICE ?= tour-guide-frontend
+SYSTEMD_DIR ?= /etc/systemd/system
 REMOTE_DB_HOST ?= 127.0.0.1
 REMOTE_DB_PORT ?= 3306
 REMOTE_DB_USER ?= root
@@ -24,7 +27,8 @@ REMOTE_DB_PASS ?=
 REMOTE_DB_NAME ?= tour_guide
 
 .PHONY: backend frontend migrate bundle import-bundle build-backend build-frontend package-backend package-frontend package upload \
-	upload-backend upload-frontend deploy deploy-backend deploy-frontend deploy-static remote-migrate dump-db upload-db remote-import-db deploy-db
+	upload-backend upload-frontend deploy deploy-backend deploy-frontend deploy-static remote-migrate dump-db upload-db remote-import-db deploy-db \
+	install-services restart-backend restart-frontend restart-services package-data upload-data remote-import-data deploy-data
 
 # 启动后端服务（开发）Amd环境
 backend:
@@ -58,12 +62,11 @@ build-frontend:
 	@set -e; \
 	echo "Building frontend..."; \
 	cd frontend && NEXT_PUBLIC_API_URL=$(NEXT_PUBLIC_API_URL) npm ci && NEXT_PUBLIC_API_URL=$(NEXT_PUBLIC_API_URL) npm run build && cd ../; \
-	mkdir -p dist/frontend; \
-	cp -a frontend/.next dist/frontend/; \
+	rm -rf dist/frontend; \
+	mkdir -p dist/frontend/.next; \
+	cp -a frontend/.next/standalone/. dist/frontend/; \
+	cp -a frontend/.next/static dist/frontend/.next/; \
 	cp -a frontend/public dist/frontend/; \
-	cp -a frontend/package.json dist/frontend/; \
-	if [ -f frontend/package-lock.json ]; then cp -a frontend/package-lock.json dist/frontend/; fi; \
-	if [ -f frontend/next.config.js ]; then cp -a frontend/next.config.js dist/frontend/; fi; \
 	echo "Frontend build output: dist/frontend"
 
 package-backend: build-backend
@@ -119,15 +122,24 @@ deploy: package upload
 deploy-backend: package-backend upload-backend
 	@set -e; \
 	SSH_CMD="ssh -p $(SSH_PORT) -o StrictHostKeyChecking=accept-new"; \
-	$$SSH_CMD $(SSH_USER)@$(SSH_HOST) "mkdir -p $(REMOTE_DIR)/backend && tar -xzf $(REMOTE_DIR)/backend.tar.gz -C $(REMOTE_DIR)/backend"; \
-	echo "Remote backend updated: $(REMOTE_DIR)/backend"
+	$$SSH_CMD $(SSH_USER)@$(SSH_HOST) "set -e; \
+	mkdir -p $(REMOTE_DIR)/backend; \
+	tar -xzf $(REMOTE_DIR)/backend.tar.gz -C $(REMOTE_DIR)/backend; \
+	systemctl restart $(BACKEND_SERVICE); \
+	systemctl --no-pager --full status $(BACKEND_SERVICE) | head -n 20"; \
+	echo "Remote backend updated and restarted: $(REMOTE_DIR)/backend"
 
 # 解包并更新远程前端
 deploy-frontend: package-frontend upload-frontend
 	@set -e; \
 	SSH_CMD="ssh -p $(SSH_PORT) -o StrictHostKeyChecking=accept-new"; \
-	$$SSH_CMD $(SSH_USER)@$(SSH_HOST) "mkdir -p $(REMOTE_DIR)/frontend && tar -xzf $(REMOTE_DIR)/frontend.tar.gz -C $(REMOTE_DIR)/frontend"; \
-	echo "Remote frontend updated: $(REMOTE_DIR)/frontend"
+	$$SSH_CMD $(SSH_USER)@$(SSH_HOST) "set -e; \
+	rm -rf $(REMOTE_DIR)/frontend; \
+	mkdir -p $(REMOTE_DIR)/frontend; \
+	tar -xzf $(REMOTE_DIR)/frontend.tar.gz -C $(REMOTE_DIR)/frontend; \
+	systemctl restart $(FRONTEND_SERVICE); \
+	systemctl --no-pager --full status $(FRONTEND_SERVICE) | head -n 20"; \
+	echo "Remote frontend updated and restarted: $(REMOTE_DIR)/frontend"
 
 # 仅更新前端静态文件（public + .next/static）
 deploy-static: build-frontend
@@ -138,6 +150,29 @@ deploy-static: build-frontend
 	scp -P $(SSH_PORT) -o StrictHostKeyChecking=accept-new dist/frontend-static.tar.gz $(SSH_USER)@$(SSH_HOST):$(REMOTE_DIR)/; \
 	$$SSH_CMD $(SSH_USER)@$(SSH_HOST) "mkdir -p $(REMOTE_DIR)/frontend && tar -xzf $(REMOTE_DIR)/frontend-static.tar.gz -C $(REMOTE_DIR)/frontend"; \
 	echo "Remote frontend static updated"
+
+# 安装/更新远程 systemd service，并启用开机自启
+install-services:
+	@set -e; \
+	SSH_CMD="ssh -p $(SSH_PORT) -o StrictHostKeyChecking=accept-new"; \
+	SCP_CMD="scp -P $(SSH_PORT) -o StrictHostKeyChecking=accept-new"; \
+	$$SCP_CMD deploy/systemd/tour-guide-backend.service deploy/systemd/tour-guide-frontend.service $(SSH_USER)@$(SSH_HOST):$(REMOTE_DIR)/; \
+	$$SSH_CMD $(SSH_USER)@$(SSH_HOST) "set -e; \
+	cp $(REMOTE_DIR)/tour-guide-backend.service $(SYSTEMD_DIR)/$(BACKEND_SERVICE).service; \
+	cp $(REMOTE_DIR)/tour-guide-frontend.service $(SYSTEMD_DIR)/$(FRONTEND_SERVICE).service; \
+	systemctl daemon-reload; \
+	systemctl enable $(BACKEND_SERVICE) $(FRONTEND_SERVICE)"; \
+	echo "Systemd services installed: $(BACKEND_SERVICE), $(FRONTEND_SERVICE)"
+
+restart-backend:
+	@set -e; \
+	ssh -p $(SSH_PORT) -o StrictHostKeyChecking=accept-new $(SSH_USER)@$(SSH_HOST) "systemctl restart $(BACKEND_SERVICE) && systemctl --no-pager --full status $(BACKEND_SERVICE) | head -n 20"
+
+restart-frontend:
+	@set -e; \
+	ssh -p $(SSH_PORT) -o StrictHostKeyChecking=accept-new $(SSH_USER)@$(SSH_HOST) "systemctl restart $(FRONTEND_SERVICE) && systemctl --no-pager --full status $(FRONTEND_SERVICE) | head -n 20"
+
+restart-services: restart-backend restart-frontend
 
 # 远程执行 migrations
 remote-migrate:
@@ -182,6 +217,49 @@ upload-db: dump-db
 	scp -P $(SSH_PORT) -o StrictHostKeyChecking=accept-new dist/db_dump.sql $(SSH_USER)@$(SSH_HOST):$(REMOTE_DIR)/; \
 	echo "Uploaded dist/db_dump.sql to $(SSH_USER)@$(SSH_HOST):$(REMOTE_DIR)"
 
+# 打包本地静态文件（uploads）+ 数据库记录（db_dump.sql）
+package-data: dump-db
+	@set -e; \
+	rm -rf dist/data && mkdir -p dist/data; \
+	cp -a dist/db_dump.sql dist/data/; \
+	if [ -d "$(UPLOADS_DIR)" ]; then \
+		mkdir -p dist/data/uploads; \
+		cp -a "$(UPLOADS_DIR)/." dist/data/uploads/; \
+	fi; \
+	COPYFILE_DISABLE=1 tar -czf dist/data.tar.gz -C dist/data .; \
+	echo "Created dist/data.tar.gz"
+
+upload-data: package-data
+	@set -e; \
+	scp -P $(SSH_PORT) -o StrictHostKeyChecking=accept-new dist/data.tar.gz $(SSH_USER)@$(SSH_HOST):$(REMOTE_DIR)/; \
+	echo "Uploaded dist/data.tar.gz to $(SSH_USER)@$(SSH_HOST):$(REMOTE_DIR)"
+
+remote-import-data: upload-data
+	@set -e; \
+	SSH_CMD="ssh -p $(SSH_PORT) -o StrictHostKeyChecking=accept-new"; \
+	$$SSH_CMD $(SSH_USER)@$(SSH_HOST) "set -e; \
+	tmp_dir=/tmp/tour_guide_data_$$(date +%Y%m%d_%H%M%S); \
+	mkdir -p $$tmp_dir; \
+	tar -xzf $(REMOTE_DIR)/data.tar.gz -C $$tmp_dir; \
+	if [ -z \"$(REMOTE_DB_PASS)\" ]; then \
+		MYSQL=\"mysql -h $(REMOTE_DB_HOST) -P $(REMOTE_DB_PORT) -u $(REMOTE_DB_USER)\"; \
+	else \
+		MYSQL=\"mysql -h $(REMOTE_DB_HOST) -P $(REMOTE_DB_PORT) -u $(REMOTE_DB_USER) -p$(REMOTE_DB_PASS)\"; \
+	fi; \
+	echo \"Importing DB into $(REMOTE_DB_NAME)...\"; \
+	$$MYSQL -e \"DROP DATABASE IF EXISTS \`$(REMOTE_DB_NAME)\`; CREATE DATABASE \`$(REMOTE_DB_NAME)\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\"; \
+	$$MYSQL $(REMOTE_DB_NAME) < $$tmp_dir/db_dump.sql; \
+	mkdir -p $(REMOTE_DIR)/backend/uploads; \
+	if [ -d $$tmp_dir/uploads ]; then \
+		rm -rf $(REMOTE_DIR)/backend/uploads/*; \
+		cp -a $$tmp_dir/uploads/. $(REMOTE_DIR)/backend/uploads/; \
+	fi; \
+	rm -rf $$tmp_dir; \
+	systemctl restart $(BACKEND_SERVICE); \
+	echo \"Remote data import completed and backend restarted.\""
+
+deploy-data: remote-import-data
+
 # 远程导入 SQL dump（会覆盖同名数据库）
 remote-import-db: upload-db
 	@set -e; \
@@ -195,6 +273,7 @@ remote-import-db: upload-db
 	echo \"Importing $(REMOTE_DIR)/db_dump.sql into $(REMOTE_DB_NAME)...\"; \
 	$$MYSQL -e \"DROP DATABASE IF EXISTS \`$(REMOTE_DB_NAME)\`; CREATE DATABASE \`$(REMOTE_DB_NAME)\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\"; \
 	$$MYSQL $(REMOTE_DB_NAME) < $(REMOTE_DIR)/db_dump.sql; \
+	systemctl restart $(BACKEND_SERVICE); \
 	echo \"Remote DB import completed.\""
 
 # 一键导出并导入远程数据库

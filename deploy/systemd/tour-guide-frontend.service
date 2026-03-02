@@ -1,14 +1,21 @@
 [Unit]
 Description=Tour Guide Frontend
-After=network.target
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 Type=simple
 WorkingDirectory=/opt/frontend
-ExecStart=/usr/bin/node /opt/frontend/node_modules/next/dist/bin/next start -p 3000
+EnvironmentFile=-/etc/default/tour-guide-frontend
+ExecStartPre=/usr/bin/test -f /opt/frontend/server.js
+ExecStart=/usr/bin/node /opt/frontend/server.js
 Restart=always
-RestartSec=3
+RestartSec=5
 Environment=NODE_ENV=production
+Environment=PORT=3000
+StandardOutput=journal
+StandardError=journal
+LimitNOFILE=65535
 
 [Install]
 WantedBy=multi-user.target
