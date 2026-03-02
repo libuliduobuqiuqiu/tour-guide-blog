@@ -11,6 +11,7 @@ export default function SettingsAdmin() {
   const defaultSettings = {
     home_hero_title: 'Professional Tour Guide in Chongqing & Chengdu',
     home_hero_subtitle: 'Discover the hidden gems of Southwest China with Janet.',
+    home_static_image: '',
     about_content: '',
     about_image: '',
     contact_email: 'janet@example.com',
@@ -45,6 +46,19 @@ export default function SettingsAdmin() {
     try {
       const url = await uploadAdminImage(file);
       setSettings((prev) => ({ ...prev, about_image: url }));
+    } catch (err) {
+      alert('Failed to upload image');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleHomeStaticImageUpload = async (file?: File | null) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadAdminImage(file);
+      setSettings((prev) => ({ ...prev, home_static_image: url }));
     } catch (err) {
       alert('Failed to upload image');
     } finally {
@@ -101,6 +115,35 @@ export default function SettingsAdmin() {
                 onChange={(e) => setSettings({ ...settings, home_hero_subtitle: e.target.value })}
                 className="w-full px-4 py-2"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Home Static Image</label>
+              <div className="flex flex-col md:flex-row gap-4 md:items-center">
+                <input
+                  type="file"
+                  accept="image/*"
+                  disabled={uploading}
+                  onChange={(e) => handleHomeStaticImageUpload(e.target.files?.[0])}
+                  className="w-full md:w-auto"
+                />
+                <input
+                  type="text"
+                  value={settings.home_static_image}
+                  onChange={(e) => setSettings({ ...settings, home_static_image: e.target.value })}
+                  placeholder="Or paste image URL"
+                  className="flex-1 px-4 py-2"
+                />
+              </div>
+              {settings.home_static_image && (
+                <div className="mt-4">
+                  <img
+                    src={settings.home_static_image.startsWith('http') ? settings.home_static_image : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${settings.home_static_image.startsWith('/') ? '' : '/'}${settings.home_static_image}`}
+                    alt="Home static preview"
+                    className="w-full max-w-md h-44 rounded-2xl object-cover border"
+                  />
+                </div>
+              )}
+              <p className="text-xs text-gray-500 mt-2">Used as homepage hero image when no carousel image is configured.</p>
             </div>
           </div>
         </section>

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { fetchTours, fetchCarousels, fetchPosts, fetchConfig } from '@/lib/api';
+import { fetchTours, fetchPosts, fetchConfig } from '@/lib/api';
 import { formatDate } from '@/lib/format';
 import HeroCarousel from '@/components/HeroCarousel';
 import Reveal from '@/components/Reveal';
@@ -23,22 +23,20 @@ interface Post {
 export default async function Home() {
   let tours: Tour[] = [];
   let posts: Post[] = [];
-  let carousels = [];
   let settings = {
     home_hero_title: 'Professional Tour Guide in Guangzhou',
-    home_hero_subtitle: 'Explore the Pearl River and vibrant Cantonese culture.'
+    home_hero_subtitle: 'Explore the Pearl River and vibrant Cantonese culture.',
+    home_static_image: ''
   };
 
   try {
-    const [toursData, carouselsData, postsData, settingsRes] = await Promise.all([
+    const [toursData, postsData, settingsRes] = await Promise.all([
       fetchTours(),
-      fetchCarousels().catch(() => []),
       fetchPosts().catch(() => []),
       fetchConfig('site_settings').catch(() => null)
     ]);
     tours = toursData.slice(0, 3);
     posts = postsData.slice(0, 3);
-    if (carouselsData) carousels = carouselsData;
     if (settingsRes) settings = settingsRes
   } catch (error) {
     console.error('Failed to fetch data:', error);
@@ -49,10 +47,10 @@ export default async function Home() {
     <div className="flex flex-col items-center">
       {/* Hero Section */}
       <HeroCarousel 
-        items={carousels} 
         defaultSettings={{
           title: settings.home_hero_title,
-          subtitle: settings.home_hero_subtitle
+          subtitle: settings.home_hero_subtitle,
+          image: settings.home_static_image
         }} 
       />
 
