@@ -19,9 +19,13 @@ export default function HeroCarousel({ defaultSettings }: HeroCarouselProps) {
     if (url.startsWith('http')) return url;
     if (url.startsWith('/uploads')) return `${API_BASE_URL}${url}`;
     if (url.startsWith('uploads/')) return `${API_BASE_URL}/${url}`;
-    return url;
+    const normalizedPath = url.startsWith('/') ? url : `/${url}`;
+    return `${API_BASE_URL}${normalizedPath}`;
   };
-  const heroImage = defaultSettings.image || '/hero.jpg';
+
+  const heroImage = defaultSettings.image
+    ? normalizeImageUrl(defaultSettings.image)
+    : 'https://images.unsplash.com/photo-1535598745644-bc791f07d6a5?auto=format&fit=crop&w=1800&q=80';
 
   return (
     <section
@@ -30,7 +34,7 @@ export default function HeroCarousel({ defaultSettings }: HeroCarouselProps) {
       <div className="w-full h-[66vh] max-h-[720px] min-h-[460px] md:min-h-[540px] relative">
         {heroImage && (
           <Image
-            src={normalizeImageUrl(heroImage)}
+            src={heroImage}
             alt={defaultSettings.title}
             fill
             unoptimized
