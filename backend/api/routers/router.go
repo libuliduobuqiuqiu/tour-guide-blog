@@ -7,8 +7,12 @@ import (
 	"github.com/spf13/viper"
 )
 
-func InitRouter() *gin.Engine {
-	r := gin.Default()
+func InitRouter(debug bool) *gin.Engine {
+	logWriter := initHTTPLogWriter(debug)
+	r := gin.New()
+	r.Use(gin.LoggerWithWriter(logWriter))
+	r.Use(gin.RecoveryWithWriter(logWriter))
+	r.Use(middleware.ErrorStackLogger(logWriter))
 
 	// 静态文件服务
 	r.Static("/uploads", viper.GetString("upload.path"))

@@ -7,13 +7,19 @@ import (
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var DB *gorm.DB
 
-func InitDB(dsn string) {
+func InitDB(dsn string, debug bool) {
 	var err error
-	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	cfg := &gorm.Config{}
+	if debug {
+		cfg.Logger = logger.Default.LogMode(logger.Info)
+	}
+
+	DB, err = gorm.Open(mysql.Open(dsn), cfg)
 	if err != nil {
 		log.Fatalf("failed to connect database: %v", err)
 	}

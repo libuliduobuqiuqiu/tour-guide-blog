@@ -3,3 +3,4 @@ dist/
 frontend/.next/
 frontend/node_modules/
 backend/uploads/
+backend/logs/

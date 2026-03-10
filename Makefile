@@ -106,7 +106,7 @@ mac:
 	go env -w CGO_ENABLED=0
 	go env -w GOOS=darwin
 	go env -w GOARCH=arm64
-	cd backend && go run ./cmd/main.go
+	cd backend && go run ./cmd/main.go -d
 
 # 启动前端开发服务
 frontend:
