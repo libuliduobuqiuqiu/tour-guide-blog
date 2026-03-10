@@ -93,6 +93,7 @@ make install-services \
 核心行为：
 - `80` 端口接入
 - 反向代理到 `127.0.0.1:3000`（frontend service）
+- `/api/` 与 `/uploads/` 反向代理到 `127.0.0.1:8080`（backend service）
 - 透传 `X-Forwarded-*`
 - 对 `/_next/static/` 开缓存头
 
@@ -139,6 +140,8 @@ make deploy-frontend \
   SSH_USER=root \
   REMOTE_DIR=/opt
 ```
+
+> 提示：生产构建建议不要设置 `NEXT_PUBLIC_API_URL`，让前端使用相对路径（`/api`、`/uploads`），由 Nginx 代理到后端。
 
 ## 5. 持续更新流程（推荐）
 
@@ -206,6 +209,16 @@ curl -I http://127.0.0.1
 journalctl -u tour-guide-backend -n 100 --no-pager
 journalctl -u tour-guide-frontend -n 100 --no-pager
 ```
+
+## 7.1 SSR 访问后端的环境变量
+
+前端 SSR 请求不会经过浏览器，因此需要在生产环境设置：
+
+- `API_URL=https://<你的域名>`（推荐）
+- 可选：`NEXT_PUBLIC_API_URL=https://<你的域名>`（仅当你希望构建时写死域名）
+
+可通过 systemd 环境变量文件 `/etc/default/tour-guide-frontend` 配置，参考：
+`deploy/systemd/tour-guide-frontend.env.example`
 
 ## 8. 回滚建议
 
