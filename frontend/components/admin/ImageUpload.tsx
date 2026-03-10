@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo } from 'react';
 import { Upload, X } from 'lucide-react';
+import { withPublicOrigin } from '@/lib/url';
 
 interface ImageUploadProps {
   value?: string;
@@ -24,9 +25,7 @@ export default function ImageUpload({ value, file, onFileChange, className = '' 
   const previewUrl = useMemo(() => {
     if (localPreviewUrl) return localPreviewUrl;
     if (!value) return '';
-    if (value.startsWith('http')) return value;
-    const host = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-    return `${host}${value.startsWith('/') ? '' : '/'}${value}`;
+    return withPublicOrigin(value);
   }, [localPreviewUrl, value]);
 
   const label = file ? 'Change Image' : 'Select Image';

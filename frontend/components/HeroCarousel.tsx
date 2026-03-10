@@ -2,6 +2,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import Reveal from '@/components/Reveal';
+import { withPublicOrigin } from '@/lib/url';
 
 interface HeroCarouselProps {
   defaultSettings: {
@@ -12,15 +13,9 @@ interface HeroCarouselProps {
 }
 
 export default function HeroCarousel({ defaultSettings }: HeroCarouselProps) {
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-
   const normalizeImageUrl = (url: string) => {
     if (!url) return '';
-    if (url.startsWith('http')) return url;
-    if (url.startsWith('/uploads')) return `${API_BASE_URL}${url}`;
-    if (url.startsWith('uploads/')) return `${API_BASE_URL}/${url}`;
-    const normalizedPath = url.startsWith('/') ? url : `/${url}`;
-    return `${API_BASE_URL}${normalizedPath}`;
+    return withPublicOrigin(url);
   };
 
   const heroImage = defaultSettings.image

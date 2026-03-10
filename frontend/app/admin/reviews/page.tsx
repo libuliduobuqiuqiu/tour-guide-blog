@@ -5,6 +5,7 @@ import api from '@/lib/axios';
 import { Plus, Trash2, Edit2, Star, Wand2 } from 'lucide-react';
 import ImageUpload from '@/components/admin/ImageUpload';
 import { uploadAdminImage } from '@/lib/admin-upload';
+import { withPublicOrigin } from '@/lib/url';
 
 interface Review {
   id: number;
@@ -19,8 +20,6 @@ interface Review {
   sort_order: number;
   is_active: boolean;
 }
-
-const HOST = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 function toDateInput(dateValue: string | null | undefined) {
   if (!dateValue) return '';
@@ -276,7 +275,7 @@ export default function ReviewsAdmin() {
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden">
                   {item.avatar ? (
-                    <img src={`${HOST}${item.avatar}`} alt={item.username} className="w-full h-full object-cover" />
+                    <img src={withPublicOrigin(item.avatar)} alt={item.username} className="w-full h-full object-cover" />
                   ) : (
                     <div className="flex items-center justify-center h-full text-gray-500 text-xs">No</div>
                   )}

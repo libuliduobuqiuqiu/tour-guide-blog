@@ -2,6 +2,7 @@ import { fetchPost } from '@/lib/api';
 import { formatDate } from '@/lib/format';
 import { notFound } from 'next/navigation';
 import ContentRenderer from '@/components/ContentRenderer';
+import { withPublicOrigin } from '@/lib/url';
 
 export default async function BlogPostPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -13,11 +14,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
     return notFound();
   }
 
-  const HOST = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
   const coverUrl = post.cover_image
-    ? post.cover_image.startsWith('http')
-      ? post.cover_image
-      : `${HOST}${post.cover_image.startsWith('/') ? '' : '/'}${post.cover_image}`
+    ? withPublicOrigin(post.cover_image)
     : '';
 
   return (

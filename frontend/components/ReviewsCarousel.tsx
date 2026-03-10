@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Star, ChevronLeft, ChevronRight, Quote } from 'lucide-react';
+import { withPublicOrigin } from '@/lib/url';
 
 interface Review {
   id: number;
@@ -48,9 +49,7 @@ export default function ReviewsCarousel({ items }: { items: Review[] }) {
                 {currentItem.avatar ? (
                   <img
                     src={
-                      currentItem.avatar.startsWith('http')
-                        ? currentItem.avatar
-                        : `http://localhost:8080${currentItem.avatar}`
+                      withPublicOrigin(currentItem.avatar)
                     }
                     alt={currentItem.username}
                     className="w-full h-full object-cover"

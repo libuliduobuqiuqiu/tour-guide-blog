@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { withPublicOrigin } from '@/lib/url';
 
 type AboutPayload = {
   name?: string;
@@ -7,7 +8,7 @@ type AboutPayload = {
 };
 
 export default async function About() {
-  const API_HOST = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+  const API_HOST = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'http://127.0.0.1:8080';
   const API_BASE_URL = API_HOST.endsWith('/api') ? API_HOST : `${API_HOST}/api`;
   let about: AboutPayload = {
     name: 'Janet',
@@ -26,9 +27,7 @@ export default async function About() {
   }
 
   const imageSrc = about.image
-    ? about.image.startsWith('http')
-      ? about.image
-      : `${API_HOST}${about.image.startsWith('/') ? '' : '/'}${about.image}`
+    ? withPublicOrigin(about.image)
     : 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=900&q=80';
 
   const bioParagraphs = (about.bio || '')

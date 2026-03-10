@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { fetchPosts } from '@/lib/api';
 import { formatDate } from '@/lib/format';
+import { withPublicOrigin } from '@/lib/url';
 
 interface Post {
   id: number;
@@ -25,8 +26,6 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
   } catch (error) {
     console.error('Failed to fetch posts:', error);
   }
-  const HOST = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-
   return (
     <div className="py-12 md:py-16 bg-[linear-gradient(180deg,#f7fbff_0%,#edf5ff_100%)] min-h-[calc(100vh-64px)]">
       <div className="max-w-[1400px] mx-auto px-3 md:px-4 lg:px-6">
@@ -54,7 +53,7 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
                 className="w-full h-56 bg-gray-200 bg-cover bg-center"
                 style={{
                   backgroundImage: post.cover_image
-                    ? `url(${post.cover_image.startsWith('http') ? post.cover_image : `${HOST}${post.cover_image.startsWith('/') ? '' : '/'}${post.cover_image}`})`
+                    ? `url(${withPublicOrigin(post.cover_image)})`
                     : "url('https://images.unsplash.com/photo-1495435229349-e86db7bfa013?auto=format&fit=crop&w=900&q=80')",
                 }}
               >

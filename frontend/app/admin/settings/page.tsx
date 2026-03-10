@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import api from '@/lib/axios';
 import { uploadAdminImage } from '@/lib/admin-upload';
 import { Save, RefreshCcw } from 'lucide-react';
+import { withPublicOrigin } from '@/lib/url';
 
 export default function SettingsAdmin() {
   const [loading, setLoading] = useState(false);
@@ -137,7 +138,7 @@ export default function SettingsAdmin() {
               {settings.home_static_image && (
                 <div className="mt-4">
                   <img
-                    src={settings.home_static_image.startsWith('http') ? settings.home_static_image : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${settings.home_static_image.startsWith('/') ? '' : '/'}${settings.home_static_image}`}
+                    src={withPublicOrigin(settings.home_static_image)}
                     alt="Home static preview"
                     className="w-full max-w-md h-44 rounded-2xl object-cover border"
                   />
@@ -172,7 +173,7 @@ export default function SettingsAdmin() {
               {settings.about_image && (
                 <div className="mt-4">
                   <img
-                    src={settings.about_image.startsWith('http') ? settings.about_image : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${settings.about_image.startsWith('/') ? '' : '/'}${settings.about_image}`}
+                    src={withPublicOrigin(settings.about_image)}
                     alt="About preview"
                     className="w-32 h-32 rounded-2xl object-cover border"
                   />

@@ -5,6 +5,7 @@ import api from '@/lib/axios';
 import { Plus, Trash2, Edit2 } from 'lucide-react';
 import ImageUpload from '@/components/admin/ImageUpload';
 import { uploadAdminImage } from '@/lib/admin-upload';
+import { withPublicOrigin } from '@/lib/url';
 
 interface Carousel {
   id: number;
@@ -170,7 +171,7 @@ export default function CarouselsAdmin() {
           <div key={item.id} className="admin-panel overflow-hidden group">
             <div className="h-48 bg-gray-200 relative">
               {item.image_url ? (
-                <img src={`http://localhost:8080${item.image_url}`} alt={item.title} className="w-full h-full object-cover" />
+                <img src={withPublicOrigin(item.image_url)} alt={item.title} className="w-full h-full object-cover" />
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-400">No Image</div>
               )}

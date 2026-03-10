@@ -3,6 +3,7 @@ import { fetchTours, fetchPosts, fetchConfig } from '@/lib/api';
 import { formatDate } from '@/lib/format';
 import HeroCarousel from '@/components/HeroCarousel';
 import Reveal from '@/components/Reveal';
+import { withPublicOrigin } from '@/lib/url';
 
 interface Tour {
   id: number;
@@ -41,8 +42,6 @@ export default async function Home() {
   } catch (error) {
     console.error('Failed to fetch data:', error);
   }
-  const HOST = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-
   return (
     <div className="flex flex-col items-center">
       {/* Hero Section */}
@@ -73,7 +72,7 @@ export default async function Home() {
                     className="h-52 bg-gray-200 bg-cover bg-center" 
                     style={{ 
                       backgroundImage: tour.cover_image 
-                        ? `url(${tour.cover_image.startsWith('http') ? tour.cover_image : `${HOST}${tour.cover_image.startsWith('/') ? '' : '/'}${tour.cover_image}`})` 
+                        ? `url(${withPublicOrigin(tour.cover_image)})` 
                         : "url('https://images.unsplash.com/photo-1535598745644-bc791f07d6a5?auto=format&fit=crop&w=1200&q=80')" 
                     }}
                   >
@@ -171,7 +170,7 @@ export default async function Home() {
                     className="h-52 bg-gray-200 bg-cover bg-center"
                     style={{
                       backgroundImage: post.cover_image
-                        ? `url(${post.cover_image.startsWith('http') ? post.cover_image : `${HOST}${post.cover_image.startsWith('/') ? '' : '/'}${post.cover_image}`})`
+                        ? `url(${withPublicOrigin(post.cover_image)})`
                         : "url('https://images.unsplash.com/photo-1495435229349-e86db7bfa013?auto=format&fit=crop&w=900&q=80')",
                     }}
                   >

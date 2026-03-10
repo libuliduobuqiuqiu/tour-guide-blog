@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { fetchTours } from '@/lib/api';
+import { withPublicOrigin } from '@/lib/url';
 
 interface Tour {
   id: number;
@@ -16,8 +17,6 @@ export default async function ToursPage() {
   } catch (error) {
     console.error('Failed to fetch tours:', error);
   }
-  const HOST = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-
   return (
     <div className="py-12 md:py-16 bg-[linear-gradient(180deg,#f7fbff_0%,#edf5ff_100%)] min-h-[calc(100vh-64px)]">
       <div className="max-w-[1400px] mx-auto px-3 md:px-4 lg:px-6">
@@ -34,7 +33,7 @@ export default async function ToursPage() {
                 className="h-56 bg-gray-200 bg-cover bg-center" 
                 style={{ 
                   backgroundImage: tour.cover_image 
-                    ? `url(${tour.cover_image.startsWith('http') ? tour.cover_image : `${HOST}${tour.cover_image.startsWith('/') ? '' : '/'}${tour.cover_image}`})` 
+                    ? `url(${withPublicOrigin(tour.cover_image)})` 
                     : "url('https://images.unsplash.com/photo-1527631746610-bca00a040d60?auto=format&fit=crop&w=1200&q=80')" 
                 }}
               >

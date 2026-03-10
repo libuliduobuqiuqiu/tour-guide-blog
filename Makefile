@@ -8,7 +8,9 @@
 
 # ---------- 前端构建配置 ----------
 # Next.js 构建期会注入该变量，前端通过它访问后端 API/静态资源
+# 说明：生产环境建议留空以使用相对路径；本地开发可显式设置为 http://localhost:8080
 NEXT_PUBLIC_API_URL ?= http://localhost:8080
+
 
 # ---------- 本地数据库配置 ----------
 DB_HOST ?= 127.0.0.1
@@ -131,7 +133,7 @@ build-backend:
 build-frontend:
 	@set -e; \
 	echo "Building frontend..."; \
-	cd frontend && NEXT_PUBLIC_API_URL=$(NEXT_PUBLIC_API_URL) npm ci && NEXT_PUBLIC_API_URL=$(NEXT_PUBLIC_API_URL) npm run build && cd ../; \
+	cd frontend &&  npm ci && npm run build && cd ../; \
 	rm -rf dist/frontend; \
 	mkdir -p dist/frontend/.next; \
 	cp -a frontend/.next/standalone/. dist/frontend/; \

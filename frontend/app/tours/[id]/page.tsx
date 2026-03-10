@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import ContentRenderer from '@/components/ContentRenderer';
+import { withPublicOrigin } from '@/lib/url';
 
 export default async function TourDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -19,7 +20,7 @@ export default async function TourDetailPage({ params }: { params: Promise<{ id:
       <div className="w-full h-[320px] md:h-[380px] bg-gray-200 relative overflow-hidden reveal-down">
         {tour.cover_image ? (
           <Image
-            src={(tour.cover_image || '').startsWith('http') ? tour.cover_image : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${tour.cover_image.startsWith('/') ? '' : '/'}${tour.cover_image}`}
+            src={withPublicOrigin(tour.cover_image || '')}
             alt={tour.title}
             fill
             unoptimized
