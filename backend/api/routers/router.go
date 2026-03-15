@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"tour-guide-blog-backend/api/handlers"
 	"tour-guide-blog-backend/api/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -39,6 +40,8 @@ func InitRouter(debug bool) *gin.Engine {
 
 	// 注册各个模块路由
 	RegisterAuthRoutes(admin)
+	// 兼容前端通过 /api/admin/login 访问登录接口
+	api.POST("/admin/login", handlers.Login)
 	RegisterTourRoutes(api, protected)
 	RegisterPostRoutes(api, protected)
 	RegisterContactRoutes(api, protected)
