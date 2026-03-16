@@ -25,7 +25,12 @@ bash scripts/init_ubuntu.sh
 - `mysql-server`
 - `redis-server`
 - `nodejs 20`
+- `logrotate`
 - 常用工具：`curl/git/rsync/zip/unzip` 等
+
+并会自动完成：
+- 创建 `/var/log/tour-guide`
+- 安装前端日志轮转配置到 `/etc/logrotate.d/tour-guide-frontend`
 
 ### 1.2 创建业务目录
 
@@ -55,7 +60,7 @@ cp backend/configs/config_temp.yaml backend/configs/config.yaml
 - 开机自启
 - 失败自动拉起（`Restart=always`）
 - 启动前配置检查（`ExecStartPre`）
-- journald 日志输出
+- 支持前端日志文件输出（通过 `/etc/default/tour-guide-frontend` 配置）
 
 ### 2.1 安装服务文件
 
@@ -85,6 +90,22 @@ make install-services \
 参考模板：
 - `deploy/systemd/tour-guide-backend.env.example`
 - `deploy/systemd/tour-guide-frontend.env.example`
+
+关键日志变量：
+- `FRONTEND_LOG_FILE=/var/log/tour-guide/frontend.log`
+
+### 2.3 前端日志按天轮转（logrotate）
+
+若你已经执行过 `scripts/init_ubuntu.sh`，该配置会自动安装。也可手工检查：
+
+```bash
+logrotate -d /etc/logrotate.d/tour-guide-frontend
+```
+
+该配置会对 `FRONTEND_LOG_FILE` 默认路径（`/var/log/tour-guide/frontend.log`）执行：
+- 每天轮转
+- 文件名日期后缀（`-YYYY-MM-DD`）
+- 最多保留 30 天
 
 ## 3. Nginx 代理配置
 
@@ -207,7 +228,7 @@ systemctl status nginx --no-pager
 curl -I http://127.0.0.1:3000
 curl -I http://127.0.0.1
 journalctl -u tour-guide-backend -n 100 --no-pager
-journalctl -u tour-guide-frontend -n 100 --no-pager
+tail -n 100 /var/log/tour-guide/frontend.log
 ```
 
 ## 7.1 SSR 访问后端的环境变量
@@ -219,6 +240,8 @@ journalctl -u tour-guide-frontend -n 100 --no-pager
 
 可通过 systemd 环境变量文件 `/etc/default/tour-guide-frontend` 配置，参考：
 `deploy/systemd/tour-guide-frontend.env.example`
+
+前端日志文件路径也通过该文件配置（`FRONTEND_LOG_FILE`）。
 
 ## 8. 回滚建议
 

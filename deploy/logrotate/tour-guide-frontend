@@ -1,0 +1,12 @@
+/var/log/tour-guide/frontend.log {
+    daily
+    rotate 30
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+    dateext
+    dateformat -%Y-%m-%d
+    create 0644 root root
+}

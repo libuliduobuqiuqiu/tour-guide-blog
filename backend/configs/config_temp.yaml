@@ -22,3 +22,9 @@ redis:
   addr: "127.0.0.1:6379"
   password: ""
   db: 0
+
+log:
+  # 实际文件名会按天生成：<name>-YYYY-MM-DD<ext>
+  # 例如 /var/log/tour-guide/backend-http-2026-03-16.log
+  http_file: "/var/log/tour-guide/backend-http.log"
+  http_retention_days: 30

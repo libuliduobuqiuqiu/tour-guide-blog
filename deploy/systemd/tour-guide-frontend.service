@@ -8,14 +8,12 @@ Type=simple
 WorkingDirectory=/opt/frontend
 EnvironmentFile=-/etc/default/tour-guide-frontend
 ExecStartPre=/usr/bin/test -f /opt/frontend/server.js
-ExecStart=/usr/bin/node /opt/frontend/server.js
+ExecStart=/bin/bash -lc '/usr/bin/mkdir -p "$$(dirname "$${FRONTEND_LOG_FILE:-/var/log/tour-guide/frontend.log}")" && exec /usr/bin/node /opt/frontend/server.js >> "$${FRONTEND_LOG_FILE:-/var/log/tour-guide/frontend.log}" 2>&1'
 Restart=always
 RestartSec=5
 Environment=NODE_ENV=production
 Environment=PORT=3000
 Environment=API_URL=https://yourdomain.com
-StandardOutput=journal
-StandardError=journal
 LimitNOFILE=65535
 
 [Install]
