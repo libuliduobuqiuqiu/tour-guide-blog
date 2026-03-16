@@ -48,6 +48,7 @@ export default function AdminSidebar() {
             <Link
               key={item.name}
               href={item.href}
+              prefetch={false}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                 isActive 
                   ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-900/40' 

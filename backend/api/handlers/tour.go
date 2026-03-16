@@ -10,7 +10,14 @@ import (
 )
 
 func ListTours(c *gin.Context) {
-	tours, err := service.Tour.List()
+	withContent := c.Query("with_content") == "true"
+	var tours []*model.Tour
+	var err error
+	if withContent {
+		tours, err = service.Tour.List()
+	} else {
+		tours, err = service.Tour.ListLite()
+	}
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

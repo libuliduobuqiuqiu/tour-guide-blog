@@ -7,7 +7,7 @@ const API_BASE_URL = API_HOST
   : '/api';
 
 export async function fetchTours() {
-  const res = await fetch(`${API_BASE_URL}/tours`);
+  const res = await fetch(`${API_BASE_URL}/tours?with_content=false`);
   if (!res.ok) throw new Error('Failed to fetch tours');
   return res.json();
 }
@@ -19,9 +19,9 @@ export async function fetchTour(id: string) {
 }
 
 export async function fetchPosts(tag?: string) {
-  const url = tag 
-    ? `${API_BASE_URL}/posts?tag=${encodeURIComponent(tag)}`
-    : `${API_BASE_URL}/posts`;
+  const query = new URLSearchParams({ with_content: 'false' });
+  if (tag) query.set('tag', tag);
+  const url = `${API_BASE_URL}/posts?${query.toString()}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error('Failed to fetch posts');
   return res.json();
@@ -45,7 +45,7 @@ export async function fetchReviews() {
   return res.json();
 }
 
-export async function sendContactMessage(data: any) {
+export async function sendContactMessage(data: Record<string, unknown>) {
   const res = await fetch(`${API_BASE_URL}/contact`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

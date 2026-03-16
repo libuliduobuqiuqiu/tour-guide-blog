@@ -1,11 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import api from '@/lib/axios';
 import { Plus, Pencil, Trash2, X } from 'lucide-react';
-import Editor from '@/components/admin/Editor';
 import ImageUpload from '@/components/admin/ImageUpload';
 import { uploadAdminImage } from '@/lib/admin-upload';
+
+const LazyEditor = dynamic(() => import('@/components/admin/Editor'), {
+  ssr: false,
+  loading: () => <div className="h-64 rounded-lg border bg-gray-50 animate-pulse" />,
+});
 
 interface Post {
   id: number;
@@ -32,10 +37,22 @@ export default function BlogAdmin() {
 
   const fetchPosts = async () => {
     try {
-      const res = await api.get('/api/posts');
+      const res = await api.get('/api/posts?with_content=false');
       setPosts(res.data);
-    } catch (err) {
+    } catch {
       console.error('Failed to fetch posts');
+    }
+  };
+
+  const handleEdit = async (id: number) => {
+    try {
+      const res = await api.get(`/api/posts/${id}`);
+      setCurrentPost(res.data);
+      setCoverImageFile(null);
+      setIsEditing(true);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load post details';
+      alert(message);
     }
   };
 
@@ -71,7 +88,7 @@ export default function BlogAdmin() {
     try {
       await api.delete(`/api/admin/posts/${id}`);
       fetchPosts();
-    } catch (err) {
+    } catch {
       console.error('Failed to delete post');
     }
   };
@@ -113,11 +130,7 @@ export default function BlogAdmin() {
                 </td>
                 <td className="px-6 py-4 flex gap-3">
                   <button
-                    onClick={() => {
-                      setCurrentPost(post);
-                      setCoverImageFile(null);
-                      setIsEditing(true);
-                    }}
+                    onClick={() => handleEdit(post.id)}
                     className="text-blue-600 hover:text-blue-800"
                   >
                     <Pencil size={18} />
@@ -208,7 +221,7 @@ export default function BlogAdmin() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Content</label>
-              <Editor
+              <LazyEditor
                 value={currentPost.content || ''}
                 onChange={(val) => setCurrentPost({ ...currentPost, content: val })}
               />

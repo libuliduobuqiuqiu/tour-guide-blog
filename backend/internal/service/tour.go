@@ -14,6 +14,21 @@ func (s *TourService) List() ([]*model.Tour, error) {
 	return t.Order(t.CreatedAt.Desc()).Find()
 }
 
+func (s *TourService) ListLite() ([]*model.Tour, error) {
+	t := query.Tour
+	return t.Select(
+		t.ID,
+		t.Title,
+		t.Description,
+		t.CoverImage,
+		t.Price,
+		t.Duration,
+		t.Location,
+		t.CreatedAt,
+		t.UpdatedAt,
+	).Order(t.CreatedAt.Desc()).Find()
+}
+
 func (s *TourService) GetByID(id uint) (*model.Tour, error) {
 	t := query.Tour
 	return t.Where(t.ID.Eq(id)).First()

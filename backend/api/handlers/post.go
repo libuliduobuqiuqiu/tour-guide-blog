@@ -11,7 +11,14 @@ import (
 
 func ListPosts(c *gin.Context) {
 	tag := c.Query("tag")
-	posts, err := service.Post.List(tag)
+	withContent := c.Query("with_content") == "true"
+	var posts []*model.Post
+	var err error
+	if withContent {
+		posts, err = service.Post.List(tag)
+	} else {
+		posts, err = service.Post.ListLite(tag)
+	}
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

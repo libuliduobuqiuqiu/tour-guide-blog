@@ -18,6 +18,25 @@ func (s *PostService) List(tag string) ([]*model.Post, error) {
 	return q.Find()
 }
 
+func (s *PostService) ListLite(tag string) ([]*model.Post, error) {
+	p := query.Post
+	q := p.Select(
+		p.ID,
+		p.Title,
+		p.Summary,
+		p.Author,
+		p.CoverImage,
+		p.Category,
+		p.Tags,
+		p.CreatedAt,
+		p.UpdatedAt,
+	).Order(p.CreatedAt.Desc())
+	if tag != "" {
+		q = q.Where(p.Tags.Like("%" + tag + "%"))
+	}
+	return q.Find()
+}
+
 func (s *PostService) GetByID(id uint) (*model.Post, error) {
 	p := query.Post
 	return p.Where(p.ID.Eq(id)).First()

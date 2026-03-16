@@ -1,11 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import api from '@/lib/axios';
 import { Plus, Pencil, Trash2, X } from 'lucide-react';
-import Editor from '@/components/admin/Editor';
 import ImageUpload from '@/components/admin/ImageUpload';
 import { uploadAdminImage } from '@/lib/admin-upload';
+
+const LazyEditor = dynamic(() => import('@/components/admin/Editor'), {
+  ssr: false,
+  loading: () => <div className="h-64 rounded-lg border bg-gray-50 animate-pulse" />,
+});
 
 interface Tour {
   id: number;
@@ -31,10 +36,22 @@ export default function ToursAdmin() {
 
   const fetchTours = async () => {
     try {
-      const res = await api.get('/api/tours');
+      const res = await api.get('/api/tours?with_content=false');
       setTours(res.data);
-    } catch (err) {
+    } catch {
       console.error('Failed to fetch tours');
+    }
+  };
+
+  const handleEdit = async (id: number) => {
+    try {
+      const res = await api.get(`/api/tours/${id}`);
+      setCurrentTour(res.data);
+      setCoverImageFile(null);
+      setIsEditing(true);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load tour details';
+      alert(message);
     }
   };
 
@@ -70,7 +87,7 @@ export default function ToursAdmin() {
     try {
       await api.delete(`/api/admin/tours/${id}`);
       fetchTours();
-    } catch (err) {
+    } catch {
       console.error('Failed to delete tour');
     }
   };
@@ -110,11 +127,7 @@ export default function ToursAdmin() {
                 <td className="px-6 py-4">${tour.price}</td>
                 <td className="px-6 py-4 flex gap-3">
                   <button
-                    onClick={() => {
-                      setCurrentTour(tour);
-                      setCoverImageFile(null);
-                      setIsEditing(true);
-                    }}
+                    onClick={() => handleEdit(tour.id)}
                     className="text-blue-600 hover:text-blue-800"
                   >
                     <Pencil size={18} />
@@ -204,7 +217,7 @@ export default function ToursAdmin() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Itinerary / Content</label>
-              <Editor
+              <LazyEditor
                 value={currentTour.content || ''}
                 onChange={(val) => setCurrentTour({ ...currentTour, content: val })}
               />
