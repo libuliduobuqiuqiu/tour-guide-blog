@@ -50,9 +50,9 @@ export default function BlogAdmin() {
       }
 
       if (currentPost.id) {
-        await api.put(`/admin/posts/${currentPost.id}`, payload);
+        await api.put(`/api/admin/posts/${currentPost.id}`, payload);
       } else {
-        await api.post('/admin/posts', payload);
+        await api.post('/api/admin/posts', payload);
       }
       setCoverImageFile(null);
       setIsEditing(false);
@@ -69,7 +69,7 @@ export default function BlogAdmin() {
   const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this post?')) return;
     try {
-      await api.delete(`/admin/posts/${id}`);
+      await api.delete(`/api/admin/posts/${id}`);
       fetchPosts();
     } catch (err) {
       console.error('Failed to delete post');

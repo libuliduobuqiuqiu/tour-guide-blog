@@ -18,7 +18,7 @@ export default function AdminDashboard() {
         const [toursRes, postsRes, contactsRes] = await Promise.all([
           api.get('/api/tours'),
           api.get('/api/posts'),
-          api.get('/admin/contacts')
+          api.get('/api/admin/contacts')
         ]);
         setStats({
           tours: toursRes.data.length,

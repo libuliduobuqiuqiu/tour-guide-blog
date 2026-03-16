@@ -6,7 +6,7 @@ export async function uploadAdminImage(file: File): Promise<string> {
   formData.append('file', file);
 
   try {
-    const res = await api.post('/admin/upload', formData, {
+    const res = await api.post('/api/admin/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
 

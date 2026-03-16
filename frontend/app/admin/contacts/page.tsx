@@ -18,7 +18,7 @@ export default function ContactsAdmin() {
 
   async function fetchContacts() {
     try {
-      const res = await api.get('/admin/contacts');
+      const res = await api.get('/api/admin/contacts');
       setContacts(res.data);
     } catch (err) {
       console.error('Failed to fetch contacts');
@@ -33,7 +33,7 @@ export default function ContactsAdmin() {
   const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this message?')) return;
     try {
-      await api.delete(`/admin/contacts/${id}`);
+      await api.delete(`/api/admin/contacts/${id}`);
       fetchContacts();
     } catch (err) {
       console.error('Failed to delete contact');

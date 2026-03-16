@@ -37,6 +37,9 @@ func InitRouter(debug bool) *gin.Engine {
 	admin := r.Group("/admin")
 	protected := admin.Group("/")
 	protected.Use(middleware.Auth())
+	apiAdmin := api.Group("/admin")
+	apiProtected := apiAdmin.Group("/")
+	apiProtected.Use(middleware.Auth())
 
 	// 注册各个模块路由
 	RegisterAuthRoutes(admin)
@@ -49,6 +52,36 @@ func InitRouter(debug bool) *gin.Engine {
 	RegisterCarouselRoutes(api, protected)
 	RegisterReviewRoutes(api, protected)
 	RegisterUploadRoutes(protected)
+	registerAPIAdminAliases(apiProtected)
 
 	return r
+}
+
+func registerAPIAdminAliases(protected *gin.RouterGroup) {
+	protected.GET("/tours", handlers.ListTours)
+	protected.POST("/tours", handlers.CreateTour)
+	protected.PUT("/tours/:id", handlers.UpdateTour)
+	protected.DELETE("/tours/:id", handlers.DeleteTour)
+
+	protected.GET("/posts", handlers.ListPosts)
+	protected.POST("/posts", handlers.CreatePost)
+	protected.PUT("/posts/:id", handlers.UpdatePost)
+	protected.DELETE("/posts/:id", handlers.DeletePost)
+
+	protected.GET("/contacts", handlers.ListContacts)
+
+	protected.PUT("/config/:key", handlers.UpdateConfig)
+
+	protected.GET("/carousels", handlers.ListCarousels)
+	protected.POST("/carousels", handlers.CreateCarousel)
+	protected.PUT("/carousels/:id", handlers.UpdateCarousel)
+	protected.DELETE("/carousels/:id", handlers.DeleteCarousel)
+
+	protected.GET("/reviews", handlers.ListReviews)
+	protected.POST("/reviews", handlers.CreateReview)
+	protected.PUT("/reviews/:id", handlers.UpdateReview)
+	protected.DELETE("/reviews/:id", handlers.DeleteReview)
+	protected.POST("/reviews/generate", handlers.GenerateReviews)
+
+	protected.POST("/upload", handlers.UploadImage)
 }

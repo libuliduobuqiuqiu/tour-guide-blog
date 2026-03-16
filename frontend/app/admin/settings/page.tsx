@@ -72,11 +72,11 @@ export default function SettingsAdmin() {
     setLoading(true);
     try {
       // 保存到通用的 config 接口
-      await api.put('/admin/config/site_settings', {
+      await api.put('/api/admin/config/site_settings', {
         value: JSON.stringify(settings)
       });
       // 同时更新 about 接口的数据（为了兼容之前的 API）
-      await api.put('/admin/config/about', {
+      await api.put('/api/admin/config/about', {
         value: JSON.stringify({
           name: 'Janet',
           bio: settings.about_content,

@@ -24,8 +24,16 @@ export default function CarouselsAdmin() {
 
   async function fetchCarousels() {
     try {
-      const res = await api.get('/admin/carousels');
-      setCarousels(res.data);
+      const res = await api.get('/api/admin/carousels');
+      const payload = res.data;
+      const list = Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.data)
+          ? payload.data
+          : Array.isArray(payload?.list)
+            ? payload.list
+            : [];
+      setCarousels(list);
     } catch (err) {
       console.error(err);
     }
@@ -39,7 +47,7 @@ export default function CarouselsAdmin() {
   const handleDelete = async (id: number) => {
     if (!confirm('Are you sure?')) return;
     try {
-      await api.delete(`/admin/carousels/${id}`);
+      await api.delete(`/api/admin/carousels/${id}`);
       fetchCarousels();
     } catch (err) {
       alert('Failed to delete');
@@ -58,9 +66,9 @@ export default function CarouselsAdmin() {
       }
 
       if (editing.id === 0) {
-        await api.post('/admin/carousels', payload);
+        await api.post('/api/admin/carousels', payload);
       } else {
-        await api.put(`/admin/carousels/${editing.id}`, payload);
+        await api.put(`/api/admin/carousels/${editing.id}`, payload);
       }
       setImageFile(null);
       setEditing(null);

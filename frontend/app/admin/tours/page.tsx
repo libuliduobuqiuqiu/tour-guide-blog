@@ -49,9 +49,9 @@ export default function ToursAdmin() {
       }
 
       if (currentTour.id) {
-        await api.put(`/admin/tours/${currentTour.id}`, payload);
+        await api.put(`/api/admin/tours/${currentTour.id}`, payload);
       } else {
-        await api.post('/admin/tours', payload);
+        await api.post('/api/admin/tours', payload);
       }
       setCoverImageFile(null);
       setIsEditing(false);
@@ -68,7 +68,7 @@ export default function ToursAdmin() {
   const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this tour?')) return;
     try {
-      await api.delete(`/admin/tours/${id}`);
+      await api.delete(`/api/admin/tours/${id}`);
       fetchTours();
     } catch (err) {
       console.error('Failed to delete tour');
