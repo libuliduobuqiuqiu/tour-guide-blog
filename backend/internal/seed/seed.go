@@ -104,7 +104,7 @@ func seedSiteSettings() {
 	if count > 0 {
 		return
 	}
-	value := `{"home_hero_title":"Professional Tour Guide in Guangzhou","home_hero_subtitle":"Explore the Pearl River and vibrant Cantonese culture."}`
+	value := `{"home_hero_title":"Professional Tour Guide in Guangzhou","home_hero_subtitle":"Explore the Pearl River and vibrant Cantonese culture.","icp_number":""}`
 	item := model.Config{Key: "site_settings", Value: value}
 	if err := dao.DB.Create(&item).Error; err != nil {
 		log.Printf("Failed to seed site settings: %v", err)

@@ -4,6 +4,7 @@ type SiteSettings = {
   social_xiaohongshu?: string;
   social_youtube?: string;
   social_x?: string;
+  icp_number?: string;
 };
 
 const Footer = async () => {
@@ -71,6 +72,18 @@ const Footer = async () => {
         <p className="text-slate-300 text-sm tracking-wide">
           © 2026 Janet Tours. All rights reserved.
         </p>
+        {settings.icp_number && (
+          <p className="mt-2 text-slate-300 text-sm tracking-wide">
+            <a
+              href="https://beian.miit.gov.cn/"
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-white transition-colors"
+            >
+              {settings.icp_number}
+            </a>
+          </p>
+        )}
       </div>
     </footer>
   );

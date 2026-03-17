@@ -23,7 +23,8 @@ export default function SettingsAdmin() {
     social_instagram: '',
     social_xiaohongshu: '',
     social_youtube: '',
-    social_x: ''
+    social_x: '',
+    icp_number: ''
   };
   const [settings, setSettings] = useState(defaultSettings);
 
@@ -288,6 +289,21 @@ export default function SettingsAdmin() {
                 placeholder="https://www.xiaohongshu.com/user/profile/..."
               />
             </div>
+          </div>
+        </section>
+
+        <section className="admin-panel p-8">
+          <h2 className="text-lg font-semibold mb-6 border-b pb-2 text-slate-700">Footer ICP</h2>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">ICP Registration Number</label>
+            <input
+              type="text"
+              value={settings.icp_number}
+              onChange={(e) => setSettings({ ...settings, icp_number: e.target.value })}
+              className="w-full px-4 py-2"
+              placeholder="e.g. 粤ICP备12345678号"
+            />
+            <p className="text-xs text-gray-500 mt-2">Shown in the site footer, links to the MIIT备案 site.</p>
           </div>
         </section>
 
