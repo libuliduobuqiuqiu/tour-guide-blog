@@ -51,6 +51,7 @@ func InitRouter(debug bool) *gin.Engine {
 	RegisterConfigRoutes(api, protected)
 	RegisterCarouselRoutes(api, protected)
 	RegisterReviewRoutes(api, protected)
+	RegisterSocialRoutes(api, protected)
 	RegisterUploadRoutes(protected)
 	protected.GET("/stats", handlers.GetAdminStats)
 	registerAPIAdminAliases(apiProtected)
@@ -83,6 +84,11 @@ func registerAPIAdminAliases(protected *gin.RouterGroup) {
 	protected.PUT("/reviews/:id", handlers.UpdateReview)
 	protected.DELETE("/reviews/:id", handlers.DeleteReview)
 	protected.POST("/reviews/generate", handlers.GenerateReviews)
+
+	protected.GET("/social/settings", handlers.GetSocialSettings)
+	protected.PUT("/social/settings", handlers.UpdateSocialSettings)
+	protected.GET("/social/status", handlers.GetSocialStatus)
+	protected.POST("/social/sync", handlers.SyncSocialFeed)
 
 	protected.POST("/upload", handlers.UploadImage)
 	protected.GET("/stats", handlers.GetAdminStats)

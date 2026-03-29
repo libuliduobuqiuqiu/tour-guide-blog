@@ -5,36 +5,137 @@ import api from '@/lib/axios';
 import { uploadAdminImage } from '@/lib/admin-upload';
 import { Save, RefreshCcw } from 'lucide-react';
 import { withPublicOrigin } from '@/lib/url';
+import type { Review } from '@/lib/reviews';
+import type { SocialAdminSettings, SocialStatus } from '@/lib/social';
+
+const defaultSettings = {
+  home_hero_title: 'Professional Tour Guide in Chongqing & Chengdu',
+  home_hero_subtitle: 'Discover the hidden gems of Southwest China with Janet.',
+  home_static_image: '',
+  home_featured_review_ids: [0, 0, 0, 0],
+  about_content: '',
+  about_image: '',
+  contact_email: 'janet@example.com',
+  contact_phone: '+86 123 4567 8901',
+  wechat_id: 'janet_tours',
+  contact_location: 'Chongqing & Chengdu, China',
+  social_tiktok: '',
+  social_instagram: '',
+  social_xiaohongshu: '',
+  social_youtube: '',
+  social_x: '',
+  icp_number: ''
+};
+
+const defaultSocialSettings: SocialAdminSettings = {
+  instagram: {
+    username: '',
+    profile_url: '',
+    post_limit: 12,
+    account_id: '',
+    client_id: '',
+    client_secret: '',
+    redirect_uri: '',
+    access_token: '',
+    refresh_token: '',
+  },
+  tiktok: {
+    username: '',
+    profile_url: '',
+    post_limit: 12,
+    account_id: '',
+    client_id: '',
+    client_secret: '',
+    redirect_uri: '',
+    access_token: '',
+    refresh_token: '',
+  },
+};
+
+const defaultSocialStatus: SocialStatus = {
+  instagram: {
+    configured: false,
+    connected: false,
+    username: '',
+    item_count: 0,
+    last_sync_at: '',
+    last_sync_error: '',
+  },
+  tiktok: {
+    configured: false,
+    connected: false,
+    username: '',
+    item_count: 0,
+    last_sync_at: '',
+    last_sync_error: '',
+  },
+};
+
+function normalizeFeaturedReviewIds(value: unknown) {
+  const values = Array.isArray(value) ? value : [];
+  const ids = values
+    .map((item) => Number(item))
+    .filter((item) => Number.isInteger(item) && item > 0)
+    .slice(0, 4);
+
+  while (ids.length < 4) {
+    ids.push(0);
+  }
+
+  return ids;
+}
 
 export default function SettingsAdmin() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const defaultSettings = {
-    home_hero_title: 'Professional Tour Guide in Chongqing & Chengdu',
-    home_hero_subtitle: 'Discover the hidden gems of Southwest China with Janet.',
-    home_static_image: '',
-    about_content: '',
-    about_image: '',
-    contact_email: 'janet@example.com',
-    contact_phone: '+86 123 4567 8901',
-    wechat_id: 'janet_tours',
-    contact_location: 'Chongqing & Chengdu, China',
-    social_tiktok: '',
-    social_instagram: '',
-    social_xiaohongshu: '',
-    social_youtube: '',
-    social_x: '',
-    icp_number: ''
-  };
+  const [syncingPlatform, setSyncingPlatform] = useState<string | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [settings, setSettings] = useState(defaultSettings);
+  const [socialSettings, setSocialSettings] = useState<SocialAdminSettings>(defaultSocialSettings);
+  const [socialStatus, setSocialStatus] = useState<SocialStatus>(defaultSocialStatus);
 
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await api.get('/api/config/site_settings');
-        if (!res.data) return;
-        const parsed = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
-        setSettings({ ...defaultSettings, ...parsed });
+        const [settingsRes, reviewsRes, socialSettingsRes, socialStatusRes, socialConfigRes] = await Promise.all([
+          api.get('/api/config/site_settings').catch(() => null),
+          api.get('/api/admin/reviews').catch(() => null),
+          api.get('/api/admin/social/settings').catch(() => null),
+          api.get('/api/admin/social/status').catch(() => null),
+          api.get('/api/config/social_settings').catch(() => null),
+        ]);
+
+        if (settingsRes?.data) {
+          const parsed = typeof settingsRes.data === 'string' ? JSON.parse(settingsRes.data) : settingsRes.data;
+          setSettings({
+            ...defaultSettings,
+            ...parsed,
+            home_featured_review_ids: normalizeFeaturedReviewIds(parsed?.home_featured_review_ids),
+          });
+        }
+
+        const reviewPayload = reviewsRes?.data;
+        const reviewList = Array.isArray(reviewPayload)
+          ? reviewPayload
+          : Array.isArray(reviewPayload?.data)
+            ? reviewPayload.data
+            : Array.isArray(reviewPayload?.list)
+              ? reviewPayload.list
+              : [];
+        setReviews(reviewList);
+        const socialSettingsPayload = socialSettingsRes?.data || socialConfigRes?.data;
+        if (socialSettingsPayload) {
+          setSocialSettings({
+            instagram: { ...defaultSocialSettings.instagram, ...socialSettingsPayload.instagram },
+            tiktok: { ...defaultSocialSettings.tiktok, ...socialSettingsPayload.tiktok },
+          });
+        }
+        if (socialStatusRes?.data) {
+          setSocialStatus({
+            instagram: { ...defaultSocialStatus.instagram, ...socialStatusRes.data.instagram },
+            tiktok: { ...defaultSocialStatus.tiktok, ...socialStatusRes.data.tiktok },
+          });
+        }
       } catch (err) {
         console.log('No existing settings found, using defaults');
       }
@@ -72,23 +173,91 @@ export default function SettingsAdmin() {
     e.preventDefault();
     setLoading(true);
     try {
-      // 保存到通用的 config 接口
-      await api.put('/api/admin/config/site_settings', {
-        value: JSON.stringify(settings)
-      });
-      // 同时更新 about 接口的数据（为了兼容之前的 API）
-      await api.put('/api/admin/config/about', {
-        value: JSON.stringify({
-          name: 'Janet',
-          bio: settings.about_content,
-          image: settings.about_image || '/images/janet.jpg'
-        })
-      });
+      await Promise.all([
+        api.put('/api/admin/config/site_settings', {
+          value: JSON.stringify(settings)
+        }),
+        api.put('/api/admin/config/social_settings', {
+          value: JSON.stringify(socialSettings)
+        }),
+        api.put('/api/admin/config/about', {
+          value: JSON.stringify({
+            name: 'Janet',
+            bio: settings.about_content,
+            image: settings.about_image || '/images/janet.jpg'
+          })
+        }),
+      ]);
+
+      const statusRes = await api.get('/api/admin/social/status').catch(() => null);
+      if (statusRes?.data) {
+        setSocialStatus({
+          instagram: { ...defaultSocialStatus.instagram, ...statusRes.data.instagram },
+          tiktok: { ...defaultSocialStatus.tiktok, ...statusRes.data.tiktok },
+        });
+      }
       alert('Settings saved successfully!');
-    } catch (err) {
-      alert('Failed to save settings');
+    } catch (err: unknown) {
+      const message =
+        typeof err === 'object' && err !== null && 'response' in err
+          ? ((err as { response?: { data?: { error?: string } } }).response?.data?.error || 'Failed to save settings')
+          : 'Failed to save settings';
+      alert(message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const updateFeaturedReview = (index: number, value: string) => {
+    const next = [...settings.home_featured_review_ids];
+    next[index] = Number.parseInt(value, 10) || 0;
+    setSettings({ ...settings, home_featured_review_ids: next });
+  };
+
+  const updateSocialPlatform = (
+    platform: 'instagram' | 'tiktok',
+    field: keyof SocialAdminSettings['instagram'],
+    value: string
+  ) => {
+    const nextValue =
+      field === 'post_limit'
+        ? Math.max(1, Math.min(24, Number.parseInt(value, 10) || 12))
+        : value;
+
+    setSocialSettings((prev) => ({
+      ...prev,
+      [platform]: {
+        ...prev[platform],
+        [field]: nextValue,
+      },
+    }));
+  };
+
+  const handleSocialSync = async (platform: 'instagram' | 'tiktok' | 'all') => {
+    setSyncingPlatform(platform);
+    try {
+      await api.put('/api/admin/config/social_settings', {
+        value: JSON.stringify(socialSettings)
+      });
+      await api.post('/api/admin/social/sync', { platform });
+      const [statusRes] = await Promise.all([
+        api.get('/api/admin/social/status').catch(() => null),
+      ]);
+      if (statusRes?.data) {
+        setSocialStatus({
+          instagram: { ...defaultSocialStatus.instagram, ...statusRes.data.instagram },
+          tiktok: { ...defaultSocialStatus.tiktok, ...statusRes.data.tiktok },
+        });
+      }
+      alert(`Social sync completed for ${platform}.`);
+    } catch (err: unknown) {
+      const message =
+        typeof err === 'object' && err !== null && 'response' in err
+          ? ((err as { response?: { data?: { error?: string } } }).response?.data?.error || 'Social sync failed')
+          : 'Social sync failed';
+      alert(message);
+    } finally {
+      setSyncingPlatform(null);
     }
   };
 
@@ -191,6 +360,204 @@ export default function SettingsAdmin() {
                 placeholder="Tell your story..."
               />
             </div>
+          </div>
+        </section>
+
+        <section className="admin-panel p-8">
+          <h2 className="text-lg font-semibold mb-6 border-b pb-2 text-amber-700">Home Page Reviews</h2>
+          <div className="space-y-5">
+            <div>
+              <p className="text-sm text-gray-700">Choose the 4 review cards shown below the Why Choose Me section on the homepage.</p>
+              <p className="text-xs text-gray-500 mt-1">Leaving a slot empty will fall back to the next active review automatically.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {settings.home_featured_review_ids.map((reviewId, index) => (
+                <div key={index}>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Review Card {index + 1}
+                  </label>
+                  <select
+                    value={reviewId}
+                    onChange={(e) => updateFeaturedReview(index, e.target.value)}
+                    className="w-full px-4 py-2"
+                  >
+                    <option value={0}>Auto select</option>
+                    {reviews.map((review) => (
+                      <option key={review.id} value={review.id}>
+                        {review.username} · {review.country || 'Unknown country'} · {review.review_date ? review.review_date.slice(0, 7) : 'No date'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="admin-panel p-8">
+          <div className="flex flex-col gap-3 border-b pb-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-rose-700">Social Integrations</h2>
+              <p className="mt-1 text-sm text-gray-500">
+                Public profile sync is the default path. Add a profile URL, set the post limit, then sync recent posts for the homepage carousels.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => handleSocialSync('instagram')}
+                disabled={syncingPlatform !== null}
+                className="btn-secondary px-4 py-2 disabled:opacity-60"
+              >
+                {syncingPlatform === 'instagram' ? 'Syncing Instagram...' : 'Sync Instagram'}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSocialSync('tiktok')}
+                disabled={syncingPlatform !== null}
+                className="btn-secondary px-4 py-2 disabled:opacity-60"
+              >
+                {syncingPlatform === 'tiktok' ? 'Syncing TikTok...' : 'Sync TikTok'}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSocialSync('all')}
+                disabled={syncingPlatform !== null}
+                className="btn-primary px-4 py-2 disabled:opacity-60"
+              >
+                {syncingPlatform === 'all' ? 'Syncing All...' : 'Sync All'}
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
+            {(['instagram', 'tiktok'] as const).map((platform) => {
+              const platformSettings = socialSettings[platform];
+              const platformStatus = socialStatus[platform];
+              const title = platform === 'instagram' ? 'Instagram' : 'TikTok';
+              const accountLabel = platform === 'instagram' ? 'Business Account ID' : 'Open ID';
+              const clientLabel = platform === 'instagram' ? 'App ID' : 'Client Key';
+              const profilePlaceholder =
+                platform === 'instagram'
+                  ? 'https://www.instagram.com/yourhandle/'
+                  : 'https://www.tiktok.com/@yourhandle';
+
+              return (
+                <div key={platform} className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5 space-y-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Configured: {platformStatus.configured ? 'Yes' : 'No'} · Connected: {platformStatus.connected ? 'Yes' : 'No'} · Items: {platformStatus.item_count}
+                      </p>
+                    </div>
+                    <div className="text-right text-xs text-slate-500">
+                      <div>{platformStatus.username || 'No username set'}</div>
+                      <div>{platformStatus.last_sync_at ? `Last sync: ${platformStatus.last_sync_at}` : 'Not synced yet'}</div>
+                    </div>
+                  </div>
+
+                  {platformStatus.last_sync_error && (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                      {platformStatus.last_sync_error}
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+                      Recommended: use public profile sync. Fill in the profile URL and post limit below, then click sync. The OAuth fields are optional fallback settings.
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                      <input
+                        type="text"
+                        value={platformSettings.username}
+                        onChange={(e) => updateSocialPlatform(platform, 'username', e.target.value)}
+                        className="w-full px-4 py-2"
+                        placeholder={platform === 'instagram' ? '@yourhandle' : '@yourtiktok'}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Profile URL</label>
+                      <input
+                        type="url"
+                        value={platformSettings.profile_url}
+                        onChange={(e) => updateSocialPlatform(platform, 'profile_url', e.target.value)}
+                        className="w-full px-4 py-2"
+                        placeholder={profilePlaceholder}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Post Limit</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={24}
+                        value={platformSettings.post_limit}
+                        onChange={(e) => updateSocialPlatform(platform, 'post_limit', e.target.value)}
+                        className="w-full px-4 py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">{accountLabel}</label>
+                      <input
+                        type="text"
+                        value={platformSettings.account_id}
+                        onChange={(e) => updateSocialPlatform(platform, 'account_id', e.target.value)}
+                        className="w-full px-4 py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">{clientLabel}</label>
+                      <input
+                        type="text"
+                        value={platformSettings.client_id}
+                        onChange={(e) => updateSocialPlatform(platform, 'client_id', e.target.value)}
+                        className="w-full px-4 py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Client Secret</label>
+                      <input
+                        type="password"
+                        value={platformSettings.client_secret}
+                        onChange={(e) => updateSocialPlatform(platform, 'client_secret', e.target.value)}
+                        className="w-full px-4 py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Redirect URI</label>
+                      <input
+                        type="url"
+                        value={platformSettings.redirect_uri}
+                        onChange={(e) => updateSocialPlatform(platform, 'redirect_uri', e.target.value)}
+                        className="w-full px-4 py-2"
+                        placeholder="https://your-domain.com/..."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Access Token</label>
+                      <textarea
+                        rows={3}
+                        value={platformSettings.access_token}
+                        onChange={(e) => updateSocialPlatform(platform, 'access_token', e.target.value)}
+                        className="w-full px-4 py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Refresh Token</label>
+                      <textarea
+                        rows={2}
+                        value={platformSettings.refresh_token}
+                        onChange={(e) => updateSocialPlatform(platform, 'refresh_token', e.target.value)}
+                        className="w-full px-4 py-2"
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
 

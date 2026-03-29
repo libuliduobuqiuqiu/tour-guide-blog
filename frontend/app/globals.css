@@ -137,10 +137,74 @@ a {
   }
 }
 
+.social-marquee-mask {
+  position: relative;
+  overflow: hidden;
+}
+
+.social-marquee-mask::before,
+.social-marquee-mask::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: clamp(24px, 5vw, 72px);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.social-marquee-mask::before {
+  left: 0;
+  background: linear-gradient(90deg, rgba(248, 251, 255, 0.92) 0%, rgba(248, 251, 255, 0) 100%);
+}
+
+.social-marquee-mask::after {
+  right: 0;
+  background: linear-gradient(270deg, rgba(248, 251, 255, 0.92) 0%, rgba(248, 251, 255, 0) 100%);
+}
+
+.social-marquee-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+
+.social-marquee-left {
+  animation: social-marquee-left var(--social-duration, 36s) linear infinite;
+}
+
+.social-marquee-right {
+  animation: social-marquee-right var(--social-duration, 36s) linear infinite;
+}
+
+.social-marquee-mask:hover .social-marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes social-marquee-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes social-marquee-right {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .fade-up,
   .reveal,
-  .reveal-down {
+  .reveal-down,
+  .social-marquee-left,
+  .social-marquee-right {
     animation: none !important;
     transition: none !important;
     transform: none !important;
