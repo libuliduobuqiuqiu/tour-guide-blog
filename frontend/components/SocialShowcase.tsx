@@ -32,23 +32,12 @@ function buildLoopItems(items: SocialFeedItem[] | null | undefined, minimumCount
   return loopItems;
 }
 
-function splitRows(items: SocialFeedItem[] | null | undefined) {
-  const normalized = buildLoopItems(items);
-  return normalized.reduce<[LoopFeedItem[], LoopFeedItem[]]>(
-    (rows, item, index) => {
-      rows[index % 2].push(item);
-      return rows;
-    },
-    [[], []]
-  );
-}
-
 function SocialTile({ item }: { item: LoopFeedItem }) {
   const imageUrl = withSocialImageProxy(item.thumbnail_url || item.media_url);
   const tileClass =
     item.platform === 'tiktok'
-      ? 'w-[190px] sm:w-[220px] lg:w-[250px]'
-      : 'w-[180px] sm:w-[210px] lg:w-[240px]';
+      ? 'w-[190px] sm:w-[220px] lg:w-[240px]'
+      : 'w-[190px] sm:w-[220px] lg:w-[240px]';
   const ratioClass =
     item.platform === 'tiktok'
       ? 'aspect-[9/16]'
@@ -61,7 +50,7 @@ function SocialTile({ item }: { item: LoopFeedItem }) {
       href={item.permalink || '#'}
       target="_blank"
       rel="noreferrer"
-      className={`group block shrink-0 overflow-hidden rounded-[1.25rem] bg-slate-200 shadow-[0_20px_45px_-24px_rgba(15,23,42,0.45)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_26px_55px_-24px_rgba(15,23,42,0.55)] ${tileClass}`}
+      className={`group block shrink-0 overflow-hidden rounded-[1.25rem] bg-slate-200 transition duration-300 hover:-translate-y-1 ${tileClass}`}
       aria-label="Open social post"
     >
       <div className={`relative bg-slate-100 ${ratioClass}`}>
@@ -119,7 +108,7 @@ function PlatformWall({
   shellClass: string;
 }) {
   const normalizedItems = normalizeItems(items);
-  const [firstRow, secondRow] = splitRows(items);
+  const rowItems = buildLoopItems(items);
 
   return (
     <article className={`overflow-hidden rounded-[2rem] border border-white/60 ${shellClass}`}>
@@ -128,9 +117,8 @@ function PlatformWall({
       </div>
 
       {normalizedItems.length > 0 ? (
-        <div className="space-y-3 px-3 py-4 sm:space-y-4 sm:px-4 sm:py-5 lg:px-5 lg:py-6">
-          <SocialRow items={firstRow} direction="left" duration="34s" />
-          <SocialRow items={secondRow.length > 0 ? secondRow : firstRow} direction="right" duration="40s" />
+        <div className="px-3 py-4 sm:px-4 sm:py-5 lg:px-5 lg:py-6">
+          <SocialRow items={rowItems} direction="left" duration="34s" />
         </div>
       ) : (
         <div className="flex min-h-[220px] items-center justify-center px-8 py-10 text-center text-sm text-slate-500">

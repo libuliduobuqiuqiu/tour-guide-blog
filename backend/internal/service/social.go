@@ -133,16 +133,18 @@ func (s *SocialService) Sync(platform string) error {
 	settings, _ := s.GetAdminSettings()
 	cache, _ := s.getFeedCache()
 
+	nextInstagram := cache.Instagram
+	nextTikTok := cache.TikTok
 	var err error
 	switch platform {
 	case "instagram":
-		cache.Instagram, err = s.syncInstagram(settings.Instagram)
+		nextInstagram, err = s.syncInstagram(settings.Instagram)
 	case "tiktok":
-		cache.TikTok, err = s.syncTikTok(settings.TikTok)
+		nextTikTok, err = s.syncTikTok(settings.TikTok)
 	case "all":
-		cache.Instagram, err = s.syncInstagram(settings.Instagram)
+		nextInstagram, err = s.syncInstagram(settings.Instagram)
 		if err == nil {
-			cache.TikTok, err = s.syncTikTok(settings.TikTok)
+			nextTikTok, err = s.syncTikTok(settings.TikTok)
 		}
 	default:
 		return errors.New("unsupported platform")
@@ -156,6 +158,8 @@ func (s *SocialService) Sync(platform string) error {
 		return err
 	}
 
+	cache.Instagram = nextInstagram
+	cache.TikTok = nextTikTok
 	cache.LastError = ""
 	return s.writeConfigJSON(socialFeedKey, cache)
 }
@@ -403,60 +407,16 @@ func (s *SocialService) syncTikTokPublic(settings SocialPlatformSettings) ([]Soc
 		return nil, err
 	}
 
-	itemModule, ok := firstMapPath(payload,
-		[]string{"__DEFAULT_SCOPE__", "webapp.video-detail", "itemInfo", "itemStruct"},
-		[]string{"ItemModule"},
-		[]string{"itemModule"},
-	)
-	if !ok {
-		itemModule, _ = firstMapPath(payload, []string{"__DEFAULT_SCOPE__", "webapp.user-detail", "itemModule"})
-	}
+	items := extractTikTokItemsFromPayload(payload, username, settings.PostLimit)
 
-	itemMaps := collectTikTokItems(itemModule)
-	if len(itemMaps) == 0 {
-		itemMaps = collectTikTokItems(payload)
-	}
-
-	items := make([]SocialFeedItem, 0, len(itemMaps))
-	for _, item := range itemMaps {
-		id := firstStringFromMap(item, "id", "itemId")
-		if id == "" {
-			continue
-		}
-
-		caption := firstStringFromMap(item, "desc", "title")
-		createTime := normalizeUnixTimestamp(firstInt64FromMap(item, "createTime"))
-		videoMap := nestedMap(item, "video")
-		imagePostMap := nestedMap(item, "imagePost")
-		coverURL := firstStringFromMap(videoMap, "cover", "dynamicCover", "originCover")
-		if coverURL == "" {
-			if images := sliceValueFromMap(imagePostMap, "images"); len(images) > 0 {
-				if firstImage, ok := images[0].(map[string]interface{}); ok {
-					coverURL = firstStringFromMap(firstImage, "imageURL", "imageUrl")
+	if len(items) == 0 {
+		if profile, ok := firstMapPath(payload, []string{"__DEFAULT_SCOPE__", "webapp.user-detail", "userInfo"}); ok {
+			if stats, ok := firstMapPath(profile, []string{"stats"}); ok {
+				if firstInt64FromMap(stats, "videoCount") > 0 {
+					return nil, errors.New("tiktok public sync found no posts in the page payload; TikTok now returns account info but not the post list for this profile, and the remaining feed request appears to require signed client-side calls")
 				}
 			}
 		}
-		mediaType := "video"
-		if len(imagePostMap) > 0 {
-			mediaType = "image"
-		}
-
-		items = append(items, SocialFeedItem{
-			ID:           id,
-			Platform:     "tiktok",
-			Caption:      caption,
-			Permalink:    fmt.Sprintf("https://www.tiktok.com/@%s/video/%s", username, id),
-			MediaType:    mediaType,
-			MediaURL:     coverURL,
-			ThumbnailURL: coverURL,
-			Timestamp:    createTime,
-		})
-		if len(items) >= settings.PostLimit {
-			break
-		}
-	}
-
-	if len(items) == 0 {
 		return nil, errors.New("tiktok public sync found no posts; the profile may be private or the page structure may have changed")
 	}
 
@@ -713,17 +673,9 @@ func collectTikTokItems(root map[string]interface{}) []map[string]interface{} {
 		switch typed := value.(type) {
 		case map[string]interface{}:
 			if id := firstStringFromMap(typed, "id", "itemId"); id != "" {
-				if _, hasVideo := typed["video"]; hasVideo {
-					if !seen[id] {
-						seen[id] = true
-						items = append(items, typed)
-					}
-				}
-				if _, hasImagePost := typed["imagePost"]; hasImagePost {
-					if !seen[id] {
-						seen[id] = true
-						items = append(items, typed)
-					}
+				if looksLikeTikTokPost(typed) && !seen[id] {
+					seen[id] = true
+					items = append(items, typed)
 				}
 			}
 			for _, child := range typed {
@@ -740,10 +692,161 @@ func collectTikTokItems(root map[string]interface{}) []map[string]interface{} {
 	return items
 }
 
+func extractTikTokItemsFromPayload(payload map[string]interface{}, username string, limit int) []SocialFeedItem {
+	candidates := make([]map[string]interface{}, 0)
+	seen := map[string]bool{}
+
+	appendCandidate := func(item map[string]interface{}) {
+		id := firstStringFromMap(item, "id", "itemId")
+		if id == "" || seen[id] || !looksLikeTikTokPost(item) {
+			return
+		}
+		seen[id] = true
+		candidates = append(candidates, item)
+	}
+
+	appendFromMap := func(root map[string]interface{}) {
+		for _, item := range collectTikTokItems(root) {
+			appendCandidate(item)
+		}
+	}
+
+	itemModules := []map[string]interface{}{}
+	for _, paths := range [][]string{
+		{"__DEFAULT_SCOPE__", "webapp.user-detail", "itemModule"},
+		{"__DEFAULT_SCOPE__", "webapp.video-detail", "itemInfo", "itemStruct"},
+		{"ItemModule"},
+		{"itemModule"},
+		{"props", "pageProps", "itemModule"},
+	} {
+		if module, ok := firstMapPath(payload, paths); ok {
+			itemModules = append(itemModules, module)
+		}
+	}
+
+	for _, module := range itemModules {
+		appendFromMap(module)
+	}
+
+	for _, paths := range [][]string{
+		{"__DEFAULT_SCOPE__", "webapp.user-detail", "itemList"},
+		{"ItemList", "user-post", "list"},
+		{"itemList"},
+		{"props", "pageProps", "itemList"},
+	} {
+		ids, ok := firstSlicePath(payload, paths)
+		if !ok {
+			continue
+		}
+		for _, rawID := range ids {
+			id := strings.TrimSpace(fmt.Sprint(rawID))
+			if id == "" {
+				continue
+			}
+			for _, module := range itemModules {
+				if item, ok := module[id].(map[string]interface{}); ok {
+					appendCandidate(item)
+					break
+				}
+			}
+		}
+	}
+
+	if len(candidates) == 0 {
+		appendFromMap(payload)
+	}
+
+	items := make([]SocialFeedItem, 0, min(limit, len(candidates)))
+	for _, item := range candidates {
+		feedItem, ok := buildTikTokFeedItem(item, username)
+		if !ok {
+			continue
+		}
+		items = append(items, feedItem)
+		if len(items) >= limit {
+			break
+		}
+	}
+
+	return items
+}
+
+func looksLikeTikTokPost(item map[string]interface{}) bool {
+	if len(item) == 0 {
+		return false
+	}
+	if _, hasVideo := item["video"]; hasVideo {
+		return true
+	}
+	if _, hasImagePost := item["imagePost"]; hasImagePost {
+		return true
+	}
+	if firstStringFromMap(item, "cover", "dynamicCover", "originCover") != "" {
+		return true
+	}
+	if videoMap := nestedMap(item, "video"); len(videoMap) > 0 {
+		if firstStringFromMap(videoMap, "cover", "dynamicCover", "originCover", "playAddr") != "" {
+			return true
+		}
+	}
+	if imagePostMap := nestedMap(item, "imagePost"); len(imagePostMap) > 0 {
+		if len(sliceValueFromMap(imagePostMap, "images")) > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func buildTikTokFeedItem(item map[string]interface{}, username string) (SocialFeedItem, bool) {
+	id := firstStringFromMap(item, "id", "itemId")
+	if id == "" {
+		return SocialFeedItem{}, false
+	}
+
+	caption := firstStringFromMap(item, "desc", "title")
+	createTime := normalizeUnixTimestamp(firstInt64FromMap(item, "createTime"))
+	videoMap := nestedMap(item, "video")
+	imagePostMap := nestedMap(item, "imagePost")
+	coverURL := firstStringFromMap(
+		videoMap,
+		"cover",
+		"dynamicCover",
+		"originCover",
+		"playAddr",
+	)
+	if coverURL == "" {
+		coverURL = firstStringFromMap(item, "cover", "dynamicCover", "originCover")
+	}
+	if coverURL == "" {
+		if images := sliceValueFromMap(imagePostMap, "images"); len(images) > 0 {
+			if firstImage, ok := images[0].(map[string]interface{}); ok {
+				coverURL = firstStringFromMap(firstImage, "imageURL", "imageUrl", "displayImageURL")
+			}
+		}
+	}
+
+	mediaType := "video"
+	if len(imagePostMap) > 0 {
+		mediaType = "image"
+	}
+
+	return SocialFeedItem{
+		ID:           id,
+		Platform:     "tiktok",
+		Caption:      caption,
+		Permalink:    fmt.Sprintf("https://www.tiktok.com/@%s/video/%s", username, id),
+		MediaType:    mediaType,
+		MediaURL:     coverURL,
+		ThumbnailURL: coverURL,
+		Timestamp:    createTime,
+	}, true
+}
+
 func extractTikTokPayload(body []byte) (map[string]interface{}, error) {
 	patterns := []*regexp.Regexp{
 		regexp.MustCompile(`(?s)<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__" type="application/json">\s*(\{.*?\})\s*</script>`),
 		regexp.MustCompile(`(?s)<script id="SIGI_STATE" type="application/json">\s*(\{.*?\})\s*</script>`),
+		regexp.MustCompile(`(?s)<script id="__NEXT_DATA__" type="application/json">\s*(\{.*?\})\s*</script>`),
 	}
 
 	for _, pattern := range patterns {

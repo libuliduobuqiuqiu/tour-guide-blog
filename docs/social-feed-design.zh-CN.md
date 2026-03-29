@@ -259,6 +259,32 @@ TikTok 和 Instagram 的返回内容可能会受到以下因素影响：
 
 ### 3. 增加定时同步
 
+## 十、2026-03-30 补充结论
+
+在 2026-03-30 针对 `@tourjanet` 的实际排查中，已经确认：
+
+- TikTok 当前公开用户页首屏只返回账号信息，不再直接返回帖子列表
+- `videoCount` 可以拿到，但 `itemList` 为空
+- 页面真实会再发起带 `X-Bogus` / `X-Gnarly` 的 `/api/post/item_list/` 请求
+- 当前无登录抓取链路会触发滑块验证，接口虽然返回 `200`，但响应体为空
+
+这意味着：
+
+- 纯靠后端 HTTP 请求抓公开主页
+- 再配合静态 HTML / JSON 解析
+
+在当前 TikTok 页面模式下，已经不足以稳定完成自动同步。
+
+如果后续必须继续保留 TikTok 自动同步，当前更现实的方向是：
+
+- 使用服务端登录态
+- 配合 Playwright 之类的浏览器运行环境
+- 从页面真实异步请求中提取视频链接和封面图
+
+详细排查过程见：
+
+- [docs/tiktok-sync-investigation-2026-03-30.zh-CN.md](/data/MyRepo/tour-guide-blog/docs/tiktok-sync-investigation-2026-03-30.zh-CN.md)
+
 如果部署环境支持 cron 或定时任务，建议把手动同步升级成定时自动刷新。
 
 ### 4. 增强诊断信息
