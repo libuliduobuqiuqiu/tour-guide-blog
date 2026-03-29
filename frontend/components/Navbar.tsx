@@ -4,8 +4,8 @@ import { Compass } from 'lucide-react';
 const Navbar = () => {
   const navItems = [
     { href: '/tours', label: 'Tours' },
+    { href: '/reviews', label: 'Reviews' },
     { href: '/blog', label: 'Blog' },
-    { href: '/reviews', label: 'Guest Reviews' },
     { href: '/about', label: 'About' },
     { href: '/contact', label: 'Contact' },
   ];
@@ -19,7 +19,7 @@ const Navbar = () => {
               <Compass size={18} />
             </span>
             <Link href="/" className="text-2xl font-semibold tracking-wide text-slate-900">
-              Janet<span className="text-blue-700">Tours</span>
+              Tour<span className="text-blue-700">Janet</span>
             </Link>
           </div>
 

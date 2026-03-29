@@ -1,17 +1,6 @@
 import { fetchReviews } from '@/lib/api';
 import GuestReviewsGrid from '@/components/GuestReviewsGrid';
-
-interface Review {
-  id: number;
-  username: string;
-  country: string;
-  review_date: string;
-  tour_route: string;
-  host: string;
-  content: string;
-  avatar: string;
-  rating: number;
-}
+import type { Review } from '@/lib/reviews';
 
 export default async function GuestReviewsPage() {
   let reviews: Review[] = [];
@@ -28,7 +17,7 @@ export default async function GuestReviewsPage() {
         <header className="mb-10 fade-up">
           <h1 className="text-4xl md:text-5xl font-semibold text-slate-900 tracking-wide">Guest Reviews</h1>
           <p className="mt-3 text-slate-600 text-lg">
-            Read detailed feedback from travelers about routes, service quality, and host experience.
+            Read detailed feedback from travelers about the pace, service quality, and overall experience.
           </p>
         </header>
 

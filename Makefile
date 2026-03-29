@@ -100,7 +100,7 @@ backend:
 	go env -w CGO_ENABLED=0
 	go env -w GOOS=linux
 	go env -w GOARCH=amd64
-	cd backend && go run ./cmd/main.go
+	cd backend && go run ./cmd/main.go -d
 
 # 启动后端服务（开发）- 以 macOS arm64 目标环境执行
 # 说明：会修改当前 Go 环境变量（go env -w）
