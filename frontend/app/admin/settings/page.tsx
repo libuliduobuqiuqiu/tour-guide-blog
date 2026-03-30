@@ -19,12 +19,15 @@ const defaultSettings = {
   contact_phone: '+86 123 4567 8901',
   wechat_id: 'janet_tours',
   contact_location: 'Chongqing & Chengdu, China',
+  wechat_qr_image: '',
+  whatsapp_qr_image: '',
   social_tiktok: '',
   social_instagram: '',
   social_xiaohongshu: '',
   social_youtube: '',
   social_x: '',
-  icp_number: ''
+  icp_number: '',
+  public_security_beian: ''
 };
 
 const defaultSocialSettings: SocialAdminSettings = {
@@ -162,6 +165,19 @@ export default function SettingsAdmin() {
     try {
       const url = await uploadAdminImage(file);
       setSettings((prev) => ({ ...prev, home_static_image: url }));
+    } catch (err) {
+      alert('Failed to upload image');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleContactQrUpload = async (field: 'wechat_qr_image' | 'whatsapp_qr_image', file?: File | null) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadAdminImage(file);
+      setSettings((prev) => ({ ...prev, [field]: url }));
     } catch (err) {
       alert('Failed to upload image');
     } finally {
@@ -505,7 +521,7 @@ export default function SettingsAdmin() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">WhatsApp</label>
               <input
                 type="text"
                 value={settings.contact_phone}
@@ -521,6 +537,58 @@ export default function SettingsAdmin() {
                 onChange={(e) => setSettings({ ...settings, wechat_id: e.target.value })}
                 className="w-full px-4 py-2"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">WeChat QR</label>
+              <div className="flex flex-col gap-4">
+                <input
+                  type="file"
+                  accept="image/*"
+                  disabled={uploading}
+                  onChange={(e) => handleContactQrUpload('wechat_qr_image', e.target.files?.[0])}
+                  className="w-full"
+                />
+                <input
+                  type="text"
+                  value={settings.wechat_qr_image}
+                  onChange={(e) => setSettings({ ...settings, wechat_qr_image: e.target.value })}
+                  placeholder="Or paste image URL"
+                  className="w-full px-4 py-2"
+                />
+                {settings.wechat_qr_image && (
+                  <img
+                    src={withPublicOrigin(settings.wechat_qr_image)}
+                    alt="WeChat QR preview"
+                    className="h-32 w-32 rounded-2xl border object-contain bg-white"
+                  />
+                )}
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">WhatsApp QR</label>
+              <div className="flex flex-col gap-4">
+                <input
+                  type="file"
+                  accept="image/*"
+                  disabled={uploading}
+                  onChange={(e) => handleContactQrUpload('whatsapp_qr_image', e.target.files?.[0])}
+                  className="w-full"
+                />
+                <input
+                  type="text"
+                  value={settings.whatsapp_qr_image}
+                  onChange={(e) => setSettings({ ...settings, whatsapp_qr_image: e.target.value })}
+                  placeholder="Or paste image URL"
+                  className="w-full px-4 py-2"
+                />
+                {settings.whatsapp_qr_image && (
+                  <img
+                    src={withPublicOrigin(settings.whatsapp_qr_image)}
+                    alt="WhatsApp QR preview"
+                    className="h-32 w-32 rounded-2xl border object-contain bg-white"
+                  />
+                )}
+              </div>
             </div>
           </div>
         </section>
@@ -582,17 +650,30 @@ export default function SettingsAdmin() {
         </section>
 
         <section className="admin-panel p-8">
-          <h2 className="text-lg font-semibold mb-6 border-b pb-2 text-slate-700">Footer ICP</h2>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">ICP Registration Number</label>
-            <input
-              type="text"
-              value={settings.icp_number}
-              onChange={(e) => setSettings({ ...settings, icp_number: e.target.value })}
-              className="w-full px-4 py-2"
-              placeholder="e.g. 粤ICP备12345678号"
-            />
-            <p className="text-xs text-gray-500 mt-2">Shown in the site footer, links to the MIIT备案 site.</p>
+          <h2 className="text-lg font-semibold mb-6 border-b pb-2 text-slate-700">Footer Filing</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">ICP Registration Number</label>
+              <input
+                type="text"
+                value={settings.icp_number}
+                onChange={(e) => setSettings({ ...settings, icp_number: e.target.value })}
+                className="w-full px-4 py-2"
+                placeholder="e.g. 粤ICP备12345678号"
+              />
+              <p className="text-xs text-gray-500 mt-2">Shown in the site footer, links to the MIIT备案 site.</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Public Security Filing Number</label>
+              <input
+                type="text"
+                value={settings.public_security_beian}
+                onChange={(e) => setSettings({ ...settings, public_security_beian: e.target.value })}
+                className="w-full px-4 py-2"
+                placeholder="e.g. 粤公网安备44010402001234号"
+              />
+              <p className="text-xs text-gray-500 mt-2">Shown in the site footer as the 公安备案号.</p>
+            </div>
           </div>
         </section>
 

@@ -57,7 +57,18 @@ export async function sendContactMessage(data: Record<string, unknown>) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error('Failed to send message');
+  if (!res.ok) {
+    let message = 'Failed to send message';
+    try {
+      const payload = await res.json();
+      if (typeof payload?.error === 'string' && payload.error.trim()) {
+        message = payload.error;
+      }
+    } catch {
+      // ignore non-json error body
+    }
+    throw new Error(message);
+  }
   return res.json();
 }
 

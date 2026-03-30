@@ -17,3 +17,19 @@ func (s *ContactService) List() ([]*model.Contact, error) {
 func (s *ContactService) Create(contact *model.Contact) error {
 	return query.Contact.Create(contact)
 }
+
+func (s *ContactService) Delete(id uint) error {
+	con := query.Contact
+	_, err := con.Where(con.ID.Eq(id)).Delete()
+	return err
+}
+
+func (s *ContactService) DeleteBatch(ids []uint) error {
+	if len(ids) == 0 {
+		return nil
+	}
+
+	con := query.Contact
+	_, err := con.Where(con.ID.In(ids...)).Delete()
+	return err
+}

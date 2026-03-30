@@ -5,6 +5,7 @@ type SiteSettings = {
   social_youtube?: string;
   social_x?: string;
   icp_number?: string;
+  public_security_beian?: string;
 };
 
 const Footer = async () => {
@@ -81,6 +82,18 @@ const Footer = async () => {
               className="hover:text-white transition-colors"
             >
               {settings.icp_number}
+            </a>
+          </p>
+        )}
+        {settings.public_security_beian && (
+          <p className="mt-2 text-slate-300 text-sm tracking-wide">
+            <a
+              href="https://beian.mps.gov.cn/"
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-white transition-colors"
+            >
+              {settings.public_security_beian}
             </a>
           </p>
         )}

@@ -10,4 +10,6 @@ func RegisterContactRoutes(rg *gin.RouterGroup, protected *gin.RouterGroup) {
 	rg.POST("/contact", handlers.CreateContact)
 
 	protected.GET("/contacts", handlers.ListContacts)
+	protected.DELETE("/contacts/:id", handlers.DeleteContact)
+	protected.POST("/contacts/batch-delete", handlers.DeleteContactsBatch)
 }

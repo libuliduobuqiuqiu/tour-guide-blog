@@ -20,8 +20,8 @@ const menuItems = [
   { name: 'Blog', icon: BookOpen, href: '/admin/blog' },
   { name: 'Carousels', icon: BookOpen, href: '/admin/carousels' },
   { name: 'Reviews', icon: MessageSquare, href: '/admin/reviews' },
-  { name: 'Settings', icon: Settings, href: '/admin/settings' },
   { name: 'Contacts', icon: MessageSquare, href: '/admin/contacts' },
+  { name: 'Settings', icon: Settings, href: '/admin/settings' },
 ];
 
 export default function AdminSidebar() {

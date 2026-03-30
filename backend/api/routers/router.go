@@ -71,6 +71,8 @@ func registerAPIAdminAliases(protected *gin.RouterGroup) {
 	protected.DELETE("/posts/:id", handlers.DeletePost)
 
 	protected.GET("/contacts", handlers.ListContacts)
+	protected.DELETE("/contacts/:id", handlers.DeleteContact)
+	protected.POST("/contacts/batch-delete", handlers.DeleteContactsBatch)
 
 	protected.PUT("/config/:key", handlers.UpdateConfig)
 
