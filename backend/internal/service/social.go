@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"crypto/sha1"
 	"encoding/json"
 	"errors"
@@ -11,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -225,7 +227,19 @@ func (s *SocialService) syncInstagram(settings SocialPlatformSettings) ([]Social
 }
 
 func (s *SocialService) syncTikTok(settings SocialPlatformSettings) ([]SocialFeedItem, error) {
-	return s.syncTikTokPublic(settings)
+	items, err := s.syncTikTokYTDLP(settings)
+	if err == nil && len(items) > 0 {
+		return items, nil
+	}
+
+	publicItems, publicErr := s.syncTikTokPublic(settings)
+	if publicErr == nil {
+		return publicItems, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("yt-dlp sync failed: %v; public sync failed: %w", err, publicErr)
+	}
+	return nil, publicErr
 }
 
 func (s *SocialService) getFeedCache() (*SocialFeedCache, error) {
@@ -421,6 +435,116 @@ func (s *SocialService) syncTikTokPublic(settings SocialPlatformSettings) ([]Soc
 	}
 
 	return s.localizeFeedMedia(items)
+}
+
+type ytDLPPlaylistResult struct {
+	Entries []ytDLPEntry `json:"entries"`
+}
+
+type ytDLPEntry struct {
+	ID          string              `json:"id"`
+	URL         string              `json:"url"`
+	Title       string              `json:"title"`
+	Description string              `json:"description"`
+	Timestamp   int64               `json:"timestamp"`
+	Thumbnails  []ytDLPThumbnailRef `json:"thumbnails"`
+}
+
+type ytDLPThumbnailRef struct {
+	ID  string `json:"id"`
+	URL string `json:"url"`
+}
+
+func (s *SocialService) syncTikTokYTDLP(settings SocialPlatformSettings) ([]SocialFeedItem, error) {
+	username := normalizePlatformUsername("tiktok", settings.ProfileURL, settings.Username)
+	if username == "" {
+		return nil, errors.New("tiktok profile url or username is required")
+	}
+
+	bin, err := findYTDLPBinary()
+	if err != nil {
+		return nil, err
+	}
+
+	profileURL := strings.TrimSpace(settings.ProfileURL)
+	if profileURL == "" {
+		profileURL = fmt.Sprintf("https://www.tiktok.com/@%s", username)
+	}
+
+	limit := sanitizePostLimit(settings.PostLimit)
+	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(
+		ctx,
+		bin,
+		"--no-warnings",
+		"-J",
+		"--flat-playlist",
+		"--playlist-end", strconv.Itoa(limit),
+		profileURL,
+	)
+	output, err := cmd.Output()
+	if ctx.Err() == context.DeadlineExceeded {
+		return nil, errors.New("yt-dlp tiktok sync timed out")
+	}
+	if err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			detail := strings.TrimSpace(string(exitErr.Stderr))
+			if detail != "" {
+				return nil, fmt.Errorf("yt-dlp execution failed: %s", detail)
+			}
+		}
+		return nil, fmt.Errorf("yt-dlp execution failed: %w", err)
+	}
+
+	var result ytDLPPlaylistResult
+	if err := json.Unmarshal(output, &result); err != nil {
+		return nil, fmt.Errorf("failed to parse yt-dlp output: %w", err)
+	}
+	if len(result.Entries) == 0 {
+		return nil, errors.New("yt-dlp returned no tiktok posts")
+	}
+
+	items := make([]SocialFeedItem, 0, min(limit, len(result.Entries)))
+	for _, entry := range result.Entries {
+		item, ok := buildTikTokFeedItemFromYTDLP(entry, username)
+		if !ok {
+			continue
+		}
+		items = append(items, item)
+		if len(items) >= limit {
+			break
+		}
+	}
+	if len(items) == 0 {
+		return nil, errors.New("yt-dlp returned no usable tiktok posts")
+	}
+
+	return s.localizeFeedMedia(items)
+}
+
+func findYTDLPBinary() (string, error) {
+	candidates := []string{
+		strings.TrimSpace(viper.GetString("social.tiktok.yt_dlp_bin")),
+		strings.TrimSpace(os.Getenv("SOCIAL_TIKTOK_YT_DLP_BIN")),
+		"/tmp/yt-dlp",
+	}
+
+	for _, candidate := range candidates {
+		if candidate == "" {
+			continue
+		}
+		if _, err := os.Stat(candidate); err == nil {
+			return candidate, nil
+		}
+	}
+
+	if bin, err := exec.LookPath("yt-dlp"); err == nil {
+		return bin, nil
+	}
+
+	return "", errors.New("yt-dlp binary not found; set social.tiktok.yt_dlp_bin or SOCIAL_TIKTOK_YT_DLP_BIN")
 }
 
 const defaultBrowserUA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
@@ -840,6 +964,58 @@ func buildTikTokFeedItem(item map[string]interface{}, username string) (SocialFe
 		ThumbnailURL: coverURL,
 		Timestamp:    createTime,
 	}, true
+}
+
+func buildTikTokFeedItemFromYTDLP(entry ytDLPEntry, username string) (SocialFeedItem, bool) {
+	id := strings.TrimSpace(entry.ID)
+	if id == "" {
+		return SocialFeedItem{}, false
+	}
+
+	permalink := strings.TrimSpace(entry.URL)
+	if permalink == "" {
+		permalink = fmt.Sprintf("https://www.tiktok.com/@%s/video/%s", username, id)
+	}
+
+	caption := strings.TrimSpace(entry.Description)
+	if caption == "" {
+		caption = strings.TrimSpace(entry.Title)
+	}
+
+	coverURL := pickYTDLPThumbnail(entry.Thumbnails)
+	if coverURL == "" {
+		return SocialFeedItem{}, false
+	}
+
+	return SocialFeedItem{
+		ID:           id,
+		Platform:     "tiktok",
+		Caption:      caption,
+		Permalink:    permalink,
+		MediaType:    "video",
+		MediaURL:     coverURL,
+		ThumbnailURL: coverURL,
+		Timestamp:    normalizeUnixTimestamp(entry.Timestamp),
+	}, true
+}
+
+func pickYTDLPThumbnail(thumbnails []ytDLPThumbnailRef) string {
+	preferredIDs := []string{"cover", "originCover", "dynamicCover"}
+	for _, preferredID := range preferredIDs {
+		for _, thumbnail := range thumbnails {
+			if strings.EqualFold(strings.TrimSpace(thumbnail.ID), preferredID) && strings.TrimSpace(thumbnail.URL) != "" {
+				return strings.TrimSpace(thumbnail.URL)
+			}
+		}
+	}
+
+	for _, thumbnail := range thumbnails {
+		if strings.TrimSpace(thumbnail.URL) != "" {
+			return strings.TrimSpace(thumbnail.URL)
+		}
+	}
+
+	return ""
 }
 
 func extractTikTokPayload(body []byte) (map[string]interface{}, error) {

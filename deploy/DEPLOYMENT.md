@@ -26,11 +26,13 @@ bash scripts/init_ubuntu.sh
 - `redis-server`
 - `nodejs 20`
 - `logrotate`
+- `yt-dlp`
 - 常用工具：`curl/git/rsync/zip/unzip` 等
 
 并会自动完成：
 - 创建 `/var/log/tour-guide`
 - 安装前端日志轮转配置到 `/etc/logrotate.d/tour-guide-frontend`
+- 下载 `yt-dlp` 到 `/usr/local/bin/yt-dlp`
 
 ### 1.2 创建业务目录
 
@@ -94,6 +96,9 @@ make install-services \
 关键日志变量：
 - `FRONTEND_LOG_FILE=/var/log/tour-guide/frontend.log`
 
+TikTok 同步相关变量：
+- `SOCIAL_TIKTOK_YT_DLP_BIN=/usr/local/bin/yt-dlp`
+
 ### 2.3 前端日志按天轮转（logrotate）
 
 若你已经执行过 `scripts/init_ubuntu.sh`，该配置会自动安装。也可手工检查：
@@ -139,6 +144,14 @@ make deploy-backend \
   REMOTE_DIR=/opt
 ```
 
+如果这台机器是在本次改造前就已经初始化过，而你没有重新执行 `scripts/init_ubuntu.sh`，请先补装：
+
+```bash
+curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
+chmod +x /usr/local/bin/yt-dlp
+yt-dlp --version
+```
+
 ### 4.2 执行远程迁移（建议首次发布后执行）
 
 ```bash
@@ -170,6 +183,14 @@ make deploy-frontend \
 
 ```bash
 make deploy-backend SSH_HOST=<服务器IP> SSH_USER=root REMOTE_DIR=/opt
+```
+
+如遇 TikTok 同步突然失效，升级后端前建议先检查并更新 `yt-dlp`：
+
+```bash
+yt-dlp --version
+curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
+chmod +x /usr/local/bin/yt-dlp
 ```
 
 ### 5.2 仅前端更新

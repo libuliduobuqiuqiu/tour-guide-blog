@@ -102,18 +102,30 @@ function PlatformWall({
   title,
   items,
   shellClass,
+  accentClass,
+  iconClass,
 }: {
   title: string;
   items: SocialFeedItem[] | null | undefined;
   shellClass: string;
+  accentClass: string;
+  iconClass: string;
 }) {
   const normalizedItems = normalizeItems(items);
   const rowItems = buildLoopItems(items);
 
   return (
     <article className={`overflow-hidden rounded-[2rem] border border-white/60 ${shellClass}`}>
-      <div className="px-5 pt-5 sm:px-6 sm:pt-6">
-        <h3 className="text-base font-semibold uppercase tracking-[0.28em] text-slate-500">{title}</h3>
+      <div className="flex items-center justify-between gap-4 px-5 pt-5 sm:px-6 sm:pt-6">
+        <div className="flex items-center gap-3">
+          <div className={`flex h-11 w-11 items-center justify-center rounded-2xl text-lg text-white shadow-lg ${accentClass}`}>
+            <i className={iconClass} aria-hidden="true" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900 sm:text-xl">{title}</h3>
+            <p className="text-xs font-medium uppercase tracking-[0.24em] text-slate-500">Latest posts</p>
+          </div>
+        </div>
       </div>
 
       {normalizedItems.length > 0 ? (
@@ -142,11 +154,15 @@ export default function SocialShowcase({
         title="Instagram"
         items={instagramItems}
         shellClass="bg-[linear-gradient(180deg,rgba(255,255,255,0.94)_0%,rgba(255,244,249,0.92)_100%)] shadow-[0_30px_70px_-38px_rgba(221,42,123,0.32)]"
+        accentClass="bg-[linear-gradient(135deg,#f58529_0%,#dd2a7b_55%,#8134af_100%)]"
+        iconClass="fa-brands fa-instagram"
       />
       <PlatformWall
         title="TikTok"
         items={tiktokItems}
         shellClass="bg-[linear-gradient(180deg,rgba(248,251,255,0.96)_0%,rgba(239,247,255,0.96)_100%)] shadow-[0_30px_70px_-38px_rgba(15,23,42,0.28)]"
+        accentClass="bg-[linear-gradient(135deg,#0f172a_0%,#111827_55%,#14b8a6_100%)]"
+        iconClass="fa-brands fa-tiktok"
       />
     </div>
   );

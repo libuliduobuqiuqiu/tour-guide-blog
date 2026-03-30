@@ -31,7 +31,7 @@ const Footer = async () => {
 
   return (
     <footer
-      className="relative mt-16 text-white py-14 overflow-hidden"
+      className="relative text-white py-14 overflow-hidden"
       style={{
         backgroundImage:
           "linear-gradient(130deg, rgba(9,21,45,0.92), rgba(26,56,114,0.86)), url('https://images.unsplash.com/photo-1528164344705-47542687000d?auto=format&fit=crop&w=1800&q=80')",

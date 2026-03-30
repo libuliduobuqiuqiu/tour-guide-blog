@@ -10,6 +10,11 @@ sudo apt-get update -y
 echo "==> Installing base tools"
 sudo apt-get install -y curl ca-certificates gnupg lsb-release rsync unzip zip git
 
+echo "==> Installing TikTok sync dependency: yt-dlp"
+sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
+sudo chmod 755 /usr/local/bin/yt-dlp
+sudo /usr/local/bin/yt-dlp --version
+
 echo "==> Installing Nginx"
 sudo apt-get install -y nginx
 

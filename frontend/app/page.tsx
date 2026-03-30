@@ -82,7 +82,7 @@ export default async function Home() {
       />
 
       {/* Featured Tours */}
-      <section className="w-full bg-white/70">
+      <section className="w-full bg-[linear-gradient(180deg,rgba(247,251,255,0.86)_0%,rgba(237,244,255,0.88)_100%)]">
         <div className={`${sectionShellClass} py-24`}>
           <Reveal as="div" className="text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-semibold mb-4 tracking-wide">Featured Tours</h2>
@@ -179,7 +179,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="w-full bg-white/70">
+      <section className="w-full bg-[linear-gradient(180deg,rgba(247,251,255,0.88)_0%,rgba(236,244,255,0.92)_100%)]">
         <div className={`${sectionShellClass} py-24`}>
           <Reveal as="div" className="text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-semibold mb-4 tracking-wide">Reviews</h2>

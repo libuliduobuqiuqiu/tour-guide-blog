@@ -396,14 +396,14 @@ export default function SettingsAdmin() {
         </section>
 
         <section className="admin-panel p-8">
-          <div className="flex flex-col gap-3 border-b pb-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-4 border-b pb-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="text-lg font-semibold text-rose-700">Social Integrations</h2>
               <p className="mt-1 text-sm text-gray-500">
-                Public profile sync is the default path. Add a profile URL, set the post limit, then sync recent posts for the homepage carousels.
+                Add the Instagram or TikTok profile URL below, then sync the latest posts used by the homepage social carousels.
               </p>
             </div>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <button
                 type="button"
                 onClick={() => handleSocialSync('instagram')}
@@ -436,8 +436,6 @@ export default function SettingsAdmin() {
               const platformSettings = socialSettings[platform];
               const platformStatus = socialStatus[platform];
               const title = platform === 'instagram' ? 'Instagram' : 'TikTok';
-              const accountLabel = platform === 'instagram' ? 'Business Account ID' : 'Open ID';
-              const clientLabel = platform === 'instagram' ? 'App ID' : 'Client Key';
               const profilePlaceholder =
                 platform === 'instagram'
                   ? 'https://www.instagram.com/yourhandle/'
@@ -466,17 +464,7 @@ export default function SettingsAdmin() {
 
                   <div className="grid grid-cols-1 gap-4">
                     <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-                      Recommended: use public profile sync. Fill in the profile URL and post limit below, then click sync. The OAuth fields are optional fallback settings.
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
-                      <input
-                        type="text"
-                        value={platformSettings.username}
-                        onChange={(e) => updateSocialPlatform(platform, 'username', e.target.value)}
-                        className="w-full px-4 py-2"
-                        placeholder={platform === 'instagram' ? '@yourhandle' : '@yourtiktok'}
-                      />
+                      Save the profile URL first, then use the sync buttons above to refresh the homepage feed. Other platform credentials are no longer required here.
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Profile URL</label>
@@ -486,72 +474,6 @@ export default function SettingsAdmin() {
                         onChange={(e) => updateSocialPlatform(platform, 'profile_url', e.target.value)}
                         className="w-full px-4 py-2"
                         placeholder={profilePlaceholder}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Post Limit</label>
-                      <input
-                        type="number"
-                        min={1}
-                        max={24}
-                        value={platformSettings.post_limit}
-                        onChange={(e) => updateSocialPlatform(platform, 'post_limit', e.target.value)}
-                        className="w-full px-4 py-2"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{accountLabel}</label>
-                      <input
-                        type="text"
-                        value={platformSettings.account_id}
-                        onChange={(e) => updateSocialPlatform(platform, 'account_id', e.target.value)}
-                        className="w-full px-4 py-2"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{clientLabel}</label>
-                      <input
-                        type="text"
-                        value={platformSettings.client_id}
-                        onChange={(e) => updateSocialPlatform(platform, 'client_id', e.target.value)}
-                        className="w-full px-4 py-2"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Client Secret</label>
-                      <input
-                        type="password"
-                        value={platformSettings.client_secret}
-                        onChange={(e) => updateSocialPlatform(platform, 'client_secret', e.target.value)}
-                        className="w-full px-4 py-2"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Redirect URI</label>
-                      <input
-                        type="url"
-                        value={platformSettings.redirect_uri}
-                        onChange={(e) => updateSocialPlatform(platform, 'redirect_uri', e.target.value)}
-                        className="w-full px-4 py-2"
-                        placeholder="https://your-domain.com/..."
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Access Token</label>
-                      <textarea
-                        rows={3}
-                        value={platformSettings.access_token}
-                        onChange={(e) => updateSocialPlatform(platform, 'access_token', e.target.value)}
-                        className="w-full px-4 py-2"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Refresh Token</label>
-                      <textarea
-                        rows={2}
-                        value={platformSettings.refresh_token}
-                        onChange={(e) => updateSocialPlatform(platform, 'refresh_token', e.target.value)}
-                        className="w-full px-4 py-2"
                       />
                     </div>
                   </div>

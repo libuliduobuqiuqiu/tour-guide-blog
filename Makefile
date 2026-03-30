@@ -54,7 +54,8 @@ REMOTE_DB_NAME ?= tour_guide
 	dump-db upload-db remote-import-db deploy-db \
 	bundle import-bundle \
 	install-services restart-backend restart-frontend restart-services \
-	package-data upload-data remote-import-data deploy-data
+	package-data upload-data remote-import-data deploy-data \
+	changelog
 
 # ==============================
 # 帮助
@@ -88,7 +89,10 @@ help:
 	echo ""; \
 	echo "[备份恢复]"; \
 	echo "  bundle           打包数据库 + uploads + migrations"; \
-	echo "  import-bundle    使用 bundle 覆盖导入本地数据库与图片";
+	echo "  import-bundle    使用 bundle 覆盖导入本地数据库与图片"; \
+	echo ""; \
+	echo "[文档]"; \
+	echo "  changelog        根据 docs/commit-log-*.md 生成 CHANGELOG.md";
 
 # ==============================
 # 本地开发
@@ -113,6 +117,15 @@ mac:
 # 启动前端开发服务
 frontend:
 	cd frontend && NEXT_PUBLIC_API_URL=$(NEXT_PUBLIC_API_URL) npm run dev
+
+# ==============================
+# 文档
+# ==============================
+
+# 根据 docs/commit-log-*.md 生成 CHANGELOG.md
+# 依赖：python3（仅标准库，无需额外安装第三方组件）
+changelog:
+	python3 scripts/generate_changelog.py
 
 # ==============================
 # 构建与打包
