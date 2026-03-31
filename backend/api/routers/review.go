@@ -8,9 +8,12 @@ import (
 
 func RegisterReviewRoutes(rg *gin.RouterGroup, protected *gin.RouterGroup) {
 	rg.GET("/reviews", handlers.ListReviews)
+	rg.POST("/reviews", handlers.CreatePublicReview)
+	rg.POST("/reviews/photos", handlers.UploadReviewPhoto)
 
 	protected.GET("/reviews", handlers.ListReviews)
 	protected.POST("/reviews", handlers.CreateReview)
+	protected.POST("/reviews/reorder", handlers.ReorderReviews)
 	protected.PUT("/reviews/:id", handlers.UpdateReview)
 	protected.DELETE("/reviews/:id", handlers.DeleteReview)
 	protected.POST("/reviews/generate", handlers.GenerateReviews)

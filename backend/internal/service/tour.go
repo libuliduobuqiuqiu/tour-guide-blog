@@ -1,8 +1,10 @@
 package service
 
 import (
+	"tour-guide-blog-backend/internal/dao"
 	"tour-guide-blog-backend/internal/model"
-	"tour-guide-blog-backend/internal/query"
+
+	"gorm.io/gorm"
 )
 
 type TourService struct{}
@@ -10,42 +12,53 @@ type TourService struct{}
 var Tour = &TourService{}
 
 func (s *TourService) List() ([]*model.Tour, error) {
-	t := query.Tour
-	return t.Order(t.CreatedAt.Desc()).Find()
+	var tours []*model.Tour
+	err := dao.DB.Order("sort_order ASC, created_at DESC").Find(&tours).Error
+	return tours, err
 }
 
 func (s *TourService) ListLite() ([]*model.Tour, error) {
-	t := query.Tour
-	return t.Select(
-		t.ID,
-		t.Title,
-		t.Description,
-		t.CoverImage,
-		t.Price,
-		t.Duration,
-		t.Location,
-		t.CreatedAt,
-		t.UpdatedAt,
-	).Order(t.CreatedAt.Desc()).Find()
+	var tours []*model.Tour
+	err := dao.DB.Select(
+		"id",
+		"title",
+		"description",
+		"cover_image",
+		"price",
+		"duration",
+		"location",
+		"sort_order",
+		"created_at",
+		"updated_at",
+	).Order("sort_order ASC, created_at DESC").Find(&tours).Error
+	return tours, err
 }
 
 func (s *TourService) GetByID(id uint) (*model.Tour, error) {
-	t := query.Tour
-	return t.Where(t.ID.Eq(id)).First()
+	var tour model.Tour
+	err := dao.DB.First(&tour, id).Error
+	return &tour, err
 }
 
 func (s *TourService) Create(tour *model.Tour) error {
-	return query.Tour.Create(tour)
+	return dao.DB.Create(tour).Error
 }
 
 func (s *TourService) Update(id uint, tour *model.Tour) error {
-	t := query.Tour
-	_, err := t.Where(t.ID.Eq(id)).Updates(tour)
-	return err
+	return dao.DB.Model(&model.Tour{}).Where("id = ?", id).Updates(tour).Error
 }
 
 func (s *TourService) Delete(id uint) error {
-	t := query.Tour
-	_, err := t.Where(t.ID.Eq(id)).Delete()
-	return err
+	return dao.DB.Delete(&model.Tour{}, id).Error
+}
+
+func (s *TourService) Reorder(ids []uint) error {
+	return dao.DB.Transaction(func(tx *gorm.DB) error {
+		for index, id := range ids {
+			if err := tx.Model(&model.Tour{}).Where("id = ?", id).Update("sort_order", index+1).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }

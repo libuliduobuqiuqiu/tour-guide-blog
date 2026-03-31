@@ -12,6 +12,7 @@ func RegisterTourRoutes(rg *gin.RouterGroup, protected *gin.RouterGroup) {
 
 	protected.GET("/tours", handlers.ListTours)
 	protected.POST("/tours", handlers.CreateTour)
+	protected.POST("/tours/reorder", handlers.ReorderTours)
 	protected.PUT("/tours/:id", handlers.UpdateTour)
 	protected.DELETE("/tours/:id", handlers.DeleteTour)
 }

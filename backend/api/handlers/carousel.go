@@ -14,10 +14,10 @@ func ListCarousels(c *gin.Context) {
 	// 这里简单处理，返回所有，前端自己筛选或者加参数
 	// 为了方便管理后台，返回所有
 	activeOnly := c.Query("active") == "true"
-	
+
 	var list []*model.Carousel
 	var err error
-	
+
 	if activeOnly {
 		list, err = service.Carousel.ListActive()
 	} else {
@@ -80,4 +80,24 @@ func DeleteCarousel(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Carousel deleted"})
+}
+
+func ReorderCarousels(c *gin.Context) {
+	var req struct {
+		IDs []uint `json:"ids"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if len(req.IDs) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ids is required"})
+		return
+	}
+
+	if err := service.Carousel.Reorder(req.IDs); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Carousel order updated"})
 }

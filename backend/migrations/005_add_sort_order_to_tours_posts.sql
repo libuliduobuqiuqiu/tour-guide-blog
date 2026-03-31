@@ -1,0 +1,5 @@
+ALTER TABLE tours
+  ADD COLUMN sort_order INT NOT NULL DEFAULT 0 AFTER location;
+
+ALTER TABLE posts
+  ADD COLUMN sort_order INT NOT NULL DEFAULT 0 AFTER tags;

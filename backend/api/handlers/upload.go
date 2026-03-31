@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -13,14 +14,73 @@ import (
 	"github.com/spf13/viper"
 )
 
+type uploadRateEntry struct {
+	Count     int
+	WindowEnd time.Time
+}
+
+var (
+	reviewUploadRateMu      sync.Mutex
+	reviewUploadRateEntries = map[string]uploadRateEntry{}
+)
+
+const (
+	reviewPhotoMaxSize    int64 = 4 * 1024 * 1024
+	reviewPhotoRateLimit        = 12
+	reviewPhotoRateWindow       = 10 * time.Minute
+)
+
 func UploadImage(c *gin.Context) {
+	uploadImage(c, viper.GetInt64("upload.max_size"))
+}
+
+func UploadReviewPhoto(c *gin.Context) {
+	clientIP := getClientIP(c)
+	if !validateReviewUploadRate(clientIP) {
+		c.JSON(http.StatusTooManyRequests, gin.H{"error": "Too many upload requests. Please try again later."})
+		return
+	}
+
+	uploadImage(c, reviewPhotoMaxSize)
+}
+
+func validateReviewUploadRate(clientIP string) bool {
+	now := time.Now()
+
+	reviewUploadRateMu.Lock()
+	defer reviewUploadRateMu.Unlock()
+
+	for key, entry := range reviewUploadRateEntries {
+		if now.After(entry.WindowEnd) {
+			delete(reviewUploadRateEntries, key)
+		}
+	}
+
+	entry := reviewUploadRateEntries[clientIP]
+	if now.After(entry.WindowEnd) {
+		entry = uploadRateEntry{
+			Count:     0,
+			WindowEnd: now.Add(reviewPhotoRateWindow),
+		}
+	}
+
+	if entry.Count >= reviewPhotoRateLimit {
+		reviewUploadRateEntries[clientIP] = entry
+		return false
+	}
+
+	entry.Count++
+	reviewUploadRateEntries[clientIP] = entry
+	return true
+}
+
+func uploadImage(c *gin.Context, maxSize int64) {
 	file, err := c.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "No file uploaded"})
 		return
 	}
 
-	// 检查文件类型
 	ext := strings.ToLower(strings.TrimSpace(filepath.Ext(file.Filename)))
 	allowTypes := viper.GetStringSlice("upload.allow_types")
 	if len(allowTypes) == 0 {
@@ -39,43 +99,32 @@ func UploadImage(c *gin.Context) {
 		normalizedAllowTypes[normalized] = struct{}{}
 	}
 
-	allowed := false
-	if _, ok := normalizedAllowTypes[ext]; ok {
-		allowed = true
-	}
-	if !allowed {
+	if _, ok := normalizedAllowTypes[ext]; !ok {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "File type not allowed, supported: jpg, jpeg, png, gif, webp",
 		})
 		return
 	}
 
-	// 检查大小
-	maxSize := viper.GetInt64("upload.max_size")
 	if file.Size > maxSize {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "File too large"})
 		return
 	}
 
-	// 确保存储目录存在
 	uploadPath := viper.GetString("upload.path")
 	if err := os.MkdirAll(uploadPath, 0755); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create upload directory"})
 		return
 	}
 
-	// 生成新文件名
 	newFilename := fmt.Sprintf("%s_%s%s", time.Now().Format("20060102"), uuid.New().String()[:8], ext)
 	dst := filepath.Join(uploadPath, newFilename)
 
-	// 保存文件
 	if err := c.SaveUploadedFile(file, dst); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
 		return
 	}
 
-	// 返回访问URL
-	// 假设静态文件服务挂载在 /uploads
 	url := fmt.Sprintf("/uploads/%s", newFilename)
 	c.JSON(http.StatusOK, gin.H{
 		"url":      url,

@@ -9,8 +9,10 @@ import {
   Settings,
   MessageSquare,
   LogOut,
-  User,
+  UserRound,
   Sparkles,
+  Images,
+  PanelLeftClose,
 } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 
@@ -18,7 +20,7 @@ const menuItems = [
   { name: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
   { name: 'Tours', icon: Map, href: '/admin/tours' },
   { name: 'Blog', icon: BookOpen, href: '/admin/blog' },
-  { name: 'Carousels', icon: BookOpen, href: '/admin/carousels' },
+  { name: 'Carousels', icon: Images, href: '/admin/carousels' },
   { name: 'Reviews', icon: MessageSquare, href: '/admin/reviews' },
   { name: 'Contacts', icon: MessageSquare, href: '/admin/contacts' },
   { name: 'Settings', icon: Settings, href: '/admin/settings' },
@@ -29,48 +31,61 @@ export default function AdminSidebar() {
   const { logout } = useAuth();
 
   return (
-    <div className="w-20 md:w-64 text-white flex flex-col min-h-screen sticky top-0 h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-blue-950 shadow-2xl">
-      <div className="p-6 border-b border-white/10">
-        <h1 className="text-xl font-semibold tracking-wide items-center gap-2 hidden md:flex">
-          <User className="text-sky-400" />
-          Janet Admin
-        </h1>
-        <p className="text-xs text-slate-400 mt-2 items-center gap-1 hidden md:flex">
-          <Sparkles size={12} />
-          Dashboard Workspace
-        </p>
-      </div>
+    <aside className="admin-sidebar w-[88px] text-white md:w-[288px]">
+      <div className="relative z-10 flex h-full flex-col">
+        <div className="border-b border-white/10 px-4 py-5 md:px-6 md:py-6">
+          <div className="hidden items-center gap-3 md:flex">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-400/14 text-sky-200 ring-1 ring-sky-300/18">
+              <UserRound size={22} />
+            </div>
+            <div>
+              <h1 className="text-lg font-semibold tracking-[0.08em] text-white">Janet Admin</h1>
+              <p className="mt-1 text-xs uppercase tracking-[0.24em] text-slate-300">Content Control Room</p>
+            </div>
+          </div>
+          <div className="flex justify-center md:hidden">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-400/14 text-sky-200 ring-1 ring-sky-300/18">
+              <PanelLeftClose size={20} />
+            </div>
+          </div>
+          <p className="mt-4 hidden items-center gap-1 text-xs text-slate-300 md:flex">
+            <Sparkles size={12} />
+            Unified dashboard workspace
+          </p>
+        </div>
 
-      <nav className="flex-1 p-4 space-y-2">
-        {menuItems.map((item) => {
-          const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href));
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              prefetch={false}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                isActive 
-                  ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-900/40' 
-                  : 'text-slate-300 hover:bg-white/10 hover:text-white'
-              }`}
-            >
-              <item.icon size={20} />
-              <span className="font-medium hidden md:inline">{item.name}</span>
-            </Link>
-          );
-        })}
-      </nav>
+        <nav className="relative z-10 flex-1 space-y-2 px-3 py-4 md:px-4 md:py-5">
+          {menuItems.map((item) => {
+            const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href));
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                prefetch={false}
+                className={`admin-sidebar-link flex items-center justify-center gap-3 rounded-2xl px-4 py-3 text-slate-100 md:justify-start ${
+                  isActive ? 'admin-sidebar-link-active' : ''
+                }`}
+              >
+                <item.icon size={19} className="relative z-10 shrink-0" />
+                <span className="relative z-10 hidden text-sm font-semibold tracking-[0.08em] md:inline">
+                  {item.name}
+                </span>
+              </Link>
+            );
+          })}
+        </nav>
 
-      <div className="p-4 border-t border-white/10">
-        <button
-          onClick={logout}
-          className="flex items-center gap-3 px-4 py-3 w-full text-slate-300 hover:bg-white/10 hover:text-white rounded-xl transition-all"
-        >
-          <LogOut size={20} />
-          <span className="font-medium hidden md:inline">Logout</span>
-        </button>
+        <div className="relative z-10 border-t border-white/10 p-3 md:p-4">
+          <button
+            type="button"
+            onClick={logout}
+            className="admin-sidebar-link flex w-full items-center justify-center gap-3 rounded-2xl px-4 py-3 text-slate-100 md:justify-start"
+          >
+            <LogOut size={19} />
+            <span className="hidden text-sm font-semibold tracking-[0.08em] md:inline">Logout</span>
+          </button>
+        </div>
       </div>
-    </div>
+    </aside>
   );
 }

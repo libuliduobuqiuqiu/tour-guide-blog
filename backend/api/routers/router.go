@@ -62,11 +62,13 @@ func InitRouter(debug bool) *gin.Engine {
 func registerAPIAdminAliases(protected *gin.RouterGroup) {
 	protected.GET("/tours", handlers.ListTours)
 	protected.POST("/tours", handlers.CreateTour)
+	protected.POST("/tours/reorder", handlers.ReorderTours)
 	protected.PUT("/tours/:id", handlers.UpdateTour)
 	protected.DELETE("/tours/:id", handlers.DeleteTour)
 
 	protected.GET("/posts", handlers.ListPosts)
 	protected.POST("/posts", handlers.CreatePost)
+	protected.POST("/posts/reorder", handlers.ReorderPosts)
 	protected.PUT("/posts/:id", handlers.UpdatePost)
 	protected.DELETE("/posts/:id", handlers.DeletePost)
 
@@ -78,11 +80,13 @@ func registerAPIAdminAliases(protected *gin.RouterGroup) {
 
 	protected.GET("/carousels", handlers.ListCarousels)
 	protected.POST("/carousels", handlers.CreateCarousel)
+	protected.POST("/carousels/reorder", handlers.ReorderCarousels)
 	protected.PUT("/carousels/:id", handlers.UpdateCarousel)
 	protected.DELETE("/carousels/:id", handlers.DeleteCarousel)
 
 	protected.GET("/reviews", handlers.ListReviews)
 	protected.POST("/reviews", handlers.CreateReview)
+	protected.POST("/reviews/reorder", handlers.ReorderReviews)
 	protected.PUT("/reviews/:id", handlers.UpdateReview)
 	protected.DELETE("/reviews/:id", handlers.DeleteReview)
 	protected.POST("/reviews/generate", handlers.GenerateReviews)

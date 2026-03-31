@@ -98,7 +98,7 @@ export default function ContactsAdmin() {
   };
 
   return (
-    <div>
+    <div className="fade-up">
       <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-wide">User Messages</h1>

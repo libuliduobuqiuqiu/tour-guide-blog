@@ -45,6 +45,54 @@ export async function fetchReviews() {
   return res.json();
 }
 
+export async function submitReview(data: Record<string, unknown>) {
+  const res = await fetch(`${API_BASE_URL}/reviews`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    let message = 'Failed to submit review';
+    try {
+      const payload = await res.json();
+      if (typeof payload?.error === 'string' && payload.error.trim()) {
+        message = payload.error;
+      }
+    } catch {
+      // ignore non-json error body
+    }
+    throw new Error(message);
+  }
+
+  return res.json();
+}
+
+export async function uploadReviewPhoto(file: File) {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const res = await fetch(`${API_BASE_URL}/reviews/photos`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!res.ok) {
+    let message = 'Failed to upload photo';
+    try {
+      const payload = await res.json();
+      if (typeof payload?.error === 'string' && payload.error.trim()) {
+        message = payload.error;
+      }
+    } catch {
+      // ignore non-json error body
+    }
+    throw new Error(message);
+  }
+
+  return res.json() as Promise<{ url: string; filename: string }>;
+}
+
 export async function fetchSocialFeed() {
   const res = await fetch(`${API_BASE_URL}/social/feed`, { cache: 'no-store' });
   if (!res.ok) throw new Error('Failed to fetch social feed');

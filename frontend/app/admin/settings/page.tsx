@@ -278,7 +278,7 @@ export default function SettingsAdmin() {
   };
 
   return (
-    <div>
+    <div className="fade-up">
       <h1 className="text-2xl font-semibold tracking-wide mb-8">Site Settings</h1>
 
       <form onSubmit={handleSave} className="space-y-8">

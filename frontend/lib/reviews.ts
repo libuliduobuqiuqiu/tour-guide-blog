@@ -7,7 +7,10 @@ export interface Review {
   host: string;
   content: string;
   avatar: string;
+  photos: string[];
   rating: number;
+  sort_order?: number;
+  is_active?: boolean;
 }
 
 export function formatReviewMonth(dateValue: string | null | undefined) {
@@ -22,4 +25,9 @@ export function formatReviewMonth(dateValue: string | null | undefined) {
   const year = parsed.getUTCFullYear();
   const month = String(parsed.getUTCMonth() + 1).padStart(2, '0');
   return `${year}.${month}`;
+}
+
+export function getReviewInitial(name: string | null | undefined) {
+  const trimmed = (name || '').trim();
+  return trimmed ? trimmed.charAt(0).toUpperCase() : 'G';
 }

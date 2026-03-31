@@ -1,8 +1,11 @@
 package service
 
 import (
+	"tour-guide-blog-backend/internal/dao"
 	"tour-guide-blog-backend/internal/model"
 	"tour-guide-blog-backend/internal/query"
+
+	"gorm.io/gorm"
 )
 
 type CarouselService struct{}
@@ -38,4 +41,15 @@ func (s *CarouselService) Delete(id uint) error {
 func (s *CarouselService) Get(id uint) (*model.Carousel, error) {
 	q := query.Carousel
 	return q.Where(q.ID.Eq(id)).First()
+}
+
+func (s *CarouselService) Reorder(ids []uint) error {
+	return dao.DB.Transaction(func(tx *gorm.DB) error {
+		for index, id := range ids {
+			if err := tx.Model(&model.Carousel{}).Where("id = ?", id).Update("sort_order", index+1).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }

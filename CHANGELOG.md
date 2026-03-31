@@ -3,6 +3,146 @@
 This file is generated from the commit log documents in `docs/commit-log-*.md`.
 The format is intentionally close to Keep a Changelog: chronological releases with human-written change summaries.
 
+## 2026-04-01
+
+Source: `docs/commit-log-2026-04-01-admin-ui-and-reviews.md`
+
+## This Round Summary
+
+本轮工作聚焦两个方向：
+
+- 重构前后台 Reviews 流程，补齐游客评价提交流程、图片上传与后台审核排序能力
+- 统一后台管理界面，重做侧边栏、Dashboard、弹框、分页、列表交互，并让 Tours、Blog、Carousels 接入一致的管理模式
+
+本轮同时补了 Tours / Posts 的排序持久化字段与接口，后台各模块的交互方式和视觉风格已经基本统一。
+
+## Code Changes
+
+### 1. 前台 Reviews 页面升级为可投稿、可看图的完整评价体验
+
+Summary:
+
+- 新增前台评价提交弹框，支持游客填写国家、评分、正文和最多 3 张图片
+- 新增前台评价图片上传接口调用
+- Reviews 页面改成客户端壳层，支持打开投稿弹框
+- 评价卡片新增图片展示、大图预览与更完整的详情弹层
+- 新增国家数据源与前台评价辅助函数
+
+Impact:
+
+- 游客现在可以直接从前台提交评价
+- 评价内容可带图片，展示层更完整
+- 前台 Reviews 页从“静态展示”提升为“展示 + 投稿 + 详情浏览”完整闭环
+
+Files touched:
+
+- `frontend/app/reviews/page.tsx`
+- `frontend/components/ReviewsPageClient.tsx`
+- `frontend/components/ReviewSubmissionModal.tsx`
+- `frontend/components/ReviewCards.tsx`
+- `frontend/lib/api.ts`
+- `frontend/lib/reviews.ts`
+- `frontend/lib/countries.ts`
+
+### 2. 后端 Reviews 能力补齐公开提交流程、图片字段和审核排序
+
+Summary:
+
+- `Review` 模型新增 `photos` JSON 字段
+- 新增公开评价提交流程与图片 URL 校验
+- 为公开评价提交增加基础限流与蜜罐字段防刷
+- 新增后台 Reviews 重排接口
+- Review service 改为支持排序、默认日期、默认排序号和全字段更新
+- 新增评论图片迁移脚本
+
+Impact:
+
+- 前台评价提交流程不再依赖后台手工录入
+- 后台可审核、排序、置顶含图评论
+- Review 数据结构可以正式承载图片型评价内容
+
+Files touched:
+
+- `backend/internal/model/models.go`
+- `backend/api/handlers/review.go`
+- `backend/internal/service/review.go`
+- `backend/api/routers/review.go`
+- `backend/migrations/004_add_review_photos.sql`
+
+### 3. 后台整体视觉和交互统一，并扩展到更多内容页面
+
+Summary:
+
+- 重做后台侧边栏背景、图标、字体层级和激活态
+- 后台 Layout 调整壳层结构，统一页面淡入与弹框过渡
+- Dashboard 重做为运营面板
+- Tours、Blog、Carousels 全部改成与 Reviews 类似的卡片式后台页面
+- 三个页面都支持分页、拖拽排序、置顶排序和详情弹框
+
+Impact:
+
+- 后台整体视觉更统一，交互更稳定
+- 内容管理方式统一，学习成本明显下降
+- Tours、Blog、Carousels 的日常维护效率更高
+
+Files touched:
+
+- `frontend/components/admin/AdminSidebar.tsx`
+- `frontend/app/admin/layout.tsx`
+- `frontend/app/admin/page.tsx`
+- `frontend/app/admin/reviews/page.tsx`
+- `frontend/app/admin/tours/page.tsx`
+- `frontend/app/admin/blog/page.tsx`
+- `frontend/app/admin/carousels/page.tsx`
+- `frontend/app/admin/contacts/page.tsx`
+- `frontend/app/admin/settings/page.tsx`
+- `frontend/app/globals.css`
+- `frontend/components/admin/AdminModal.tsx`
+- `frontend/components/admin/AdminPagination.tsx`
+
+### 4. Tours、Posts、Carousels 的排序能力后端持久化
+
+Summary:
+
+- Tours 和 Posts 模型新增 `sort_order`
+- 新增 Tours、Posts、Carousels 的 reorder handler / route / service
+- Tours / Posts 查询顺序改为按 `sort_order` 优先，再按创建时间降序
+- 新增 Tours / Posts 排序迁移
+
+Impact:
+
+- 后台拖拽和置顶不再只是前端假动作
+- Tours、Blog、Carousels 的展示顺序可以稳定持久化
+
+Files touched:
+
+- `backend/internal/model/models.go`
+- `backend/internal/service/tour.go`
+- `backend/internal/service/post.go`
+- `backend/internal/service/carousel.go`
+- `backend/api/handlers/tour.go`
+- `backend/api/handlers/post.go`
+- `backend/api/handlers/carousel.go`
+- `backend/api/routers/tour.go`
+- `backend/api/routers/post.go`
+- `backend/api/routers/carousel.go`
+- `backend/api/routers/router.go`
+- `backend/migrations/005_add_sort_order_to_tours_posts.sql`
+
+## Validation
+
+Checks run:
+
+- `GOCACHE=/tmp/go-build go test ./...`
+- `npm run lint`
+- `npx tsc --noEmit`
+
+Results:
+
+- backend tests passed
+- frontend type check passed
+- frontend lint passed with existing warnings only
+
 ## 2026-03-30
 
 Source: `docs/commit-log-2026-03-30.md`

@@ -11,6 +11,7 @@ func RegisterCarouselRoutes(rg *gin.RouterGroup, protected *gin.RouterGroup) {
 
 	protected.GET("/carousels", handlers.ListCarousels)
 	protected.POST("/carousels", handlers.CreateCarousel)
+	protected.POST("/carousels/reorder", handlers.ReorderCarousels)
 	protected.PUT("/carousels/:id", handlers.UpdateCarousel)
 	protected.DELETE("/carousels/:id", handlers.DeleteCarousel)
 }

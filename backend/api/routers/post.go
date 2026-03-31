@@ -12,6 +12,7 @@ func RegisterPostRoutes(rg *gin.RouterGroup, protected *gin.RouterGroup) {
 
 	protected.GET("/posts", handlers.ListPosts)
 	protected.POST("/posts", handlers.CreatePost)
+	protected.POST("/posts/reorder", handlers.ReorderPosts)
 	protected.PUT("/posts/:id", handlers.UpdatePost)
 	protected.DELETE("/posts/:id", handlers.DeletePost)
 }
