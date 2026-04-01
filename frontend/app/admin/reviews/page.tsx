@@ -257,7 +257,7 @@ export default function ReviewsAdmin() {
   };
 
   return (
-    <div className="fade-up relative">
+    <div className="fade-up relative flex min-h-full flex-col">
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-wide">Manage Reviews</h1>
@@ -438,7 +438,7 @@ export default function ReviewsAdmin() {
         </span>
       </div>
 
-      <div className="space-y-4">
+      <div className="flex-1 space-y-4">
         {paginatedReviews.map((item) => (
           <div
             key={item.id}

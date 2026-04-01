@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import api from '@/lib/axios';
-import { Calendar, ChevronLeft, ChevronRight, Mail, Trash2 } from 'lucide-react';
+import AdminPagination from '@/components/admin/AdminPagination';
+import { Calendar, Mail, Trash2 } from 'lucide-react';
 
 interface Contact {
   id: number;
@@ -98,7 +99,7 @@ export default function ContactsAdmin() {
   };
 
   return (
-    <div className="fade-up">
+    <div className="fade-up flex min-h-full flex-col">
       <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-wide">User Messages</h1>
@@ -128,7 +129,8 @@ export default function ContactsAdmin() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
+      <div className="flex-1">
+        <div className="grid grid-cols-1 gap-4">
         {paginatedContacts.map((contact) => (
           <div key={contact.id} className="admin-panel overflow-hidden">
             <div className="flex flex-col gap-5 p-6 lg:flex-row lg:items-start">
@@ -193,34 +195,16 @@ export default function ContactsAdmin() {
             No messages yet.
           </div>
         )}
+        </div>
       </div>
 
       {contacts.length > PAGE_SIZE && (
-        <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 md:flex-row md:items-center md:justify-between">
-          <div className="text-sm text-slate-500">
-            Page {currentPage} of {totalPages}
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setPage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <ChevronLeft size={16} />
-              Prev
-            </button>
-            <button
-              type="button"
-              onClick={() => setPage(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Next
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        </div>
+        <AdminPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPrevious={() => setPage(Math.max(1, currentPage - 1))}
+          onNext={() => setPage(Math.min(totalPages, currentPage + 1))}
+        />
       )}
     </div>
   );

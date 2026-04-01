@@ -16,7 +16,7 @@ export default function AdminPagination({
   onNext,
 }: AdminPaginationProps) {
   return (
-    <div className="mt-6 flex flex-col gap-3 border-t border-slate-200 pt-5 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
+    <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white/95 px-5 py-4 text-sm text-slate-500 shadow-[0_14px_32px_-28px_rgba(15,23,42,0.45)] md:flex-row md:items-center md:justify-between">
       <p>
         Page {currentPage} of {totalPages}
       </p>

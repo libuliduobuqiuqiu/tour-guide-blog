@@ -185,7 +185,7 @@ export default function ToursAdmin() {
   };
 
   return (
-    <div className="fade-up space-y-6">
+    <div className="fade-up flex min-h-full flex-col gap-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-wide">Manage Tours</h1>
@@ -241,7 +241,8 @@ export default function ToursAdmin() {
         </span>
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
+      <div className="flex-1">
+        <div className="grid grid-cols-1 gap-4">
         {paginatedTours.map((tour) => (
           <div
             key={tour.id}
@@ -302,6 +303,7 @@ export default function ToursAdmin() {
         {tours.length === 0 && (
           <div className="admin-panel py-20 text-center text-slate-500">No tours yet.</div>
         )}
+        </div>
       </div>
 
       <AdminPagination

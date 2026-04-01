@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 interface AdminModalProps {
@@ -21,7 +22,9 @@ export default function AdminModal({
   useEffect(() => {
     if (!open) return;
 
+    const previousHtmlOverflow = document.documentElement.style.overflow;
     const previousOverflow = document.body.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
 
     const onKeyDown = (event: KeyboardEvent) => {
@@ -30,6 +33,7 @@ export default function AdminModal({
 
     window.addEventListener('keydown', onKeyDown);
     return () => {
+      document.documentElement.style.overflow = previousHtmlOverflow;
       document.body.style.overflow = previousOverflow;
       window.removeEventListener('keydown', onKeyDown);
     };
@@ -37,10 +41,10 @@ export default function AdminModal({
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div className="admin-modal-overlay fade-in px-4 py-8 md:px-8 md:py-10" onClick={onClose}>
-      <div className={`mx-auto w-full ${maxWidthClassName}`}>
-        <div className="admin-modal-card scale-in overflow-hidden" onClick={(event) => event.stopPropagation()}>
+      <div className={`mx-auto flex min-h-full w-full items-center ${maxWidthClassName}`}>
+        <div className="admin-modal-card scale-in w-full" onClick={(event) => event.stopPropagation()}>
           <div className="flex items-center justify-between border-b border-slate-200/80 px-6 py-5 md:px-8">
             <div>
               <h2 className="text-xl font-semibold text-slate-950">{title}</h2>
@@ -58,6 +62,7 @@ export default function AdminModal({
           <div className="px-6 py-6 md:px-8 md:py-7">{children}</div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
