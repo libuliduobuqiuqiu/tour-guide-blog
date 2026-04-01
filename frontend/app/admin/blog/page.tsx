@@ -384,6 +384,9 @@ export default function BlogAdmin() {
 
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-700">Content</label>
+            <p className="mb-3 text-xs font-medium text-slate-500">
+              Paste Markdown directly here and it will auto-convert to rich text.
+            </p>
             <LazyEditor value={editing?.content || ''} onChange={(value) => setEditing((current) => ({ ...current!, content: value }))} />
           </div>
 
