@@ -58,6 +58,8 @@ type Tour struct {
 	Title       string         `gorm:"size:255;not null" json:"title"`
 	Description string         `gorm:"type:text" json:"description"`
 	Content     string         `gorm:"type:longtext" json:"content"`
+	Highlights  StringList     `gorm:"type:json" json:"highlights"`
+	Places      StringList     `gorm:"type:json" json:"places"`
 	CoverImage  string         `gorm:"size:255" json:"cover_image"`
 	Price       float64        `gorm:"type:decimal(10,2)" json:"price"`
 	Duration    string         `gorm:"size:100" json:"duration"`

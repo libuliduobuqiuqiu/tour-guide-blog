@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import type { ReactNode } from 'react';
+import { useCallback, useMemo } from 'react';
 
 interface TocItem {
   id: string;
@@ -8,55 +9,87 @@ interface TocItem {
   level: number;
 }
 
-export default function ContentShell({ html, toc }: { html: string; toc: TocItem[] }) {
-  const [tocOpen, setTocOpen] = useState(true);
+export default function ContentShell({
+  html,
+  toc,
+  tocTitle = 'Contents',
+  variant = 'blog',
+  aside,
+  footer,
+}: {
+  html: string;
+  toc: TocItem[];
+  tocTitle?: string;
+  variant?: 'blog' | 'tour';
+  aside?: ReactNode;
+  footer?: ReactNode;
+}) {
+  const contentClassName = useMemo(
+    () =>
+      variant === 'tour'
+        ? 'content article-content article-content-tour fade-up'
+        : 'content article-content article-content-blog fade-up',
+    [variant],
+  );
+
+  const articleFrameClassName =
+    variant === 'tour'
+      ? 'article-frame article-frame-tour'
+      : 'article-frame article-frame-blog';
+  const hasFloatingAside = (variant === 'tour' && Boolean(aside)) || (variant === 'blog' && toc.length > 0);
+  const shellClassName = hasFloatingAside
+    ? 'mx-auto max-w-[1420px] px-4 pb-16 md:px-6 lg:px-8'
+    : 'mx-auto max-w-[1180px] px-4 pb-16 md:px-6 lg:px-8';
+  const articleStackClassName = variant === 'tour' ? 'space-y-20 md:space-y-24' : 'space-y-8';
+  const layoutClassName = hasFloatingAside
+    ? 'mx-auto flex max-w-fit gap-8 xl:gap-12'
+    : 'relative flex gap-8 xl:gap-12';
+  const articleClassName = variant === 'tour' ? 'min-w-0 w-[920px] max-w-full' : 'min-w-0 w-[960px] max-w-full';
 
   const scrollToId = useCallback((id: string) => {
     const el = document.getElementById(id);
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    const top = rect.top + window.scrollY - 80;
+    const top = rect.top + window.scrollY - 96;
     window.scrollTo({ top, behavior: 'smooth' });
   }, []);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 md:px-6 lg:px-8 pb-16">
-      <div className="relative flex gap-8">
-        {toc.length > 0 && (
-          <div className="hidden lg:flex w-10 shrink-0">
-            <div className="sticky top-24">
-              <button
-                type="button"
-                onClick={() => setTocOpen((prev) => !prev)}
-                className="rounded-full border border-blue-100 bg-white/80 px-2.5 py-2 text-xs font-semibold text-slate-600 shadow-sm transition hover:text-blue-700"
-                aria-label={tocOpen ? 'Hide table of contents' : 'Show table of contents'}
-                title={tocOpen ? 'Hide目录' : 'Show目录'}
-              >
-                {tocOpen ? '‹' : '›'}
-              </button>
+    <div className={shellClassName}>
+      <div className={layoutClassName}>
+        <article className={articleClassName}>
+          <div className={articleStackClassName}>
+            <div className={articleFrameClassName}>
+              <div className={contentClassName} dangerouslySetInnerHTML={{ __html: html }} />
             </div>
+            {footer ? <div className="fade-up">{footer}</div> : null}
           </div>
-        )}
-        <article className="flex-1">
-          <div
-            className="content prose prose-lg md:prose-xl max-w-none text-gray-800"
-            dangerouslySetInnerHTML={{ __html: html }}
-          />
         </article>
-        {toc.length > 0 && tocOpen && (
-          <aside className="hidden lg:block w-64 shrink-0">
-            <div className="sticky top-24 rounded-2xl border border-blue-100/80 bg-white/70 p-4 backdrop-blur">
-              <div className="font-bold mb-3">目录</div>
-              <nav className="space-y-2">
+
+        {aside && variant === 'tour' && (
+          <aside className="hidden xl:block w-[280px] shrink-0">
+            <div className="sticky top-24 space-y-4">
+              {aside}
+            </div>
+          </aside>
+        )}
+
+        {toc.length > 0 && (
+          <aside className="hidden xl:block w-[260px] shrink-0">
+            <div className="sticky top-24 rounded-[1.6rem] border border-slate-200/90 bg-white/92 p-5 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.42)] backdrop-blur">
+              <div className="mb-4 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">{tocTitle}</div>
+              <nav className="space-y-1.5">
                 {toc.map((item) => (
                   <a
                     key={item.id}
                     href={`#${item.id}`}
-                    onClick={(e) => {
-                      e.preventDefault();
+                    onClick={(event) => {
+                      event.preventDefault();
                       scrollToId(item.id);
                     }}
-                    className={`block text-sm hover:text-blue-600 ${item.level > 1 ? 'pl-3' : ''} ${item.level > 2 ? 'pl-6' : ''}`}
+                    className={`block rounded-xl px-3 py-2 text-sm leading-6 text-slate-600 transition hover:bg-slate-50 hover:text-slate-950 ${
+                      item.level > 1 ? 'pl-6 text-[13px]' : ''
+                    } ${item.level > 2 ? 'pl-9 text-[12px] text-slate-500' : ''}`}
                   >
                     {item.text}
                   </a>

@@ -3,142 +3,138 @@
 This file is generated from the commit log documents in `docs/commit-log-*.md`.
 The format is intentionally close to Keep a Changelog: chronological releases with human-written change summaries.
 
-## 2026-04-01
+## 2026-04-02
 
-Source: `docs/commit-log-2026-04-01-admin-editor-upload-and-pagination.md`
+Source: `docs/commit-log-2026-04-02-article-detail-layout-and-tour-sidebar.md`
 
 ## This Round Summary
 
-本轮工作继续聚焦后台编辑体验，主要完成了三部分：
+本轮工作聚焦前台 Blog / Tours 文章详情页的阅读体验收口，主要完成了三部分：
 
-- 调整后台分页区域，去掉外层卡片感并固定在列表底部
-- 将 Tours / Blog 的 Content 提示文案从编辑器区域移动到字段区域
-- 为富文本编辑器接入后台图片上传流，补齐本地选图、粘贴图片、拖拽图片插入，并增加图片选中与初步缩放交互
+- 重做 Blog / Tours 详情页的头图、标题区、正文排版和整体版心比例
+- 修复并重构 Blog 目录侧边栏，让目录文本抽取、视觉层级和浮动布局更稳定
+- 为 Tours 详情页新增后台可编辑的 `Highlights` / `Places to Visit`，并改造成右侧浮动信息卡片
 
-这轮仍然不涉及后端数据结构变更，重点是让后台内容编辑流程更接近日常文档工具，而不是依赖手填图片路径。
+本轮同时补齐了 Tours 后端字段和迁移文件，前后台的数据结构已经连通。
 
 ## Code Changes
 
-### 1. 后台分页改为底部独立按钮区
+### 1. Blog / Tours 详情页整体版式重构
 
 Summary:
 
-- `AdminPagination` 去掉外层卡片容器
-- 分页文案和上一页 / 下一页按钮改为更轻量的底部布局
-- Tours / Blog 等后台页面继续复用同一个分页组件
+- 重做 Blog / Tours 详情页头图展示方式，改为更大的卡片式封面
+- 统一调整标题区、正文区、底部卡片区的宽度比例和位置关系
+- 重写正文阅读框样式，优化字号、行高、标题层级、段距、图片和引用块表现
+- 收口文章页动画表现，减少原先背景铺图和内容区域的割裂感
 
 Impact:
 
-- 后台列表页底部层次更干净
-- 分页控件不再像嵌在一个单独信息框里，视觉上更贴近内容区底部操作
+- Blog / Tours 详情页整体阅读体验更稳定，页面结构更接近常见长文阅读布局
+- 头图质感更好，标题区与正文区比例更协调
+- 长文阅读时的文字密度、节奏和可读性明显提升
 
 Files touched:
 
-- `frontend/components/admin/AdminPagination.tsx`
-
-### 2. Content 提示文案回归字段区域
-
-Summary:
-
-- 移除编辑器组件内部的 Markdown 粘贴提示
-- 将提示文案挪到 Tours / Blog 表单的 `Content` 字段标签下
-
-Impact:
-
-- 提示信息归属于字段本身，而不是编辑器工具区
-- 表单语义更清楚，编辑器本体更干净
-
-Files touched:
-
-- `frontend/components/admin/Editor.tsx`
-- `frontend/app/admin/tours/page.tsx`
-- `frontend/app/admin/blog/page.tsx`
-
-### 3. 富文本编辑器接入图片上传与自动插入
-
-Summary:
-
-- 工具栏图片按钮改为本地文件选择，不再要求手填相对路径或图片 URL
-- 接入已有后台上传接口 `uploadAdminImage`
-- 支持三种图片插入方式：本地选图、粘贴图片、拖拽图片到编辑器
-- 修复首次选图后不生效的问题：记录插入位置并在插入后主动同步 HTML
-- 新增上传中与错误提示
-
-Impact:
-
-- 后台编辑内容时的插图流程明显简化
-- 内容层仍只保存图片 URL，不把图片二进制塞进数据库
-- 当前项目已经具备更合理的“上传后插入引用”编辑模型
-
-Files touched:
-
-- `frontend/components/admin/Editor.tsx`
-
-### 4. 补充后台编辑器图片模块设计文档
-
-Summary:
-
-- 新增中文设计文档，说明为什么不直接把图片内容存数据库
-- 说明当前项目采用“上传文件 + 正文保存 URL”的原因与边界
-- 补充后续可扩展方向，包括压缩、对象存储、媒体元数据表
-
-Impact:
-
-- 后续继续迭代编辑器图片能力时，有统一的设计依据
-- 团队可以更清楚地区分“内容存储”和“媒体存储”的边界
-
-Files touched:
-
-- `docs/admin-editor-image-upload-design.zh-CN.md`
-
-### 5. 接入图片选中态与初步拖拽缩放交互
-
-Summary:
-
-- 点击编辑器中的图片后增加选中高亮
-- 增加图片覆盖层和右下角缩放手柄
-- 禁用图片原生拖拽，避免浏览器默认拖动行为干扰
-- 为后续继续打磨更接近文档编辑器的图片缩放交互打基础
-
-Impact:
-
-- 后台图片编辑交互开始从“纯插入”走向“可视化编辑”
-- 当前交互基础已接通，但仍有继续细化空间
-
-Files touched:
-
-- `frontend/components/admin/Editor.tsx`
+- `frontend/app/blog/[id]/page.tsx`
+- `frontend/app/tours/[id]/page.tsx`
 - `frontend/app/globals.css`
+
+### 2. Blog 目录侧边栏和内容壳层重构
+
+Summary:
+
+- 修复目录从标题中抽取文本时出现多余字符的问题
+- 新增更稳定的标题文本清洗逻辑，处理 HTML 实体、零宽字符和残留 Markdown 符号
+- 重构 `ContentRenderer` / `ContentShell`，支持 Blog 目录和 Tours 侧边卡片两种壳层布局
+- 取消目录缩进按钮，改为稳定展示的右侧浮动目录卡片
+
+Impact:
+
+- Blog 目录的章节文本更干净，定位更准确
+- 目录与正文的视觉关系更统一
+- 内容壳层具备更好的扩展性，后续可以继续承载不同详情页的侧边结构
+
+Files touched:
+
+- `frontend/components/ContentRenderer.tsx`
+- `frontend/components/ContentShell.tsx`
+- `frontend/app/blog/[id]/page.tsx`
+- `frontend/app/globals.css`
+
+### 3. Tours 详情页改为右侧浮动信息卡片
+
+Summary:
+
+- Tours 详情页移除目录，改为右侧 `Highlights` / `Places to Visit` 两张浮动卡片
+- 两张卡片改为真正独立右侧列布局，并支持随页面滚动 `sticky`
+- 多轮收口 Tours 底部 `Booking` 卡片，让它与正文内容分离，但仍保持在同一文章容器体系下
+
+Impact:
+
+- Tours 详情页的信息结构从“长文 + 目录”调整为“正文 + 关键信息侧栏”
+- 游客更容易快速浏览路线亮点和地点信息
+- Tours 页面更符合 itinerary / travel article 的阅读方式
+
+Files touched:
+
+- `frontend/app/tours/[id]/page.tsx`
+- `frontend/components/ContentRenderer.tsx`
+- `frontend/components/ContentShell.tsx`
+- `frontend/app/globals.css`
+
+### 4. Tours 后台字段和后端模型补齐
+
+Summary:
+
+- `Tour` 模型新增 `highlights` / `places` JSON 字段
+- 后台 Tours 编辑页新增两个字段，按每行一条维护内容
+- 新增数据库迁移 `006_add_tour_highlights_and_places.sql`
+
+Impact:
+
+- 后台现在可以直接维护 Tours 详情页右侧两张卡片的数据
+- 前后端字段已经连通，详情页不再依赖写死内容
+
+Files touched:
+
+- `backend/internal/model/models.go`
+- `backend/migrations/006_add_tour_highlights_and_places.sql`
+- `frontend/app/admin/tours/page.tsx`
 
 ## Validation
 
 Checks run:
 
 - `npm run lint`
+- `GOCACHE=/tmp/go-build-cache go test ./...`
 
 Results:
 
 - frontend lint passed with existing warnings only (`no-img-element` and a few pre-existing unused variable warnings)
+- backend tests passed
 
 ## Current Working Tree Scope
 
 本轮计划纳入提交的主要文件：
 
-- `frontend/app/admin/blog/page.tsx`
+- `backend/internal/model/models.go`
+- `backend/migrations/006_add_tour_highlights_and_places.sql`
 - `frontend/app/admin/tours/page.tsx`
+- `frontend/app/blog/[id]/page.tsx`
+- `frontend/app/tours/[id]/page.tsx`
 - `frontend/app/globals.css`
-- `frontend/components/admin/AdminPagination.tsx`
-- `frontend/components/admin/Editor.tsx`
-- `docs/admin-editor-image-upload-design.zh-CN.md`
-- `docs/commit-log-2026-04-01-admin-editor-upload-and-pagination.md`
+- `frontend/components/ContentRenderer.tsx`
+- `frontend/components/ContentShell.tsx`
+- `docs/commit-log-2026-04-02-article-detail-layout-and-tour-sidebar.md`
 
 ## Recommended Next Step
 
-如果下一轮继续推进后台富文本编辑体验，优先顺序建议如下：
+如果下一轮继续打磨详情页体验，优先顺序建议如下：
 
-1. 继续收口图片拖拽缩放交互，做到稳定可预期
-2. 为图片增加对齐方式与说明文字能力
-3. 在服务端增加上传阶段压缩和尺寸约束
+1. 为 Blog / Tours 详情页补充更明确的当前章节高亮态
+2. 为 Tours 右侧浮动卡片增加在 `lg` 尺寸下的降级展示策略
+3. 继续统一正文框、底部卡片和标题卡之间的边框 / 阴影层级
 
 ## 2026-04-01
 
@@ -480,6 +476,143 @@ Results:
 1. 为富文本编辑器接入后台图片上传，而不是仅靠图片 URL
 2. 为后台弹框补充更明显的字段校验提示和错误态
 3. 继续收敛后台页面文案语言，统一中英文风格
+
+## 2026-04-01
+
+Source: `docs/commit-log-2026-04-01-admin-editor-upload-and-pagination.md`
+
+## This Round Summary
+
+本轮工作继续聚焦后台编辑体验，主要完成了三部分：
+
+- 调整后台分页区域，去掉外层卡片感并固定在列表底部
+- 将 Tours / Blog 的 Content 提示文案从编辑器区域移动到字段区域
+- 为富文本编辑器接入后台图片上传流，补齐本地选图、粘贴图片、拖拽图片插入，并增加图片选中与初步缩放交互
+
+这轮仍然不涉及后端数据结构变更，重点是让后台内容编辑流程更接近日常文档工具，而不是依赖手填图片路径。
+
+## Code Changes
+
+### 1. 后台分页改为底部独立按钮区
+
+Summary:
+
+- `AdminPagination` 去掉外层卡片容器
+- 分页文案和上一页 / 下一页按钮改为更轻量的底部布局
+- Tours / Blog 等后台页面继续复用同一个分页组件
+
+Impact:
+
+- 后台列表页底部层次更干净
+- 分页控件不再像嵌在一个单独信息框里，视觉上更贴近内容区底部操作
+
+Files touched:
+
+- `frontend/components/admin/AdminPagination.tsx`
+
+### 2. Content 提示文案回归字段区域
+
+Summary:
+
+- 移除编辑器组件内部的 Markdown 粘贴提示
+- 将提示文案挪到 Tours / Blog 表单的 `Content` 字段标签下
+
+Impact:
+
+- 提示信息归属于字段本身，而不是编辑器工具区
+- 表单语义更清楚，编辑器本体更干净
+
+Files touched:
+
+- `frontend/components/admin/Editor.tsx`
+- `frontend/app/admin/tours/page.tsx`
+- `frontend/app/admin/blog/page.tsx`
+
+### 3. 富文本编辑器接入图片上传与自动插入
+
+Summary:
+
+- 工具栏图片按钮改为本地文件选择，不再要求手填相对路径或图片 URL
+- 接入已有后台上传接口 `uploadAdminImage`
+- 支持三种图片插入方式：本地选图、粘贴图片、拖拽图片到编辑器
+- 修复首次选图后不生效的问题：记录插入位置并在插入后主动同步 HTML
+- 新增上传中与错误提示
+
+Impact:
+
+- 后台编辑内容时的插图流程明显简化
+- 内容层仍只保存图片 URL，不把图片二进制塞进数据库
+- 当前项目已经具备更合理的“上传后插入引用”编辑模型
+
+Files touched:
+
+- `frontend/components/admin/Editor.tsx`
+
+### 4. 补充后台编辑器图片模块设计文档
+
+Summary:
+
+- 新增中文设计文档，说明为什么不直接把图片内容存数据库
+- 说明当前项目采用“上传文件 + 正文保存 URL”的原因与边界
+- 补充后续可扩展方向，包括压缩、对象存储、媒体元数据表
+
+Impact:
+
+- 后续继续迭代编辑器图片能力时，有统一的设计依据
+- 团队可以更清楚地区分“内容存储”和“媒体存储”的边界
+
+Files touched:
+
+- `docs/admin-editor-image-upload-design.zh-CN.md`
+
+### 5. 接入图片选中态与初步拖拽缩放交互
+
+Summary:
+
+- 点击编辑器中的图片后增加选中高亮
+- 增加图片覆盖层和右下角缩放手柄
+- 禁用图片原生拖拽，避免浏览器默认拖动行为干扰
+- 为后续继续打磨更接近文档编辑器的图片缩放交互打基础
+
+Impact:
+
+- 后台图片编辑交互开始从“纯插入”走向“可视化编辑”
+- 当前交互基础已接通，但仍有继续细化空间
+
+Files touched:
+
+- `frontend/components/admin/Editor.tsx`
+- `frontend/app/globals.css`
+
+## Validation
+
+Checks run:
+
+- `npm run lint`
+
+Results:
+
+- frontend lint passed with existing warnings only (`no-img-element` and a few pre-existing unused variable warnings)
+
+## Current Working Tree Scope
+
+本轮计划纳入提交的主要文件：
+
+- `frontend/app/admin/blog/page.tsx`
+- `frontend/app/admin/tours/page.tsx`
+- `frontend/app/globals.css`
+- `frontend/components/admin/AdminPagination.tsx`
+- `frontend/components/admin/Editor.tsx`
+- `docs/admin-editor-image-upload-design.zh-CN.md`
+- `docs/commit-log-2026-04-01-admin-editor-upload-and-pagination.md`
+
+## Recommended Next Step
+
+如果下一轮继续推进后台富文本编辑体验，优先顺序建议如下：
+
+1. 继续收口图片拖拽缩放交互，做到稳定可预期
+2. 为图片增加对齐方式与说明文字能力
+3. 在服务端增加上传阶段压缩和尺寸约束
 
 ## 2026-03-30
 

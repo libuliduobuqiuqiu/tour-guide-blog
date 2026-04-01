@@ -21,6 +21,8 @@ interface Tour {
   title: string;
   description: string;
   content: string;
+  highlights: string[];
+  places: string[];
   price: number;
   duration: string;
   location: string;
@@ -36,6 +38,17 @@ function reorderList<T>(items: T[], fromIndex: number, toIndex: number) {
   const [moved] = next.splice(fromIndex, 1);
   next.splice(toIndex, 0, moved);
   return next;
+}
+
+function listToTextarea(items?: string[]) {
+  return Array.isArray(items) ? items.join('\n') : '';
+}
+
+function textareaToList(value: string) {
+  return value
+    .split('\n')
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 export default function ToursAdmin() {
@@ -68,6 +81,8 @@ export default function ToursAdmin() {
         title: '',
         description: '',
         content: '',
+        highlights: [],
+        places: [],
         price: 0,
         duration: '',
         location: '',
@@ -199,6 +214,8 @@ export default function ToursAdmin() {
               title: '',
               description: '',
               content: '',
+              highlights: [],
+              places: [],
               price: 0,
               duration: '',
               location: '',
@@ -368,6 +385,26 @@ export default function ToursAdmin() {
                 rows={3}
                 value={editing?.description || ''}
                 onChange={(event) => setEditing((current) => ({ ...current!, description: event.target.value }))}
+                className="w-full px-4 py-3"
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Highlights</label>
+              <textarea
+                rows={5}
+                value={listToTextarea(editing?.highlights)}
+                onChange={(event) => setEditing((current) => ({ ...current!, highlights: textareaToList(event.target.value) }))}
+                placeholder="One highlight per line"
+                className="w-full px-4 py-3"
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Places to visit</label>
+              <textarea
+                rows={5}
+                value={listToTextarea(editing?.places)}
+                onChange={(event) => setEditing((current) => ({ ...current!, places: textareaToList(event.target.value) }))}
+                placeholder="One place per line"
                 className="w-full px-4 py-3"
               />
             </div>

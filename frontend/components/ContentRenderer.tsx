@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { marked } from 'marked';
 import ContentShell from '@/components/ContentShell';
 
@@ -19,7 +20,43 @@ function slugify(text: string) {
     .replace(/[^a-z0-9\-]/g, '');
 }
 
-export default function ContentRenderer({ content }: { content: string }) {
+function decodeHtmlEntities(text: string) {
+  return text
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'");
+}
+
+function getPlainHeadingText(inner: string) {
+  return decodeHtmlEntities(
+    inner
+      .replace(/<br\s*\/?>/gi, ' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/[#`>*_[\]~]/g, ' ')
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim(),
+  );
+}
+
+export default function ContentRenderer({
+  content,
+  toc = true,
+  tocTitle = 'Contents',
+  variant = 'blog',
+  aside,
+  footer,
+}: {
+  content: string;
+  toc?: boolean;
+  tocTitle?: string;
+  variant?: 'blog' | 'tour';
+  aside?: ReactNode;
+  footer?: ReactNode;
+}) {
   let rawHtml = content || '';
   if (!isHtml(rawHtml)) {
     marked.setOptions({ breaks: true });
@@ -30,17 +67,14 @@ export default function ContentRenderer({ content }: { content: string }) {
   const headingRegex = /<h([1-4])([^>]*)>([\s\S]*?)<\/h\1>/gi;
   const enhancedHtml = rawHtml.replace(headingRegex, (_match, levelStr, attrs, inner) => {
     const level = parseInt(levelStr, 10);
-    const plainText = inner.replace(/<[^>]+>/g, '').trim();
+    const plainText = getPlainHeadingText(inner);
     const id = slugify(plainText);
-    tocItems.push({ id, text: plainText, level });
-    const cls =
-      level === 1
-        ? 'border-b-4 border-blue-600 pb-2 mt-8 mb-4'
-        : level === 2
-        ? 'border-b-2 border-blue-500 pb-2 mt-6 mb-3'
-        : level === 3
-        ? 'border-b border-blue-400 pb-1 mt-4 mb-2'
-        : 'mt-3 mb-2';
+
+    if (plainText) {
+      tocItems.push({ id, text: plainText, level });
+    }
+
+    const cls = `article-heading article-heading-${level}`;
     const hasClass = /\bclass=/.test(attrs);
     const newAttrs = hasClass
       ? attrs.replace(/class=(['"])(.*?)\1/i, (_m: string, q: string, val: string) => `class=${q}${val} ${cls}${q}`)
@@ -48,5 +82,5 @@ export default function ContentRenderer({ content }: { content: string }) {
     return `<h${level}${newAttrs} id="${id}">${inner}</h${level}>`;
   });
 
-  return <ContentShell html={enhancedHtml} toc={tocItems} />;
+  return <ContentShell html={enhancedHtml} toc={toc ? tocItems : []} tocTitle={tocTitle} variant={variant} aside={aside} footer={footer} />;
 }
