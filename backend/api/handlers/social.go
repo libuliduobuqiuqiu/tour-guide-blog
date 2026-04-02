@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -30,6 +31,10 @@ func ProxySocialImage(c *gin.Context) {
 	parsed, err := url.Parse(rawURL)
 	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") || parsed.Host == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid image url"})
+		return
+	}
+	if !isAllowedSocialImageHost(parsed.Hostname()) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "image host is not allowed"})
 		return
 	}
 
@@ -63,6 +68,44 @@ func ProxySocialImage(c *gin.Context) {
 
 	c.Header("Cache-Control", "public, max-age=3600")
 	c.DataFromReader(http.StatusOK, resp.ContentLength, contentType, resp.Body, nil)
+}
+
+func isAllowedSocialImageHost(host string) bool {
+	host = strings.ToLower(strings.TrimSpace(host))
+	if host == "" {
+		return false
+	}
+	if host == "localhost" || strings.HasSuffix(host, ".local") {
+		return false
+	}
+
+	if ip := net.ParseIP(host); ip != nil {
+		return !isPrivateIP(ip)
+	}
+
+	allowedSuffixes := []string{
+		"cdninstagram.com",
+		"fbcdn.net",
+		"fna.fbcdn.net",
+		"instagram.com",
+		"cdn-tiktok.com",
+		"tiktokcdn.com",
+		"muscdn.com",
+		"ibytedtos.com",
+		"byteimg.com",
+		"byteoversea.com",
+	}
+	for _, suffix := range allowedSuffixes {
+		if host == suffix || strings.HasSuffix(host, "."+suffix) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func isPrivateIP(ip net.IP) bool {
+	return ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalMulticast() || ip.IsLinkLocalUnicast()
 }
 
 func GetSocialSettings(c *gin.Context) {

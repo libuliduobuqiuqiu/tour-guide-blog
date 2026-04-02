@@ -5,6 +5,449 @@ The format is intentionally close to Keep a Changelog: chronological releases wi
 
 ## 2026-04-02
 
+Source: `docs/commit-log-2026-04-02-social-sync-and-admin-dashboard-fixes.md`
+
+## This Round Summary
+
+本轮工作主要聚焦三件事：
+
+- 社媒同步配置增强：后台开放 Instagram / TikTok 同步条数，并确保后端同步逻辑真正使用该值
+- 首页社媒轮播体验收口：统一 Instagram / TikTok 轮播速度，整体放慢，避免观感过快
+- 后台 Dashboard 快捷入口修复：从 Dashboard 点击创建 Tour / Blog 后弹框可正常关闭，不再反复弹出
+
+此外，本轮一并纳入了 Review 默认激活状态的配置调整。
+
+## Code Changes
+
+### 1. 社媒同步条数开放并打通前后端
+
+Summary:
+
+- 后台 Settings 的 Instagram / TikTok 卡片新增 `Sync Item Count` 输入项
+- 输入范围限制为 `1-24`，用户可直接填写每次同步条数
+- 后端 Instagram Graph API 同步参数由固定值改为读取 `post_limit`
+
+Impact:
+
+- 运营可按平台动态控制同步数量
+- Instagram 与 TikTok 的同步条数配置行为保持一致
+- 同步结果更可控，便于平衡内容新鲜度与请求成本
+
+Files touched:
+
+- `frontend/app/admin/settings/page.tsx`
+- `backend/internal/service/social.go`
+
+### 2. 首页社媒轮播速度统一并放慢
+
+Summary:
+
+- `SocialShowcase` 增加统一的轮播时长计算函数
+- 轮播时长改为按条目数线性计算并设置最小值，避免内容少时滚动过快
+
+Impact:
+
+- Instagram / TikTok 轮播节奏更一致
+- 首页社媒区阅读体验更平稳，不再“过快掠过”
+
+Files touched:
+
+- `frontend/components/SocialShowcase.tsx`
+
+### 3. Dashboard 快捷创建弹框可关闭性修复
+
+Summary:
+
+- Tours / Blog 管理页针对 `?action=new` 增加“一次性消费”逻辑
+- 首次触发创建弹框后会清理 URL 中的 `action` 参数
+- 关闭弹框时也会再次兜底清理该参数
+
+Impact:
+
+- 从 Dashboard 点击 `Publish New Tour` / `Write Blog Post` 后，弹框不再关闭即重开
+- 管理端创建流程恢复正常，交互符合预期
+
+Files touched:
+
+- `frontend/app/admin/tours/page.tsx`
+- `frontend/app/admin/blog/page.tsx`
+
+### 4. Review 默认状态调整
+
+Summary:
+
+- `Review.IsActive` 的默认值由 `true` 调整为 `false`
+
+Impact:
+
+- 新提交评价默认进入待审核状态
+- 降低未审核内容直接展示到前台的风险
+
+Files touched:
+
+- `backend/internal/model/models.go`
+
+## Validation
+
+Checks run:
+
+- `GOCACHE=/tmp/go-build-cache go test ./...`
+- `npm run lint -- app/admin/settings/page.tsx`
+- `npm run lint -- app/admin/tours/page.tsx app/admin/blog/page.tsx components/SocialShowcase.tsx`
+
+Results:
+
+- backend tests passed
+- frontend lint passed with existing `no-img-element` warnings only
+
+## Current Working Tree Scope
+
+本轮计划纳入提交的主要文件：
+
+- `backend/internal/model/models.go`
+- `backend/internal/service/social.go`
+- `frontend/app/admin/settings/page.tsx`
+- `frontend/components/SocialShowcase.tsx`
+- `frontend/app/admin/tours/page.tsx`
+- `frontend/app/admin/blog/page.tsx`
+- `docs/commit-log-2026-04-02-social-sync-and-admin-dashboard-fixes.md`
+
+## Recommended Next Step
+
+如果下一轮继续优化，可按这个顺序推进：
+
+1. 在后台 `Sync Item Count` 旁增加“推荐值”提示（如 8/12/16）
+2. 为 Dashboard 快捷创建链路补一个轻量 e2e 用例，防止 query 参数回归
+3. 让社媒轮播速度支持后台配置（而非仅代码默认值）
+
+## 2026-04-02
+
+Source: `docs/commit-log-2026-04-02-security-hardening-and-build-fixes.md`
+
+## This Round Summary
+
+本轮工作主要聚焦三件事：
+
+- 全项目安全审查：从代码安全、敏感信息、前端依赖漏洞、后端依赖漏洞四个层面做了一轮核查
+- 安全加固落地：补上后台登录限流、上传文件内容类型校验、社媒图片代理主机白名单、前端内容渲染消毒、服务端 CORS 收口
+- 生产构建修复：修复 `react-quill-new` 的 `ref` 类型问题，并去掉 `next/font/google` 对 `Poppins` 的构建期外网依赖，确保前端可在当前环境完成生产构建
+
+本轮同时纳入了工作区里已存在的前端依赖版本变更：`next` 升级到 `16.2.2`，`react-quill-new` / lockfile 调整为当前工作树状态。
+
+## Security Review Findings
+
+### 已修复
+
+1. 后台文章 / Tour 内容渲染存在 XSS 面
+
+Summary:
+
+- `ContentShell` 之前直接把 HTML 传给 `dangerouslySetInnerHTML`
+- 新增了基础 HTML 消毒逻辑，移除脚本、事件处理器和危险 URL
+
+Impact:
+
+- 降低后台富文本内容被植入脚本后在前台执行的风险
+
+Files touched:
+
+- `frontend/components/ContentShell.tsx`
+
+2. 图片上传接口只校验扩展名
+
+Summary:
+
+- 上传接口此前只看文件后缀和大小
+- 现在会读取文件头并校验 MIME，与允许的图片类型交叉验证
+
+Impact:
+
+- 降低伪造扩展名文件被当作图片写入公开目录的风险
+
+Files touched:
+
+- `backend/api/handlers/upload.go`
+
+3. 社媒图片代理存在 SSRF 面
+
+Summary:
+
+- `GET /api/social/image` 之前允许传任意外部 URL，由后端代取
+- 现在只允许已知社媒 CDN / 域名后缀，并拒绝 `localhost`、`.local` 和私网 IP
+
+Impact:
+
+- 阻断通过图片代理探测或访问内网地址的 SSRF 路径
+
+Files touched:
+
+- `backend/api/handlers/social.go`
+
+4. CORS 配置过宽且与 credentials 组合不安全
+
+Summary:
+
+- 服务端此前对所有来源返回 `Access-Control-Allow-Origin: *`，同时开启了 credentials
+- 现在改为只对白名单来源回显 `Origin`，默认保留本地开发地址，并支持 `server.frontend_origin` / `FRONTEND_ORIGIN`
+
+Impact:
+
+- 降低后台接口被任意第三方站点跨域调用的暴露面
+
+Files touched:
+
+- `backend/api/routers/router.go`
+
+5. 后台登录接口缺少限流
+
+Summary:
+
+- 为登录接口新增基于客户端 IP 的 10 分钟窗口限流
+
+Impact:
+
+- 降低后台口令被暴力尝试的风险
+
+Files touched:
+
+- `backend/api/handlers/auth.go`
+
+6. 前端生产构建阻塞项修复
+
+Summary:
+
+- `Editor` 修复了 `next/dynamic()` 包装组件后的 `ref` 类型不匹配问题
+- `layout.tsx` 去掉 `next/font/google` 的 `Poppins` 远程抓取，改为本地字体栈，避免构建环境联网依赖
+
+Impact:
+
+- `npx tsc --noEmit` 通过
+- `npx next build --webpack` 可在当前环境完成
+
+Files touched:
+
+- `frontend/components/admin/Editor.tsx`
+- `frontend/app/layout.tsx`
+- `frontend/app/globals.css`
+
+### 仍需跟进
+
+1. 本地未提交配置包含真实敏感信息
+
+Summary:
+
+- 工作区中的 `backend/configs/config.yaml` 含有实际管理员密码、JWT secret 和数据库 DSN
+- 该文件当前被 `backend/.gitignore` 忽略，未纳入版本控制
+
+Recommended next step:
+
+- 立即轮换本地密码和 JWT secret
+- 将生产配置迁移到环境变量或受控密钥管理，不再保留真实值到本地模板文件
+
+2. 后端运行时 Go 版本存在已知漏洞
+
+Summary:
+
+- `govulncheck` 显示当前环境 `go1.23.3` 命中了多项 Go 标准库漏洞
+- 还命中了 `github.com/quic-go/quic-go@v0.54.0` 的已知 DoS 公告
+
+Recommended next step:
+
+- 将构建 / 部署环境升级到较新的 Go 1.24.x 或更高的安全版本
+- 升级 `quic-go` 到审计结果建议的修复版本或让相关间接依赖更新
+
+3. 前端依赖树仍有 1 条低危公告
+
+Summary:
+
+- `npm audit` 命中 `quill@2.0.3` 的低危 XSS 公告 `GHSA-v3m3-f69x-jf25`
+- `react-quill-new` 当前最新版本仍依赖 `quill ~2.0.3`，暂时无法通过简单升级彻底消除
+
+Recommended next step:
+
+- 持续关注 `quill` / `react-quill-new` 上游发布
+- 在未来如有 patched release 时尽快升级并回归验证
+
+## Validation
+
+Checks run:
+
+- `rg` 扫描敏感信息和危险 API 使用
+- `npm audit --json`
+- `cd backend && /root/go/bin/govulncheck ./...`
+- `cd frontend && npx tsc --noEmit`
+- `cd frontend && npx next build --webpack`
+- `cd backend && GOCACHE=/tmp/go-build go build ./...`
+
+Results:
+
+- 敏感信息扫描未发现已跟踪文件中的明文密钥泄漏
+- 发现本地未跟踪配置文件 `backend/configs/config.yaml` 含真实敏感信息
+- frontend type-check passed
+- frontend webpack production build passed
+- backend build passed
+- frontend dependency audit reported 1 low severity advisory in `quill@2.0.3`
+- backend vulnerability audit reported multiple Go runtime / standard library findings on `go1.23.3`
+
+## Current Working Tree Scope
+
+本轮计划纳入提交的主要文件：
+
+- `backend/api/handlers/auth.go`
+- `backend/api/handlers/social.go`
+- `backend/api/handlers/upload.go`
+- `backend/api/routers/router.go`
+- `frontend/components/ContentShell.tsx`
+- `frontend/components/admin/Editor.tsx`
+- `frontend/app/layout.tsx`
+- `frontend/app/globals.css`
+- `frontend/package.json`
+- `frontend/package-lock.json`
+- `docs/commit-log-2026-04-02-security-hardening-and-build-fixes.md`
+
+## Recommended Next Step
+
+如果下一轮继续做安全收口，建议按这个顺序推进：
+
+1. 升级生产服务器的 Go toolchain，并重新跑一次 `govulncheck`
+2. 把后台 token 从 `localStorage` 迁移到更安全的 `HttpOnly` cookie 方案
+3. 给内容消毒和图片代理白名单补自动化测试，防止回归
+
+## 2026-04-02
+
+Source: `docs/commit-log-2026-04-02-article-detail-layout-and-tour-sidebar.md`
+
+## This Round Summary
+
+本轮工作聚焦前台 Blog / Tours 文章详情页的阅读体验收口，主要完成了三部分：
+
+- 重做 Blog / Tours 详情页的头图、标题区、正文排版和整体版心比例
+- 修复并重构 Blog 目录侧边栏，让目录文本抽取、视觉层级和浮动布局更稳定
+- 为 Tours 详情页新增后台可编辑的 `Highlights` / `Places to Visit`，并改造成右侧浮动信息卡片
+
+本轮同时补齐了 Tours 后端字段和迁移文件，前后台的数据结构已经连通。
+
+## Code Changes
+
+### 1. Blog / Tours 详情页整体版式重构
+
+Summary:
+
+- 重做 Blog / Tours 详情页头图展示方式，改为更大的卡片式封面
+- 统一调整标题区、正文区、底部卡片区的宽度比例和位置关系
+- 重写正文阅读框样式，优化字号、行高、标题层级、段距、图片和引用块表现
+- 收口文章页动画表现，减少原先背景铺图和内容区域的割裂感
+
+Impact:
+
+- Blog / Tours 详情页整体阅读体验更稳定，页面结构更接近常见长文阅读布局
+- 头图质感更好，标题区与正文区比例更协调
+- 长文阅读时的文字密度、节奏和可读性明显提升
+
+Files touched:
+
+- `frontend/app/blog/[id]/page.tsx`
+- `frontend/app/tours/[id]/page.tsx`
+- `frontend/app/globals.css`
+
+### 2. Blog 目录侧边栏和内容壳层重构
+
+Summary:
+
+- 修复目录从标题中抽取文本时出现多余字符的问题
+- 新增更稳定的标题文本清洗逻辑，处理 HTML 实体、零宽字符和残留 Markdown 符号
+- 重构 `ContentRenderer` / `ContentShell`，支持 Blog 目录和 Tours 侧边卡片两种壳层布局
+- 取消目录缩进按钮，改为稳定展示的右侧浮动目录卡片
+
+Impact:
+
+- Blog 目录的章节文本更干净，定位更准确
+- 目录与正文的视觉关系更统一
+- 内容壳层具备更好的扩展性，后续可以继续承载不同详情页的侧边结构
+
+Files touched:
+
+- `frontend/components/ContentRenderer.tsx`
+- `frontend/components/ContentShell.tsx`
+- `frontend/app/blog/[id]/page.tsx`
+- `frontend/app/globals.css`
+
+### 3. Tours 详情页改为右侧浮动信息卡片
+
+Summary:
+
+- Tours 详情页移除目录，改为右侧 `Highlights` / `Places to Visit` 两张浮动卡片
+- 两张卡片改为真正独立右侧列布局，并支持随页面滚动 `sticky`
+- 多轮收口 Tours 底部 `Booking` 卡片，让它与正文内容分离，但仍保持在同一文章容器体系下
+
+Impact:
+
+- Tours 详情页的信息结构从“长文 + 目录”调整为“正文 + 关键信息侧栏”
+- 游客更容易快速浏览路线亮点和地点信息
+- Tours 页面更符合 itinerary / travel article 的阅读方式
+
+Files touched:
+
+- `frontend/app/tours/[id]/page.tsx`
+- `frontend/components/ContentRenderer.tsx`
+- `frontend/components/ContentShell.tsx`
+- `frontend/app/globals.css`
+
+### 4. Tours 后台字段和后端模型补齐
+
+Summary:
+
+- `Tour` 模型新增 `highlights` / `places` JSON 字段
+- 后台 Tours 编辑页新增两个字段，按每行一条维护内容
+- 新增数据库迁移 `006_add_tour_highlights_and_places.sql`
+
+Impact:
+
+- 后台现在可以直接维护 Tours 详情页右侧两张卡片的数据
+- 前后端字段已经连通，详情页不再依赖写死内容
+
+Files touched:
+
+- `backend/internal/model/models.go`
+- `backend/migrations/006_add_tour_highlights_and_places.sql`
+- `frontend/app/admin/tours/page.tsx`
+
+## Validation
+
+Checks run:
+
+- `npm run lint`
+- `GOCACHE=/tmp/go-build-cache go test ./...`
+
+Results:
+
+- frontend lint passed with existing warnings only (`no-img-element` and a few pre-existing unused variable warnings)
+- backend tests passed
+
+## Current Working Tree Scope
+
+本轮计划纳入提交的主要文件：
+
+- `backend/internal/model/models.go`
+- `backend/migrations/006_add_tour_highlights_and_places.sql`
+- `frontend/app/admin/tours/page.tsx`
+- `frontend/app/blog/[id]/page.tsx`
+- `frontend/app/tours/[id]/page.tsx`
+- `frontend/app/globals.css`
+- `frontend/components/ContentRenderer.tsx`
+- `frontend/components/ContentShell.tsx`
+- `docs/commit-log-2026-04-02-article-detail-layout-and-tour-sidebar.md`
+
+## Recommended Next Step
+
+如果下一轮继续打磨详情页体验，优先顺序建议如下：
+
+1. 为 Blog / Tours 详情页补充更明确的当前章节高亮态
+2. 为 Tours 右侧浮动卡片增加在 `lg` 尺寸下的降级展示策略
+3. 继续统一正文框、底部卡片和标题卡之间的边框 / 阴影层级
+
+## 2026-04-02
+
 Source: `docs/commit-log-2026-04-02-admin-dashboard-footer-and-tour-polish.md`
 
 ## This Round Summary
@@ -167,256 +610,6 @@ Results:
 1. 在 Dashboard 的忽略提醒弹框里增加“恢复显示”入口，减少误操作成本
 2. 为 Footer 增加后台可配置的品牌小标题或版权年份策略
 3. 为 Dashboard 提醒流补一个前后端联调用例，覆盖 `PATCH` 显隐接口
-
-## 2026-04-02
-
-Source: `docs/commit-log-2026-04-02-social-sync-and-admin-dashboard-fixes.md`
-
-## This Round Summary
-
-本轮工作主要聚焦三件事：
-
-- 社媒同步配置增强：后台开放 Instagram / TikTok 同步条数，并确保后端同步逻辑真正使用该值
-- 首页社媒轮播体验收口：统一 Instagram / TikTok 轮播速度，整体放慢，避免观感过快
-- 后台 Dashboard 快捷入口修复：从 Dashboard 点击创建 Tour / Blog 后弹框可正常关闭，不再反复弹出
-
-此外，本轮一并纳入了 Review 默认激活状态的配置调整。
-
-## Code Changes
-
-### 1. 社媒同步条数开放并打通前后端
-
-Summary:
-
-- 后台 Settings 的 Instagram / TikTok 卡片新增 `Sync Item Count` 输入项
-- 输入范围限制为 `1-24`，用户可直接填写每次同步条数
-- 后端 Instagram Graph API 同步参数由固定值改为读取 `post_limit`
-
-Impact:
-
-- 运营可按平台动态控制同步数量
-- Instagram 与 TikTok 的同步条数配置行为保持一致
-- 同步结果更可控，便于平衡内容新鲜度与请求成本
-
-Files touched:
-
-- `frontend/app/admin/settings/page.tsx`
-- `backend/internal/service/social.go`
-
-### 2. 首页社媒轮播速度统一并放慢
-
-Summary:
-
-- `SocialShowcase` 增加统一的轮播时长计算函数
-- 轮播时长改为按条目数线性计算并设置最小值，避免内容少时滚动过快
-
-Impact:
-
-- Instagram / TikTok 轮播节奏更一致
-- 首页社媒区阅读体验更平稳，不再“过快掠过”
-
-Files touched:
-
-- `frontend/components/SocialShowcase.tsx`
-
-### 3. Dashboard 快捷创建弹框可关闭性修复
-
-Summary:
-
-- Tours / Blog 管理页针对 `?action=new` 增加“一次性消费”逻辑
-- 首次触发创建弹框后会清理 URL 中的 `action` 参数
-- 关闭弹框时也会再次兜底清理该参数
-
-Impact:
-
-- 从 Dashboard 点击 `Publish New Tour` / `Write Blog Post` 后，弹框不再关闭即重开
-- 管理端创建流程恢复正常，交互符合预期
-
-Files touched:
-
-- `frontend/app/admin/tours/page.tsx`
-- `frontend/app/admin/blog/page.tsx`
-
-### 4. Review 默认状态调整
-
-Summary:
-
-- `Review.IsActive` 的默认值由 `true` 调整为 `false`
-
-Impact:
-
-- 新提交评价默认进入待审核状态
-- 降低未审核内容直接展示到前台的风险
-
-Files touched:
-
-- `backend/internal/model/models.go`
-
-## Validation
-
-Checks run:
-
-- `GOCACHE=/tmp/go-build-cache go test ./...`
-- `npm run lint -- app/admin/settings/page.tsx`
-- `npm run lint -- app/admin/tours/page.tsx app/admin/blog/page.tsx components/SocialShowcase.tsx`
-
-Results:
-
-- backend tests passed
-- frontend lint passed with existing `no-img-element` warnings only
-
-## Current Working Tree Scope
-
-本轮计划纳入提交的主要文件：
-
-- `backend/internal/model/models.go`
-- `backend/internal/service/social.go`
-- `frontend/app/admin/settings/page.tsx`
-- `frontend/components/SocialShowcase.tsx`
-- `frontend/app/admin/tours/page.tsx`
-- `frontend/app/admin/blog/page.tsx`
-- `docs/commit-log-2026-04-02-social-sync-and-admin-dashboard-fixes.md`
-
-## Recommended Next Step
-
-如果下一轮继续优化，可按这个顺序推进：
-
-1. 在后台 `Sync Item Count` 旁增加“推荐值”提示（如 8/12/16）
-2. 为 Dashboard 快捷创建链路补一个轻量 e2e 用例，防止 query 参数回归
-3. 让社媒轮播速度支持后台配置（而非仅代码默认值）
-
-## 2026-04-02
-
-Source: `docs/commit-log-2026-04-02-article-detail-layout-and-tour-sidebar.md`
-
-## This Round Summary
-
-本轮工作聚焦前台 Blog / Tours 文章详情页的阅读体验收口，主要完成了三部分：
-
-- 重做 Blog / Tours 详情页的头图、标题区、正文排版和整体版心比例
-- 修复并重构 Blog 目录侧边栏，让目录文本抽取、视觉层级和浮动布局更稳定
-- 为 Tours 详情页新增后台可编辑的 `Highlights` / `Places to Visit`，并改造成右侧浮动信息卡片
-
-本轮同时补齐了 Tours 后端字段和迁移文件，前后台的数据结构已经连通。
-
-## Code Changes
-
-### 1. Blog / Tours 详情页整体版式重构
-
-Summary:
-
-- 重做 Blog / Tours 详情页头图展示方式，改为更大的卡片式封面
-- 统一调整标题区、正文区、底部卡片区的宽度比例和位置关系
-- 重写正文阅读框样式，优化字号、行高、标题层级、段距、图片和引用块表现
-- 收口文章页动画表现，减少原先背景铺图和内容区域的割裂感
-
-Impact:
-
-- Blog / Tours 详情页整体阅读体验更稳定，页面结构更接近常见长文阅读布局
-- 头图质感更好，标题区与正文区比例更协调
-- 长文阅读时的文字密度、节奏和可读性明显提升
-
-Files touched:
-
-- `frontend/app/blog/[id]/page.tsx`
-- `frontend/app/tours/[id]/page.tsx`
-- `frontend/app/globals.css`
-
-### 2. Blog 目录侧边栏和内容壳层重构
-
-Summary:
-
-- 修复目录从标题中抽取文本时出现多余字符的问题
-- 新增更稳定的标题文本清洗逻辑，处理 HTML 实体、零宽字符和残留 Markdown 符号
-- 重构 `ContentRenderer` / `ContentShell`，支持 Blog 目录和 Tours 侧边卡片两种壳层布局
-- 取消目录缩进按钮，改为稳定展示的右侧浮动目录卡片
-
-Impact:
-
-- Blog 目录的章节文本更干净，定位更准确
-- 目录与正文的视觉关系更统一
-- 内容壳层具备更好的扩展性，后续可以继续承载不同详情页的侧边结构
-
-Files touched:
-
-- `frontend/components/ContentRenderer.tsx`
-- `frontend/components/ContentShell.tsx`
-- `frontend/app/blog/[id]/page.tsx`
-- `frontend/app/globals.css`
-
-### 3. Tours 详情页改为右侧浮动信息卡片
-
-Summary:
-
-- Tours 详情页移除目录，改为右侧 `Highlights` / `Places to Visit` 两张浮动卡片
-- 两张卡片改为真正独立右侧列布局，并支持随页面滚动 `sticky`
-- 多轮收口 Tours 底部 `Booking` 卡片，让它与正文内容分离，但仍保持在同一文章容器体系下
-
-Impact:
-
-- Tours 详情页的信息结构从“长文 + 目录”调整为“正文 + 关键信息侧栏”
-- 游客更容易快速浏览路线亮点和地点信息
-- Tours 页面更符合 itinerary / travel article 的阅读方式
-
-Files touched:
-
-- `frontend/app/tours/[id]/page.tsx`
-- `frontend/components/ContentRenderer.tsx`
-- `frontend/components/ContentShell.tsx`
-- `frontend/app/globals.css`
-
-### 4. Tours 后台字段和后端模型补齐
-
-Summary:
-
-- `Tour` 模型新增 `highlights` / `places` JSON 字段
-- 后台 Tours 编辑页新增两个字段，按每行一条维护内容
-- 新增数据库迁移 `006_add_tour_highlights_and_places.sql`
-
-Impact:
-
-- 后台现在可以直接维护 Tours 详情页右侧两张卡片的数据
-- 前后端字段已经连通，详情页不再依赖写死内容
-
-Files touched:
-
-- `backend/internal/model/models.go`
-- `backend/migrations/006_add_tour_highlights_and_places.sql`
-- `frontend/app/admin/tours/page.tsx`
-
-## Validation
-
-Checks run:
-
-- `npm run lint`
-- `GOCACHE=/tmp/go-build-cache go test ./...`
-
-Results:
-
-- frontend lint passed with existing warnings only (`no-img-element` and a few pre-existing unused variable warnings)
-- backend tests passed
-
-## Current Working Tree Scope
-
-本轮计划纳入提交的主要文件：
-
-- `backend/internal/model/models.go`
-- `backend/migrations/006_add_tour_highlights_and_places.sql`
-- `frontend/app/admin/tours/page.tsx`
-- `frontend/app/blog/[id]/page.tsx`
-- `frontend/app/tours/[id]/page.tsx`
-- `frontend/app/globals.css`
-- `frontend/components/ContentRenderer.tsx`
-- `frontend/components/ContentShell.tsx`
-- `docs/commit-log-2026-04-02-article-detail-layout-and-tour-sidebar.md`
-
-## Recommended Next Step
-
-如果下一轮继续打磨详情页体验，优先顺序建议如下：
-
-1. 为 Blog / Tours 详情页补充更明确的当前章节高亮态
-2. 为 Tours 右侧浮动卡片增加在 `lg` 尺寸下的降级展示策略
-3. 继续统一正文框、底部卡片和标题卡之间的边框 / 阴影层级
 
 ## 2026-04-01
 

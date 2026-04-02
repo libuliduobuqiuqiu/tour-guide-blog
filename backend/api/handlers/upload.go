@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -111,6 +113,16 @@ func uploadImage(c *gin.Context, maxSize int64) {
 		return
 	}
 
+	contentType, err := detectUploadedContentType(file)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to inspect uploaded file"})
+		return
+	}
+	if !isAllowedUploadContentType(ext, contentType) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Uploaded file content does not match an allowed image type"})
+		return
+	}
+
 	uploadPath := viper.GetString("upload.path")
 	if err := os.MkdirAll(uploadPath, 0755); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create upload directory"})
@@ -130,4 +142,40 @@ func uploadImage(c *gin.Context, maxSize int64) {
 		"url":      url,
 		"filename": newFilename,
 	})
+}
+
+func detectUploadedContentType(file *multipart.FileHeader) (string, error) {
+	src, err := file.Open()
+	if err != nil {
+		return "", err
+	}
+	defer src.Close()
+
+	header := make([]byte, 512)
+	n, err := src.Read(header)
+	if err != nil && err != io.EOF {
+		return "", err
+	}
+
+	return http.DetectContentType(header[:n]), nil
+}
+
+func isAllowedUploadContentType(ext, contentType string) bool {
+	contentType = strings.ToLower(strings.TrimSpace(strings.Split(contentType, ";")[0]))
+	allowed := map[string][]string{
+		".jpg":  {"image/jpeg"},
+		".jpeg": {"image/jpeg"},
+		".png":  {"image/png"},
+		".gif":  {"image/gif"},
+		".webp": {"image/webp"},
+	}
+
+	expectedTypes := allowed[ext]
+	for _, expected := range expectedTypes {
+		if contentType == expected {
+			return true
+		}
+	}
+
+	return false
 }

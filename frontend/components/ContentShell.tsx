@@ -3,6 +3,18 @@
 import type { ReactNode } from 'react';
 import { useCallback, useMemo } from 'react';
 
+function sanitizeHtml(html: string) {
+  return html
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
+    .replace(/<(iframe|object|embed|meta|link|form|input|button|textarea|select)[^>]*?>[\s\S]*?<\/\1>/gi, '')
+    .replace(/<(iframe|object|embed|meta|link|form|input|button|textarea|select)[^>]*?\/?>/gi, '')
+    .replace(/\son[a-z]+\s*=\s*(['"]).*?\1/gi, '')
+    .replace(/\son[a-z]+\s*=\s*[^\s>]+/gi, '')
+    .replace(/\s(href|src)\s*=\s*(['"])\s*javascript:[\s\S]*?\2/gi, ' $1="#"')
+    .replace(/\s(href|src)\s*=\s*(['"])\s*data:text\/html[\s\S]*?\2/gi, ' $1="#"');
+}
+
 interface TocItem {
   id: string;
   text: string;
@@ -31,6 +43,7 @@ export default function ContentShell({
         : 'content article-content article-content-blog fade-up',
     [variant],
   );
+  const safeHtml = useMemo(() => sanitizeHtml(html), [html]);
 
   const articleFrameClassName =
     variant === 'tour'
@@ -60,7 +73,7 @@ export default function ContentShell({
         <article className={articleClassName}>
           <div className={articleStackClassName}>
             <div className={articleFrameClassName}>
-              <div className={contentClassName} dangerouslySetInnerHTML={{ __html: html }} />
+              <div className={contentClassName} dangerouslySetInnerHTML={{ __html: safeHtml }} />
             </div>
             {footer ? <div className="fade-up">{footer}</div> : null}
           </div>

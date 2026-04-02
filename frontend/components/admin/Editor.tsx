@@ -5,31 +5,26 @@ import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 import { Loader2, Maximize2, Minimize2 } from 'lucide-react';
 import { createPortal } from 'react-dom';
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import type { ComponentProps } from 'react';
 import { uploadAdminImage } from '@/lib/admin-upload';
 import 'react-quill-new/dist/quill.snow.css';
 
-const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
+type ReactQuillComponent = typeof import('react-quill-new').default;
+type ReactQuillProps = ComponentProps<ReactQuillComponent>;
+type ReactQuillInstance = InstanceType<ReactQuillComponent>;
+
+const ReactQuill = dynamic(async () => {
+  const { default: QuillComponent } = await import('react-quill-new');
+
+  return forwardRef<ReactQuillInstance, ReactQuillProps>(function ReactQuillWithRef(props, ref) {
+    return <QuillComponent {...props} ref={ref} />;
+  });
+}, { ssr: false });
 
 interface EditorProps {
   value: string;
   onChange: (value: string) => void;
-}
-
-interface QuillEditorInstance {
-  root: HTMLElement;
-  getLength: () => number;
-  getSelection: (focus?: boolean) => { index: number; length: number } | null;
-  setSelection: (index: number, length: number, source?: string) => void;
-  focus: () => void;
-  insertEmbed: (index: number, type: string, value: string, source?: string) => void;
-  clipboard: {
-    dangerouslyPasteHTML: (index: number, html: string, source?: string) => void;
-  };
-}
-
-interface ReactQuillInstance {
-  getEditor: () => QuillEditorInstance;
 }
 
 function looksLikeMarkdown(text: string) {
