@@ -14,6 +14,7 @@ func RegisterReviewRoutes(rg *gin.RouterGroup, protected *gin.RouterGroup) {
 	protected.GET("/reviews", handlers.ListReviews)
 	protected.POST("/reviews", handlers.CreateReview)
 	protected.POST("/reviews/reorder", handlers.ReorderReviews)
+	protected.PATCH("/reviews/:id/dashboard-visibility", handlers.UpdateReviewDashboardVisibility)
 	protected.PUT("/reviews/:id", handlers.UpdateReview)
 	protected.DELETE("/reviews/:id", handlers.DeleteReview)
 	protected.POST("/reviews/generate", handlers.GenerateReviews)

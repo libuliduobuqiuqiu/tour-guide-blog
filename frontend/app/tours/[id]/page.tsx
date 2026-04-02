@@ -12,13 +12,34 @@ function renderInfoCard(title: string, items: string[]) {
 
   return (
     <section className="fade-up rounded-[1.6rem] border border-slate-200/90 bg-white/96 p-5 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.36)] backdrop-blur">
-      <div className="mb-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">{title}</div>
+      <div className="mb-4 text-[13px] font-extrabold uppercase tracking-[0.2em] text-blue-700">{title}</div>
       <div className="space-y-2.5">
         {items.map((item, index) => (
           <div key={`${title}-${index}`} className="text-sm leading-7 text-slate-700">
             {item}
           </div>
         ))}
+      </div>
+    </section>
+  );
+}
+
+function renderBookingCard() {
+  return (
+    <section className="mx-auto max-w-[920px] px-4 md:px-6 lg:px-8">
+      <div className="fade-up overflow-hidden rounded-[2rem] border border-blue-200/80 bg-[linear-gradient(135deg,rgba(30,78,216,0.1)_0%,rgba(14,165,233,0.08)_32%,rgba(255,255,255,0.98)_100%)] px-7 py-8 text-center shadow-[0_34px_90px_-52px_rgba(30,78,216,0.42)] md:px-10 md:py-10">
+        <div className="mx-auto max-w-[42rem]">
+          <div className="mb-3 text-[13px] font-extrabold uppercase tracking-[0.22em] text-blue-700">Booking</div>
+          <h3 className="text-[2rem] font-extrabold leading-tight text-slate-950 md:text-[2.45rem]">Interested in this tour?</h3>
+          <p className="mt-4 text-lg leading-8 text-slate-700 md:text-[1.2rem]">
+            Contact me to book your adventure or customize your itinerary.
+          </p>
+        </div>
+        <div className="mt-7">
+          <Link href="/contact" className="btn-primary inline-flex px-8 py-4 text-lg font-semibold md:px-10 md:py-4.5 md:text-xl">
+            Book Now
+          </Link>
+        </div>
       </div>
     </section>
   );
@@ -42,19 +63,6 @@ export default async function TourDetailPage({ params }: { params: Promise<{ id:
       {renderInfoCard('Places to Visit', places)}
     </>
   );
-  const bookingCard = (
-    <div className="rounded-[1.55rem] border border-slate-200/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,251,254,0.96))] px-6 py-4 shadow-[0_28px_70px_-50px_rgba(15,23,42,0.34)] md:px-7 md:py-5">
-      <div className="max-w-[40rem]">
-        <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Booking</div>
-        <h3 className="mb-2 text-[1.45rem] font-semibold leading-tight text-slate-950 md:text-[1.55rem]">Interested in this tour?</h3>
-        <p className="mb-3.5 text-[0.98rem] leading-6 text-slate-600">Contact me to book your adventure or customize your itinerary.</p>
-      </div>
-      <Link href="/contact" className="btn-primary inline-flex px-5 py-2.5 text-sm">
-        Book Now
-      </Link>
-    </div>
-  );
-
   return (
     <div className="min-h-[calc(100vh-64px)] bg-[linear-gradient(180deg,#f7fbff_0%,#eef5fb_52%,#e9f1f8_100%)]">
       <div className="mx-auto max-w-[1420px] px-4 pt-6 md:px-6 md:pt-8 lg:px-8">
@@ -106,8 +114,11 @@ export default async function TourDetailPage({ params }: { params: Promise<{ id:
           toc={false}
           variant="tour"
           aside={highlights.length > 0 || places.length > 0 ? asideCards : undefined}
-          footer={bookingCard}
         />
+      </div>
+
+      <div className="pb-16 pt-4 md:pb-20 md:pt-6">
+        {renderBookingCard()}
       </div>
     </div>
   );

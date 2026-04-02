@@ -1,6 +1,7 @@
 package service
 
 import (
+	"tour-guide-blog-backend/internal/dao"
 	"tour-guide-blog-backend/internal/model"
 	"tour-guide-blog-backend/internal/query"
 )
@@ -32,4 +33,10 @@ func (s *ContactService) DeleteBatch(ids []uint) error {
 	con := query.Contact
 	_, err := con.Where(con.ID.In(ids...)).Delete()
 	return err
+}
+
+func (s *ContactService) SetDashboardVisible(id uint, visible bool) error {
+	return dao.DB.Model(&model.Contact{}).
+		Where("id = ?", id).
+		Update("show_on_dashboard", visible).Error
 }

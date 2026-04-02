@@ -26,6 +26,10 @@ type reviewReorderRequest struct {
 	IDs []uint `json:"ids"`
 }
 
+type reviewDashboardVisibilityRequest struct {
+	ShowOnDashboard bool `json:"show_on_dashboard"`
+}
+
 type reviewRateEntry struct {
 	Count     int
 	WindowEnd time.Time
@@ -249,6 +253,27 @@ func DeleteReview(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Review deleted"})
+}
+
+func UpdateReviewDashboardVisibility(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil || id <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		return
+	}
+
+	var req reviewDashboardVisibilityRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := service.Review.SetDashboardVisible(uint(id), req.ShowOnDashboard); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Review dashboard visibility updated"})
 }
 
 func GenerateReviews(c *gin.Context) {

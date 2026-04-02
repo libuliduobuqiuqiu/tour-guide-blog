@@ -24,6 +24,10 @@ type createContactRequest struct {
 	Website string `json:"website"`
 }
 
+type dashboardVisibilityRequest struct {
+	ShowOnDashboard bool `json:"show_on_dashboard"`
+}
+
 type siteSettingsSnapshot struct {
 	ContactEmail string `json:"contact_email"`
 }
@@ -210,4 +214,25 @@ func DeleteContactsBatch(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Contacts deleted"})
+}
+
+func UpdateContactDashboardVisibility(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil || id <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		return
+	}
+
+	var req dashboardVisibilityRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := service.Contact.SetDashboardVisible(uint(id), req.ShowOnDashboard); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Contact dashboard visibility updated"})
 }

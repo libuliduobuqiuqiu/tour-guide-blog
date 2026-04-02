@@ -131,70 +131,72 @@ export default function ContactsAdmin() {
 
       <div className="flex-1">
         <div className="grid grid-cols-1 gap-4">
-        {paginatedContacts.map((contact) => (
-          <div key={contact.id} className="admin-panel overflow-hidden">
-            <div className="flex flex-col gap-5 p-6 lg:flex-row lg:items-start">
-              <div className="flex items-start gap-4">
-                <input
-                  type="checkbox"
-                  checked={selectedIds.includes(contact.id)}
-                  onChange={() => toggleSelect(contact.id)}
-                  className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                  aria-label={`Select message from ${contact.name}`}
-                />
-                <div className="space-y-3">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="text-lg font-semibold text-slate-900">{contact.name}</span>
-                    <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
-                      #{contact.id}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-500">
-                    <div className="flex items-center gap-2">
-                      <Mail size={14} />
-                      <span className="break-all">{contact.email}</span>
+          {paginatedContacts.map((contact) => (
+            <div key={contact.id} className="admin-panel overflow-hidden">
+              <div className="flex flex-col gap-5 p-6 lg:flex-row lg:items-start">
+                <div className="w-full max-w-[22rem] shrink-0">
+                  <div className="flex items-start gap-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(contact.id)}
+                      onChange={() => toggleSelect(contact.id)}
+                      className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      aria-label={`Select message from ${contact.name}`}
+                    />
+                    <div className="min-w-0 space-y-3">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span className="text-lg font-semibold text-slate-900">{contact.name}</span>
+                        <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
+                          #{contact.id}
+                        </span>
+                      </div>
+                      <div className="space-y-2 text-sm text-slate-500">
+                        <div className="flex items-start gap-2">
+                          <Mail size={14} />
+                          <span className="min-w-0 break-all leading-6">{contact.email}</span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <Calendar size={14} />
+                          <span className="leading-6">{formatDate(contact.created_at)}</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar size={14} />
-                      <span>{formatDate(contact.created_at)}</span>
+                  </div>
+                </div>
+
+                <div className="min-w-0 flex-1 space-y-4">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Subject</div>
+                    <div className="mt-1 break-words text-sm font-medium text-slate-700">
+                      {contact.subject || 'No subject'}
+                    </div>
+                  </div>
+                  <div className="min-h-[11rem] min-w-0 rounded-2xl border border-slate-200 bg-white px-4 py-4">
+                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Message</div>
+                    <div className="mt-2 whitespace-pre-wrap break-words text-sm leading-7 text-slate-700">
+                      {contact.message}
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="min-w-0 flex-1 space-y-4">
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Subject</div>
-                  <div className="mt-1 text-base font-medium text-slate-900">
-                    {contact.subject || 'No subject'}
-                  </div>
+                <div className="flex lg:justify-end">
+                  <button
+                    onClick={() => handleDelete(contact.id)}
+                    className="inline-flex items-center gap-2 rounded-xl border border-red-200 px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+                  >
+                    <Trash2 size={16} />
+                    Delete
+                  </button>
                 </div>
-                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
-                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Message</div>
-                  <div className="mt-2 whitespace-pre-wrap break-words text-sm leading-7 text-slate-700">
-                    {contact.message}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex lg:justify-end">
-                <button
-                  onClick={() => handleDelete(contact.id)}
-                  className="inline-flex items-center gap-2 rounded-xl border border-red-200 px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
-                >
-                  <Trash2 size={16} />
-                  Delete
-                </button>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
 
-        {contacts.length === 0 && (
-          <div className="text-center py-20 admin-panel text-gray-500">
-            No messages yet.
-          </div>
-        )}
+          {contacts.length === 0 && (
+            <div className="text-center py-20 admin-panel text-gray-500">
+              No messages yet.
+            </div>
+          )}
         </div>
       </div>
 

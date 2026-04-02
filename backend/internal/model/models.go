@@ -88,12 +88,13 @@ type Post struct {
 
 // Contact 联系信息
 type Contact struct {
-	ID        uint      `gorm:"primaryKey" json:"id"`
-	Name      string    `gorm:"size:100;not null" json:"name"`
-	Email     string    `gorm:"size:100;not null" json:"email"`
-	Subject   string    `gorm:"size:255" json:"subject"`
-	Message   string    `gorm:"type:text;not null" json:"message"`
-	CreatedAt time.Time `json:"created_at"`
+	ID              uint      `gorm:"primaryKey" json:"id"`
+	Name            string    `gorm:"size:100;not null" json:"name"`
+	Email           string    `gorm:"size:100;not null" json:"email"`
+	Subject         string    `gorm:"size:255" json:"subject"`
+	Message         string    `gorm:"type:text;not null" json:"message"`
+	ShowOnDashboard bool      `gorm:"default:true" json:"show_on_dashboard"`
+	CreatedAt       time.Time `json:"created_at"`
 }
 
 // Admin 后台管理员
@@ -126,18 +127,19 @@ type Carousel struct {
 
 // Review 用户评价
 type Review struct {
-	ID         uint       `gorm:"primaryKey" json:"id"`
-	Username   string     `gorm:"size:100;not null" json:"username"`
-	Country    string     `gorm:"size:100" json:"country"`
-	ReviewDate string     `gorm:"type:date" json:"review_date"`
-	TourRoute  string     `gorm:"size:255" json:"tour_route"`
-	Host       string     `gorm:"size:100" json:"host"`
-	Content    string     `gorm:"type:text;not null" json:"content"`
-	Avatar     string     `gorm:"size:255" json:"avatar"`
-	Photos     StringList `gorm:"type:json" json:"photos"`
-	Rating     int        `gorm:"default:5" json:"rating"` // 1-5 stars
-	SortOrder  int        `gorm:"default:0" json:"sort_order"`
-	IsActive   bool       `gorm:"default:false" json:"is_active"`
-	CreatedAt  time.Time  `json:"created_at"`
-	UpdatedAt  time.Time  `json:"updated_at"`
+	ID              uint       `gorm:"primaryKey" json:"id"`
+	Username        string     `gorm:"size:100;not null" json:"username"`
+	Country         string     `gorm:"size:100" json:"country"`
+	ReviewDate      string     `gorm:"type:date" json:"review_date"`
+	TourRoute       string     `gorm:"size:255" json:"tour_route"`
+	Host            string     `gorm:"size:100" json:"host"`
+	Content         string     `gorm:"type:text;not null" json:"content"`
+	Avatar          string     `gorm:"size:255" json:"avatar"`
+	Photos          StringList `gorm:"type:json" json:"photos"`
+	Rating          int        `gorm:"default:5" json:"rating"` // 1-5 stars
+	SortOrder       int        `gorm:"default:0" json:"sort_order"`
+	IsActive        bool       `gorm:"default:false" json:"is_active"`
+	ShowOnDashboard bool       `gorm:"default:true" json:"show_on_dashboard"`
+	CreatedAt       time.Time  `json:"created_at"`
+	UpdatedAt       time.Time  `json:"updated_at"`
 }

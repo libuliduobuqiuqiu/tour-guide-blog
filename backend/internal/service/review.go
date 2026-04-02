@@ -83,6 +83,12 @@ func (s *ReviewService) Delete(id uint) error {
 	return dao.DB.Delete(&model.Review{}, id).Error
 }
 
+func (s *ReviewService) SetDashboardVisible(id uint, visible bool) error {
+	return dao.DB.Model(&model.Review{}).
+		Where("id = ?", id).
+		Update("show_on_dashboard", visible).Error
+}
+
 func (s *ReviewService) Reorder(ids []uint) error {
 	if len(ids) == 0 {
 		return errors.New("no review ids provided")

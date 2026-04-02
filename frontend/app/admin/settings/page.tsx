@@ -26,6 +26,8 @@ const defaultSettings = {
   social_xiaohongshu: '',
   social_youtube: '',
   social_x: '',
+  footer_title: 'Private tours with clear local guidance.',
+  footer_description: 'Your professional tour guide in Guangzhou, Chongqing and Chengdu.',
   icp_number: '',
   public_security_beian: ''
 };
@@ -608,6 +610,29 @@ export default function SettingsAdmin() {
 
         <section className="admin-panel p-8">
           <h2 className="text-lg font-semibold mb-6 border-b pb-2 text-purple-700">Footer Social Links</h2>
+          <div className="mb-6 grid grid-cols-1 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Footer Title</label>
+              <input
+                type="text"
+                value={settings.footer_title}
+                onChange={(e) => setSettings({ ...settings, footer_title: e.target.value })}
+                className="w-full px-4 py-2"
+                placeholder="Private tours with clear local guidance."
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Footer Description</label>
+              <textarea
+                rows={3}
+                value={settings.footer_description}
+                onChange={(e) => setSettings({ ...settings, footer_description: e.target.value })}
+                className="w-full px-4 py-2"
+                placeholder="Your professional tour guide in Guangzhou, Chongqing and Chengdu."
+              />
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">TikTok</label>
