@@ -492,6 +492,19 @@ export default function SettingsAdmin() {
                         placeholder={profilePlaceholder}
                       />
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Sync Item Count</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={24}
+                        step={1}
+                        value={platformSettings.post_limit}
+                        onChange={(e) => updateSocialPlatform(platform, 'post_limit', e.target.value)}
+                        className="w-full px-4 py-2"
+                      />
+                      <p className="mt-1 text-xs text-gray-500">Range: 1-24. This controls how many posts are fetched per sync.</p>
+                    </div>
                   </div>
                 </div>
               );

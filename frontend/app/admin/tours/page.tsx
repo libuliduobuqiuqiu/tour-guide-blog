@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import api from '@/lib/axios';
 import AdminModal from '@/components/admin/AdminModal';
 import AdminPagination from '@/components/admin/AdminPagination';
@@ -52,7 +52,10 @@ function textareaToList(value: string) {
 }
 
 export default function ToursAdmin() {
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
+  const action = searchParams.get('action');
   const [tours, setTours] = useState<Tour[]>([]);
   const [editing, setEditing] = useState<Partial<Tour> | null>(null);
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
@@ -75,8 +78,16 @@ export default function ToursAdmin() {
     fetchTours();
   }, []);
 
+  const consumeNewAction = useCallback(() => {
+    if (searchParams.get('action') !== 'new') return;
+    const nextParams = new URLSearchParams(searchParams.toString());
+    nextParams.delete('action');
+    const nextQuery = nextParams.toString();
+    router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false });
+  }, [pathname, router, searchParams]);
+
   useEffect(() => {
-    if (searchParams.get('action') === 'new' && !editing) {
+    if (action === 'new' && !editing) {
       setEditing({
         title: '',
         description: '',
@@ -90,8 +101,9 @@ export default function ToursAdmin() {
         sort_order: tours.length + 1,
       });
       setCoverImageFile(null);
+      consumeNewAction();
     }
-  }, [editing, searchParams, tours.length]);
+  }, [action, consumeNewAction, editing, tours.length]);
 
   useEffect(() => {
     const totalPages = Math.max(1, Math.ceil(tours.length / pageSize));
@@ -107,6 +119,7 @@ export default function ToursAdmin() {
   const closeEditor = () => {
     setEditing(null);
     setCoverImageFile(null);
+    consumeNewAction();
   };
 
   const handleEdit = async (id: number) => {

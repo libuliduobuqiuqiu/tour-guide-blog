@@ -32,6 +32,13 @@ function buildLoopItems(items: SocialFeedItem[] | null | undefined, minimumCount
   return loopItems;
 }
 
+function getMarqueeDuration(itemsCount: number) {
+  // Keep a consistent, slower pace across platforms by scaling duration with item count.
+  const secondsPerItem = 6;
+  const minSeconds = 48;
+  return `${Math.max(minSeconds, itemsCount * secondsPerItem)}s`;
+}
+
 function SocialTile({ item }: { item: LoopFeedItem }) {
   const imageUrl = withSocialImageProxy(item.thumbnail_url || item.media_url);
   const tileClass =
@@ -130,7 +137,7 @@ function PlatformWall({
 
       {normalizedItems.length > 0 ? (
         <div className="px-3 py-4 sm:px-4 sm:py-5 lg:px-5 lg:py-6">
-          <SocialRow items={rowItems} direction="left" duration="34s" />
+          <SocialRow items={rowItems} direction="left" duration={getMarqueeDuration(rowItems.length)} />
         </div>
       ) : (
         <div className="flex min-h-[220px] items-center justify-center px-8 py-10 text-center text-sm text-slate-500">

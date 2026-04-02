@@ -137,7 +137,7 @@ type Review struct {
 	Photos     StringList `gorm:"type:json" json:"photos"`
 	Rating     int        `gorm:"default:5" json:"rating"` // 1-5 stars
 	SortOrder  int        `gorm:"default:0" json:"sort_order"`
-	IsActive   bool       `gorm:"default:true" json:"is_active"`
+	IsActive   bool       `gorm:"default:false" json:"is_active"`
 	CreatedAt  time.Time  `json:"created_at"`
 	UpdatedAt  time.Time  `json:"updated_at"`
 }

@@ -180,7 +180,7 @@ func (s *SocialService) syncInstagram(settings SocialPlatformSettings) ([]Social
 
 	params := url.Values{}
 	params.Set("fields", "id,caption,media_type,media_url,thumbnail_url,permalink,timestamp")
-	params.Set("limit", "12")
+	params.Set("limit", strconv.Itoa(sanitizePostLimit(settings.PostLimit)))
 	params.Set("access_token", settings.AccessToken)
 
 	endpoint := fmt.Sprintf("https://graph.facebook.com/v23.0/%s/media?%s", url.PathEscape(settings.AccountID), params.Encode())
