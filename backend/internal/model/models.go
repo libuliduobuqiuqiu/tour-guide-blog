@@ -11,6 +11,14 @@ import (
 
 type StringList []string
 
+type TourAvailabilitySlot struct {
+	Date        string `json:"date"`
+	BookedCount int    `json:"booked_count"`
+	IsOpen      bool   `json:"is_open"`
+}
+
+type TourAvailability []TourAvailabilitySlot
+
 func (s StringList) Value() (driver.Value, error) {
 	if len(s) == 0 {
 		return "[]", nil
@@ -52,22 +60,67 @@ func (s *StringList) Scan(value interface{}) error {
 	return nil
 }
 
+func (a TourAvailability) Value() (driver.Value, error) {
+	if len(a) == 0 {
+		return "[]", nil
+	}
+
+	data, err := json.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return string(data), nil
+}
+
+func (a *TourAvailability) Scan(value interface{}) error {
+	if value == nil {
+		*a = TourAvailability{}
+		return nil
+	}
+
+	var raw []byte
+	switch v := value.(type) {
+	case []byte:
+		raw = v
+	case string:
+		raw = []byte(v)
+	default:
+		return errors.New("unsupported scan type for TourAvailability")
+	}
+
+	if len(raw) == 0 {
+		*a = TourAvailability{}
+		return nil
+	}
+
+	var parsed []TourAvailabilitySlot
+	if err := json.Unmarshal(raw, &parsed); err != nil {
+		return err
+	}
+	*a = TourAvailability(parsed)
+	return nil
+}
+
 // Tour 行程详情
 type Tour struct {
-	ID          uint           `gorm:"primaryKey" json:"id"`
-	Title       string         `gorm:"size:255;not null" json:"title"`
-	Description string         `gorm:"type:text" json:"description"`
-	Content     string         `gorm:"type:longtext" json:"content"`
-	Highlights  StringList     `gorm:"type:json" json:"highlights"`
-	Places      StringList     `gorm:"type:json" json:"places"`
-	CoverImage  string         `gorm:"size:255" json:"cover_image"`
-	Price       float64        `gorm:"type:decimal(10,2)" json:"price"`
-	Duration    string         `gorm:"size:100" json:"duration"`
-	Location    string         `gorm:"size:255" json:"location"`
-	SortOrder   int            `gorm:"default:0" json:"sort_order"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
-	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
+	ID           uint             `gorm:"primaryKey" json:"id"`
+	Title        string           `gorm:"size:255;not null" json:"title"`
+	Description  string           `gorm:"type:text" json:"description"`
+	Content      string           `gorm:"type:longtext" json:"content"`
+	Highlights   StringList       `gorm:"type:json" json:"highlights"`
+	Places       StringList       `gorm:"type:json" json:"places"`
+	BookingTag1  string           `gorm:"column:booking_tag_1;size:255" json:"booking_tag_1"`
+	BookingNote  string           `gorm:"column:booking_tag_2;size:255" json:"booking_note"`
+	MaxBookings  int              `gorm:"default:0" json:"max_bookings"`
+	Availability TourAvailability `gorm:"type:json" json:"availability"`
+	CoverImage   string           `gorm:"size:255" json:"cover_image"`
+	Price        float64          `gorm:"type:decimal(10,2)" json:"price"`
+	Duration     string           `gorm:"size:100" json:"duration"`
+	Location     string           `gorm:"size:255" json:"location"`
+	SortOrder    int              `gorm:"default:0" json:"sort_order"`
+	CreatedAt    time.Time        `json:"created_at"`
+	UpdatedAt    time.Time        `json:"updated_at"`
+	DeletedAt    gorm.DeletedAt   `gorm:"index" json:"-"`
 }
 
 // Post 博客文章

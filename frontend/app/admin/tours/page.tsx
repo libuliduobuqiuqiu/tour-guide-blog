@@ -7,7 +7,9 @@ import api from '@/lib/axios';
 import AdminModal from '@/components/admin/AdminModal';
 import AdminPagination from '@/components/admin/AdminPagination';
 import ImageUpload from '@/components/admin/ImageUpload';
+import TourAvailabilityEditor from '@/components/admin/TourAvailabilityEditor';
 import { uploadAdminImage } from '@/lib/admin-upload';
+import type { TourAvailabilitySlot } from '@/lib/tour-availability';
 import { withPublicOrigin } from '@/lib/url';
 import { ArrowUpToLine, Edit2, GripVertical, LoaderCircle, MapPinned, Plus, Trash2 } from 'lucide-react';
 
@@ -23,6 +25,10 @@ interface Tour {
   content: string;
   highlights: string[];
   places: string[];
+  booking_tag_1: string;
+  booking_note: string;
+  max_bookings: number;
+  availability: TourAvailabilitySlot[];
   price: number;
   duration: string;
   location: string;
@@ -94,6 +100,10 @@ export default function ToursAdmin() {
         content: '',
         highlights: [],
         places: [],
+        booking_tag_1: '',
+        booking_note: '',
+        max_bookings: 0,
+        availability: [],
         price: 0,
         duration: '',
         location: '',
@@ -139,7 +149,18 @@ export default function ToursAdmin() {
 
     setLoading(true);
     try {
-      let payload: Partial<Tour> = { ...editing };
+      const maxBookings = Math.max(0, editing.max_bookings ?? 0);
+      let payload: Partial<Tour> = {
+        ...editing,
+        max_bookings: maxBookings,
+        availability: Array.isArray(editing.availability)
+          ? editing.availability.map((slot) => ({
+              ...slot,
+              booked_count: maxBookings > 0 ? Math.min(Math.max(0, slot.booked_count ?? 0), maxBookings) : Math.max(0, slot.booked_count ?? 0),
+              is_open: slot.is_open !== false,
+            }))
+          : [],
+      };
       if (coverImageFile) {
         const uploadedUrl = await uploadAdminImage(coverImageFile);
         payload = { ...payload, cover_image: uploadedUrl };
@@ -229,6 +250,10 @@ export default function ToursAdmin() {
               content: '',
               highlights: [],
               places: [],
+              booking_tag_1: '',
+              booking_note: '',
+              max_bookings: 0,
+              availability: [],
               price: 0,
               duration: '',
               location: '',
@@ -389,6 +414,37 @@ export default function ToursAdmin() {
               />
             </div>
             <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Price Tag 1</label>
+              <input
+                type="text"
+                value={editing?.booking_tag_1 || ''}
+                onChange={(event) => setEditing((current) => ({ ...current!, booking_tag_1: event.target.value }))}
+                placeholder="0/6 Booked · Max 8"
+                className="w-full px-4 py-3"
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Booking Note</label>
+              <input
+                type="text"
+                value={editing?.booking_note || ''}
+                onChange={(event) => setEditing((current) => ({ ...current!, booking_note: event.target.value }))}
+                placeholder="Group of 6–8 people"
+                className="w-full px-4 py-3"
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Max Bookings</label>
+              <input
+                type="number"
+                min="0"
+                value={editing?.max_bookings ?? 0}
+                onChange={(event) => setEditing((current) => ({ ...current!, max_bookings: Number.parseInt(event.target.value, 10) || 0 }))}
+                placeholder="8"
+                className="w-full px-4 py-3"
+              />
+            </div>
+            <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">Cover Image</label>
               <ImageUpload value={editing?.cover_image} file={coverImageFile} onFileChange={setCoverImageFile} />
             </div>
@@ -419,6 +475,13 @@ export default function ToursAdmin() {
                 onChange={(event) => setEditing((current) => ({ ...current!, places: textareaToList(event.target.value) }))}
                 placeholder="One place per line"
                 className="w-full px-4 py-3"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <TourAvailabilityEditor
+                value={editing?.availability || []}
+                maxBookings={editing?.max_bookings ?? 0}
+                onChange={(value) => setEditing((current) => ({ ...current!, availability: value }))}
               />
             </div>
           </div>

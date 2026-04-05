@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import ContentRenderer from '@/components/ContentRenderer';
+import TourAvailabilityButton from '@/components/TourAvailabilityButton';
 import { withPublicOrigin } from '@/lib/url';
 
 function renderInfoCard(title: string, items: string[]) {
@@ -12,7 +13,7 @@ function renderInfoCard(title: string, items: string[]) {
 
   return (
     <section className="fade-up rounded-[1.6rem] border border-slate-200/90 bg-white/96 p-5 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.36)] backdrop-blur">
-      <div className="mb-4 text-[13px] font-extrabold uppercase tracking-[0.2em] text-blue-700">{title}</div>
+      <div className="mb-4 text-[15px] font-black uppercase tracking-[0.24em] text-blue-700 md:text-[17px]">{title}</div>
       <div className="space-y-2.5">
         {items.map((item, index) => (
           <div key={`${title}-${index}`} className="text-sm leading-7 text-slate-700">
@@ -27,19 +28,16 @@ function renderInfoCard(title: string, items: string[]) {
 function renderBookingCard() {
   return (
     <section className="mx-auto max-w-[920px] px-4 md:px-6 lg:px-8">
-      <div className="fade-up overflow-hidden rounded-[2rem] border border-blue-200/80 bg-[linear-gradient(135deg,rgba(30,78,216,0.1)_0%,rgba(14,165,233,0.08)_32%,rgba(255,255,255,0.98)_100%)] px-7 py-8 text-center shadow-[0_34px_90px_-52px_rgba(30,78,216,0.42)] md:px-10 md:py-10">
-        <div className="mx-auto max-w-[42rem]">
-          <div className="mb-3 text-[13px] font-extrabold uppercase tracking-[0.22em] text-blue-700">Booking</div>
-          <h3 className="text-[2rem] font-extrabold leading-tight text-slate-950 md:text-[2.45rem]">Interested in this tour?</h3>
-          <p className="mt-4 text-lg leading-8 text-slate-700 md:text-[1.2rem]">
-            Contact me to book your adventure or customize your itinerary.
-          </p>
-        </div>
-        <div className="mt-7">
-          <Link href="/contact" className="btn-primary inline-flex px-8 py-4 text-lg font-semibold md:px-10 md:py-4.5 md:text-xl">
-            Book Now
-          </Link>
-        </div>
+      <div className="fade-up flex flex-col items-center justify-center gap-6 px-4 py-7 text-center md:gap-7 md:py-9">
+        <p className="max-w-[42rem] text-[1.35rem] font-semibold leading-9 text-slate-800 md:text-[1.8rem] md:leading-[1.7]">
+          Contact me to book the tour.
+        </p>
+        <Link
+          href="/contact"
+          className="btn-primary inline-flex px-10 py-4 text-[1.05rem] font-extrabold uppercase tracking-[0.14em] md:px-12 md:py-5 md:text-[1.3rem]"
+        >
+          BOOK NOW
+        </Link>
       </div>
     </section>
   );
@@ -57,6 +55,7 @@ export default async function TourDetailPage({ params }: { params: Promise<{ id:
 
   const highlights = Array.isArray(tour.highlights) ? tour.highlights.filter(Boolean) : [];
   const places = Array.isArray(tour.places) ? tour.places.filter(Boolean) : [];
+  const bookingNote = typeof tour.booking_note === 'string' ? tour.booking_note.trim() : '';
   const asideCards = (
     <>
       {renderInfoCard('Highlights', highlights)}
@@ -89,15 +88,16 @@ export default async function TourDetailPage({ params }: { params: Promise<{ id:
         <section className="scale-in relative z-10 rounded-[2rem] border border-white/75 bg-white/88 px-6 py-8 shadow-[0_32px_90px_-52px_rgba(15,23,42,0.52)] backdrop-blur md:px-10 md:py-10">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
-              <div className="mb-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Curated Tour</div>
               <h1 className="text-4xl font-semibold tracking-[0.01em] text-slate-950 md:text-5xl md:leading-[1.08]">{tour.title}</h1>
               {tour.description && <p className="mt-5 max-w-2xl text-base leading-8 text-slate-600 md:text-lg">{tour.description}</p>}
             </div>
-            <div className="rounded-[1.5rem] bg-slate-950 px-6 py-5 text-white shadow-[0_24px_50px_-36px_rgba(15,23,42,0.65)]">
-              <div className="text-xs uppercase tracking-[0.22em] text-slate-300">From</div>
-              <div className="mt-1 text-3xl font-semibold">
-                ${tour.price} <span className="text-sm font-normal text-slate-300">/ person</span>
+            <div className="flex flex-col items-start lg:items-end">
+              <div className="text-[2.8rem] font-black leading-none text-slate-950 md:text-[3.5rem]">
+                ${tour.price}
+                <span className="ml-2 text-base font-semibold text-slate-500 md:text-lg">/ person</span>
               </div>
+              {bookingNote && <div className="mt-3 text-base font-normal text-slate-600 md:text-lg">{bookingNote}</div>}
+              <TourAvailabilityButton availability={tour.availability} maxBookings={tour.max_bookings ?? 0} />
             </div>
           </div>
 

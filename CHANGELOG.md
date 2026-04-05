@@ -1936,3 +1936,50 @@ Recommended push scope for this round:
 
 - only social-feed-related backend/frontend/doc changes
 - exclude unrelated worktree changes unless explicitly reviewed and requested
+
+## Current Tour Booking Availability Work Summary
+
+This workstream focuses on Tours detail-page booking UX and admin-side date availability management.
+
+Main changes prepared in the working tree:
+
+- simplified the Tours detail bottom CTA to a stronger text + `BOOK NOW` treatment
+- rebuilt the Tours price area into a text-first layout without the old dark card
+- kept a backend-configurable booking note under the price
+- added Tour-level `max_bookings` and per-date `availability` JSON data support
+- added a frontend `check availability` button with an animated date popover
+- added an admin availability calendar for opening dates and editing booked counts
+
+Core files involved:
+
+- `backend/internal/model/models.go`
+- `backend/internal/model/string_list_test.go`
+- `backend/internal/service/tour.go`
+- `backend/migrations/008_add_tour_booking_tags.sql`
+- `frontend/app/admin/tours/page.tsx`
+- `frontend/app/tours/[id]/page.tsx`
+- `frontend/components/TourAvailabilityButton.tsx`
+- `frontend/components/admin/TourAvailabilityEditor.tsx`
+- `frontend/lib/tour-availability.ts`
+- `docs/commit-log-2026-04-05-tour-booking-availability.md`
+
+## Validation Notes
+
+Checks run during this workstream:
+
+- `cd backend && GOCACHE=/tmp/go-build-cache go test ./...`
+- `cd frontend && npx tsc --noEmit`
+- `cd frontend && npm run lint -- 'app/tours/[id]/page.tsx' 'app/admin/tours/page.tsx' 'components/TourAvailabilityButton.tsx' 'components/admin/TourAvailabilityEditor.tsx' 'lib/tour-availability.ts'`
+
+Results:
+
+- backend tests passed
+- frontend type check passed
+- targeted frontend lint passed with one existing warning in admin tours list
+
+## Push Scope
+
+Recommended push scope for this round:
+
+- tours booking UX and availability related backend/frontend/doc changes
+- exclude unrelated worktree changes unless explicitly reviewed and requested
