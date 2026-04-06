@@ -59,13 +59,15 @@ export default async function Home() {
       )
     : [];
 
+  const activeReviews = reviews.filter((review) => review.is_active !== false);
+
   const selectedReviews = selectedReviewIds
-    .map((id) => reviews.find((review) => review.id === id))
+    .map((id) => activeReviews.find((review) => review.id === id))
     .filter((review): review is Review => Boolean(review));
 
   const homeReviews = [
     ...selectedReviews,
-    ...reviews.filter((review) => !selectedReviewIds.includes(review.id)),
+    ...activeReviews.filter((review) => !selectedReviewIds.includes(review.id)),
   ].slice(0, 4);
 
   const sectionShellClass = 'mx-auto max-w-[1520px] px-4 md:px-6 lg:px-8';

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
+import Image from 'next/image';
 import { Upload, X } from 'lucide-react';
 import { withPublicOrigin } from '@/lib/url';
 
@@ -8,10 +9,12 @@ interface ImageUploadProps {
   value?: string;
   file?: File | null;
   onFileChange: (file: File | null) => void;
+  onClear?: () => void;
+  stacked?: boolean;
   className?: string;
 }
 
-export default function ImageUpload({ value, file, onFileChange, className = '' }: ImageUploadProps) {
+export default function ImageUpload({ value, file, onFileChange, onClear, stacked = false, className = '' }: ImageUploadProps) {
   const localPreviewUrl = useMemo(() => (file ? URL.createObjectURL(file) : ''), [file]);
 
   useEffect(() => {
@@ -32,13 +35,13 @@ export default function ImageUpload({ value, file, onFileChange, className = '' 
 
   return (
     <div className={`flex flex-col gap-2 ${className}`}>
-      <div className="flex items-center gap-4">
+      <div className={stacked ? 'flex flex-col gap-4' : 'flex items-center gap-4'}>
         {previewUrl && (
-          <div className="w-24 h-24 relative rounded-lg overflow-hidden border border-gray-200">
-            <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+          <div className={`relative overflow-hidden rounded-lg border border-gray-200 ${stacked ? 'aspect-[4/3] w-full max-w-[240px]' : 'h-24 w-24'}`}>
+            <Image src={previewUrl} alt="Preview" fill unoptimized className="object-cover" />
           </div>
         )}
-        <div className="flex items-center gap-2">
+        <div className={stacked ? 'flex flex-wrap items-center gap-2' : 'flex items-center gap-2'}>
           <label className="cursor-pointer bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
             <Upload size={18} />
             <span>{label}</span>
@@ -53,10 +56,16 @@ export default function ImageUpload({ value, file, onFileChange, className = '' 
               }}
             />
           </label>
-          {file && (
+          {(file || (value && onClear)) && (
             <button
               type="button"
-              onClick={() => onFileChange(null)}
+              onClick={() => {
+                if (file) {
+                  onFileChange(null);
+                  return;
+                }
+                onClear?.();
+              }}
               className="bg-white border border-gray-300 hover:bg-gray-50 px-3 py-2 rounded-lg flex items-center gap-1"
             >
               <X size={16} />

@@ -409,10 +409,10 @@ export default function Editor({ value, onChange }: EditorProps) {
         <div id={toolbarId} className="admin-quill-toolbar ql-toolbar ql-snow">
           <span className="ql-formats">
             <select className="ql-header" defaultValue="">
+              <option value="">Normal</option>
               <option value="1">Heading 1</option>
               <option value="2">Heading 2</option>
               <option value="3">Heading 3</option>
-              <option value="">Body</option>
             </select>
           </span>
           <span className="ql-formats">
@@ -436,7 +436,7 @@ export default function Editor({ value, onChange }: EditorProps) {
                 <polyline className="ql-even ql-fill" points="5 13 8 10 10 12 13 9 15 11 15 13 5 13" />
               </svg>
             </button>
-            <button type="button" className="ql-clean" aria-label="Clean formatting" />
+            <button type="button" className="ql-clean" aria-label="Clear all formatting" title="Clear all formatting" />
           </span>
           <button
             type="button"

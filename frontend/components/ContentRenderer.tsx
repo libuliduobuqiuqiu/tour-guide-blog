@@ -1,15 +1,11 @@
 import type { ReactNode } from 'react';
-import { marked } from 'marked';
 import ContentShell from '@/components/ContentShell';
+import { isHtmlContent, renderRichContentHtml } from '@/lib/content';
 
 interface TocItem {
   id: string;
   text: string;
   level: number;
-}
-
-function isHtml(input: string) {
-  return /<\/[a-z][\s\S]*?>/i.test(input);
 }
 
 function slugify(text: string) {
@@ -58,9 +54,8 @@ export default function ContentRenderer({
   footer?: ReactNode;
 }) {
   let rawHtml = content || '';
-  if (!isHtml(rawHtml)) {
-    marked.setOptions({ breaks: true });
-    rawHtml = marked.parse(rawHtml) as string;
+  if (!isHtmlContent(rawHtml)) {
+    rawHtml = renderRichContentHtml(rawHtml);
   }
 
   const tocItems: TocItem[] = [];

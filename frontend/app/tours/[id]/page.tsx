@@ -3,8 +3,16 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import ContentRenderer from '@/components/ContentRenderer';
+import TourContentWithAside from '@/components/TourContentWithAside';
+import TourRouteTimeline from '@/components/TourRouteTimeline';
 import TourAvailabilityButton from '@/components/TourAvailabilityButton';
 import { withPublicOrigin } from '@/lib/url';
+
+interface TourRoutePoint {
+  title: string;
+  content: string;
+  image: string;
+}
 
 function renderInfoCard(title: string, items: string[]) {
   if (items.length === 0) {
@@ -27,7 +35,7 @@ function renderInfoCard(title: string, items: string[]) {
 
 function renderBookingCard() {
   return (
-    <section className="mx-auto max-w-[920px] px-4 md:px-6 lg:px-8">
+    <section className="mx-auto max-w-[1280px] px-4 md:px-6 lg:px-8">
       <div className="fade-up flex flex-col items-center justify-center gap-6 px-4 py-7 text-center md:gap-7 md:py-9">
         <p className="max-w-[42rem] text-[1.35rem] font-semibold leading-9 text-slate-800 md:text-[1.8rem] md:leading-[1.7]">
           Contact me to book the tour.
@@ -53,6 +61,9 @@ export default async function TourDetailPage({ params }: { params: Promise<{ id:
     return notFound();
   }
 
+  const routePoints = Array.isArray(tour.route_points)
+    ? tour.route_points.filter((point: TourRoutePoint) => point && (point.title || point.content || point.image))
+    : [];
   const highlights = Array.isArray(tour.highlights) ? tour.highlights.filter(Boolean) : [];
   const places = Array.isArray(tour.places) ? tour.places.filter(Boolean) : [];
   const bookingNote = typeof tour.booking_note === 'string' ? tour.booking_note.trim() : '';
@@ -62,6 +73,7 @@ export default async function TourDetailPage({ params }: { params: Promise<{ id:
       {renderInfoCard('Places to Visit', places)}
     </>
   );
+
   return (
     <div className="min-h-[calc(100vh-64px)] bg-[linear-gradient(180deg,#f7fbff_0%,#eef5fb_52%,#e9f1f8_100%)]">
       <div className="mx-auto max-w-[1420px] px-4 pt-6 md:px-6 md:pt-8 lg:px-8">
@@ -89,7 +101,7 @@ export default async function TourDetailPage({ params }: { params: Promise<{ id:
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
               <h1 className="text-4xl font-semibold tracking-[0.01em] text-slate-950 md:text-5xl md:leading-[1.08]">{tour.title}</h1>
-              {tour.description && <p className="mt-5 max-w-2xl text-base leading-8 text-slate-600 md:text-lg">{tour.description}</p>}
+              {tour.description && <p className="mt-5 max-w-3xl text-base leading-8 text-slate-600 md:text-lg">{tour.description}</p>}
             </div>
             <div className="flex flex-col items-start lg:items-end">
               <div className="text-[2.8rem] font-black leading-none text-slate-950 md:text-[3.5rem]">
@@ -109,17 +121,22 @@ export default async function TourDetailPage({ params }: { params: Promise<{ id:
       </div>
 
       <div className="pt-10">
-        <ContentRenderer
-          content={tour.content || ''}
-          toc={false}
-          variant="tour"
-          aside={highlights.length > 0 || places.length > 0 ? asideCards : undefined}
-        />
+        <div className="mx-auto max-w-[1280px] px-4 md:px-6 lg:px-8">
+          <TourContentWithAside aside={highlights.length > 0 || places.length > 0 ? asideCards : undefined}>
+              {routePoints.length > 0 ? (
+                <TourRouteTimeline routePoints={routePoints} />
+              ) : (
+                <ContentRenderer
+                  content={tour.content || ''}
+                  toc={false}
+                  variant="tour"
+                />
+              )}
+          </TourContentWithAside>
+        </div>
       </div>
 
-      <div className="pb-16 pt-4 md:pb-20 md:pt-6">
-        {renderBookingCard()}
-      </div>
+      <div className="pb-16 pt-4 md:pb-20 md:pt-6">{renderBookingCard()}</div>
     </div>
   );
 }

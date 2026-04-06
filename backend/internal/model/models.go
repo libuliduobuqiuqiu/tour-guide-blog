@@ -19,6 +19,14 @@ type TourAvailabilitySlot struct {
 
 type TourAvailability []TourAvailabilitySlot
 
+type TourRoutePoint struct {
+	Title   string `json:"title"`
+	Content string `json:"content"`
+	Image   string `json:"image"`
+}
+
+type TourRoutePoints []TourRoutePoint
+
 func (s StringList) Value() (driver.Value, error) {
 	if len(s) == 0 {
 		return "[]", nil
@@ -101,15 +109,56 @@ func (a *TourAvailability) Scan(value interface{}) error {
 	return nil
 }
 
+func (p TourRoutePoints) Value() (driver.Value, error) {
+	if len(p) == 0 {
+		return "[]", nil
+	}
+
+	data, err := json.Marshal(p)
+	if err != nil {
+		return nil, err
+	}
+	return string(data), nil
+}
+
+func (p *TourRoutePoints) Scan(value interface{}) error {
+	if value == nil {
+		*p = TourRoutePoints{}
+		return nil
+	}
+
+	var raw []byte
+	switch v := value.(type) {
+	case []byte:
+		raw = v
+	case string:
+		raw = []byte(v)
+	default:
+		return errors.New("unsupported scan type for TourRoutePoints")
+	}
+
+	if len(raw) == 0 {
+		*p = TourRoutePoints{}
+		return nil
+	}
+
+	var parsed []TourRoutePoint
+	if err := json.Unmarshal(raw, &parsed); err != nil {
+		return err
+	}
+	*p = TourRoutePoints(parsed)
+	return nil
+}
+
 // Tour 行程详情
 type Tour struct {
 	ID           uint             `gorm:"primaryKey" json:"id"`
 	Title        string           `gorm:"size:255;not null" json:"title"`
 	Description  string           `gorm:"type:text" json:"description"`
 	Content      string           `gorm:"type:longtext" json:"content"`
+	RoutePoints  TourRoutePoints  `gorm:"type:json" json:"route_points"`
 	Highlights   StringList       `gorm:"type:json" json:"highlights"`
 	Places       StringList       `gorm:"type:json" json:"places"`
-	BookingTag1  string           `gorm:"column:booking_tag_1;size:255" json:"booking_tag_1"`
 	BookingNote  string           `gorm:"column:booking_tag_2;size:255" json:"booking_note"`
 	MaxBookings  int              `gorm:"default:0" json:"max_bookings"`
 	Availability TourAvailability `gorm:"type:json" json:"availability"`

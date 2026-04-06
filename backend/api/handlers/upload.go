@@ -163,7 +163,7 @@ func detectUploadedContentType(file *multipart.FileHeader) (string, error) {
 func isAllowedUploadContentType(ext, contentType string) bool {
 	contentType = strings.ToLower(strings.TrimSpace(strings.Split(contentType, ";")[0]))
 	allowed := map[string][]string{
-		".jpg":  {"image/jpeg"},
+		".jpg":  {"image/jpeg", "image/jpg"},
 		".jpeg": {"image/jpeg"},
 		".png":  {"image/png"},
 		".gif":  {"image/gif"},

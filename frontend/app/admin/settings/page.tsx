@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import api from '@/lib/axios';
 import { uploadAdminImage } from '@/lib/admin-upload';
+import AdminNumberInput from '@/components/admin/AdminNumberInput';
 import { Save, RefreshCcw } from 'lucide-react';
 import { withPublicOrigin } from '@/lib/url';
 import type { Review } from '@/lib/reviews';
@@ -98,6 +99,7 @@ export default function SettingsAdmin() {
   const [settings, setSettings] = useState(defaultSettings);
   const [socialSettings, setSocialSettings] = useState<SocialAdminSettings>(defaultSocialSettings);
   const [socialStatus, setSocialStatus] = useState<SocialStatus>(defaultSocialStatus);
+  const activeReviews = reviews.filter((review) => review.is_active !== false);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -235,11 +237,11 @@ export default function SettingsAdmin() {
   const updateSocialPlatform = (
     platform: 'instagram' | 'tiktok',
     field: keyof SocialAdminSettings['instagram'],
-    value: string
+    value: string | number
   ) => {
     const nextValue =
       field === 'post_limit'
-        ? Math.max(1, Math.min(24, Number.parseInt(value, 10) || 12))
+        ? Math.max(1, Math.min(24, typeof value === 'number' ? value : Number.parseInt(value, 10) || 12))
         : value;
 
     setSocialSettings((prev) => ({
@@ -386,7 +388,7 @@ export default function SettingsAdmin() {
           <div className="space-y-5">
             <div>
               <p className="text-sm text-gray-700">Choose the 4 review cards shown below the Why Choose Me section on the homepage.</p>
-              <p className="text-xs text-gray-500 mt-1">Leaving a slot empty will fall back to the next active review automatically.</p>
+              <p className="text-xs text-gray-500 mt-1">Only active reviews can be selected here. Leaving a slot empty will fall back to the next active review automatically.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -401,7 +403,7 @@ export default function SettingsAdmin() {
                     className="w-full px-4 py-2"
                   >
                     <option value={0}>Auto select</option>
-                    {reviews.map((review) => (
+                    {activeReviews.map((review) => (
                       <option key={review.id} value={review.id}>
                         {review.username} · {review.country || 'Unknown country'} · {review.review_date ? review.review_date.slice(0, 7) : 'No date'}
                       </option>
@@ -496,13 +498,14 @@ export default function SettingsAdmin() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Sync Item Count</label>
-                      <input
-                        type="number"
+                      <AdminNumberInput
+                        key={`${platform}-post-limit-${platformSettings.post_limit}`}
                         min={1}
                         max={24}
                         step={1}
+                        fallbackValue={1}
                         value={platformSettings.post_limit}
-                        onChange={(e) => updateSocialPlatform(platform, 'post_limit', e.target.value)}
+                        onValueChange={(value) => updateSocialPlatform(platform, 'post_limit', value)}
                         className="w-full px-4 py-2"
                       />
                       <p className="mt-1 text-xs text-gray-500">Range: 1-24. This controls how many posts are fetched per sync.</p>

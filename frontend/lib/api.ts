@@ -7,13 +7,13 @@ const API_BASE_URL = API_HOST
   : '/api';
 
 export async function fetchTours() {
-  const res = await fetch(`${API_BASE_URL}/tours?with_content=false`);
+  const res = await fetch(`${API_BASE_URL}/tours?with_content=false`, { cache: 'no-store' });
   if (!res.ok) throw new Error('Failed to fetch tours');
   return res.json();
 }
 
 export async function fetchTour(id: string) {
-  const res = await fetch(`${API_BASE_URL}/tours/${id}`);
+  const res = await fetch(`${API_BASE_URL}/tours/${id}`, { cache: 'no-store' });
   if (!res.ok) throw new Error('Failed to fetch tour');
   return res.json();
 }
@@ -40,7 +40,7 @@ export async function fetchCarousels() {
 }
 
 export async function fetchReviews() {
-  const res = await fetch(`${API_BASE_URL}/reviews?active=true`);
+  const res = await fetch(`${API_BASE_URL}/reviews?active=true`, { cache: 'no-store' });
   if (!res.ok) throw new Error('Failed to fetch reviews');
   return res.json();
 }
@@ -121,7 +121,7 @@ export async function sendContactMessage(data: Record<string, unknown>) {
 }
 
 export async function fetchConfig(key: string) {
-  const res = await fetch(`${API_BASE_URL}/config/${key}`, { next: { revalidate: 60 } });
+  const res = await fetch(`${API_BASE_URL}/config/${key}`, { cache: 'no-store' });
   if (!res.ok) throw new Error('Failed to fetch config');
   return res.json();
 }

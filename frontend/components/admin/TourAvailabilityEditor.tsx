@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import AdminNumberInput from '@/components/admin/AdminNumberInput';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { TourAvailabilitySlot, getInitialMonth, getMonthLabel, getMonthMatrix, normalizeAvailability } from '@/lib/tour-availability';
 
@@ -132,12 +133,12 @@ export default function TourAvailabilityEditor({ value, maxBookings, onChange }:
                 This date is open. Adjust booked guests below. If booked guests reach the max, the public calendar will grey this date out.
               </p>
               <label className="mt-5 block text-sm font-medium text-slate-700">Booked Guests</label>
-              <input
-                type="number"
-                min="0"
+              <AdminNumberInput
+                key={`${selectedSlot.date}-${selectedSlot.booked_count}-${maxBookings}`}
+                min={0}
                 max={maxBookings > 0 ? maxBookings : undefined}
                 value={selectedSlot.booked_count}
-                onChange={(event) => updateBookedCount(Number.parseInt(event.target.value, 10) || 0)}
+                onValueChange={updateBookedCount}
                 className="mt-2 w-full px-4 py-3"
               />
               {maxBookings > 0 && <p className="mt-2 text-xs text-slate-500">Maximum guests for each date: {maxBookings}</p>}

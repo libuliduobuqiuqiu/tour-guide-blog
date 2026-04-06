@@ -55,7 +55,7 @@ SCP := scp -P $(SSH_PORT) $(SSH_OPTS)
 	remote-deploy-backend remote-deploy-frontend remote-deploy-all \
 	install-services restart-backend restart-frontend restart-services \
 	data-package-local data-push-server data-apply-server data-export-server data-download-server \
-	dump-db changelog \
+	dump-db clean-unused-uploads clean-unused-uploads-apply changelog \
 	frontend backend mac deploy-backend deploy-frontend deploy deploy-data package-data upload-data remote-import-data
 
 # ==============================
@@ -92,6 +92,8 @@ help:
 	@echo "  data-apply-server        上传并导入到远程数据库+图片目录";
 	@echo "  data-export-server       在服务器打包数据库+图片";
 	@echo "  data-download-server     从服务器下载打包数据到 backups/";
+	@echo "  clean-unused-uploads     扫描 backend/uploads 中未被数据库引用的图片（dry-run）";
+	@echo "  clean-unused-uploads-apply 真正删除未被引用的上传图片";
 	@echo "";
 	@echo "[其他]";
 	@echo "  package                  打包前后端发布产物";
@@ -221,6 +223,14 @@ dump-db:
 	echo "Exporting database $(DB_NAME) to $(DIST_DIR)/db_dump.sql"; \
 	$$MYSQLDUMP --single-transaction --routines --events --triggers $(DB_NAME) > $(DIST_DIR)/db_dump.sql; \
 	echo "Database export completed."
+
+clean-unused-uploads:
+	@set -e; \
+	cd backend && GOCACHE=/tmp/go-build-cache go run ./cmd/cleanup_uploads
+
+clean-unused-uploads-apply:
+	@set -e; \
+	cd backend && GOCACHE=/tmp/go-build-cache go run ./cmd/cleanup_uploads --apply
 
 data-package-local: dump-db
 	@set -e; \

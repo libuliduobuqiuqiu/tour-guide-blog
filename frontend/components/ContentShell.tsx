@@ -2,18 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { useCallback, useMemo } from 'react';
-
-function sanitizeHtml(html: string) {
-  return html
-    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
-    .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
-    .replace(/<(iframe|object|embed|meta|link|form|input|button|textarea|select)[^>]*?>[\s\S]*?<\/\1>/gi, '')
-    .replace(/<(iframe|object|embed|meta|link|form|input|button|textarea|select)[^>]*?\/?>/gi, '')
-    .replace(/\son[a-z]+\s*=\s*(['"]).*?\1/gi, '')
-    .replace(/\son[a-z]+\s*=\s*[^\s>]+/gi, '')
-    .replace(/\s(href|src)\s*=\s*(['"])\s*javascript:[\s\S]*?\2/gi, ' $1="#"')
-    .replace(/\s(href|src)\s*=\s*(['"])\s*data:text\/html[\s\S]*?\2/gi, ' $1="#"');
-}
+import { sanitizeHtmlContent } from '@/lib/content';
 
 interface TocItem {
   id: string;
@@ -43,21 +32,24 @@ export default function ContentShell({
         : 'content article-content article-content-blog fade-up',
     [variant],
   );
-  const safeHtml = useMemo(() => sanitizeHtml(html), [html]);
+  const safeHtml = useMemo(() => sanitizeHtmlContent(html), [html]);
 
   const articleFrameClassName =
     variant === 'tour'
       ? 'article-frame article-frame-tour'
       : 'article-frame article-frame-blog';
   const hasFloatingAside = (variant === 'tour' && Boolean(aside)) || (variant === 'blog' && toc.length > 0);
-  const shellClassName = hasFloatingAside
-    ? 'mx-auto max-w-[1420px] px-4 pb-16 md:px-6 lg:px-8'
-    : 'mx-auto max-w-[1180px] px-4 pb-16 md:px-6 lg:px-8';
+  const shellClassName =
+    variant === 'tour'
+      ? 'mx-auto max-w-[1280px] px-4 pb-16 md:px-6 lg:px-8'
+      : hasFloatingAside
+        ? 'mx-auto max-w-[1420px] px-4 pb-16 md:px-6 lg:px-8'
+        : 'mx-auto max-w-[1180px] px-4 pb-16 md:px-6 lg:px-8';
   const articleStackClassName = variant === 'tour' ? 'space-y-20 md:space-y-24' : 'space-y-8';
   const layoutClassName = hasFloatingAside
     ? 'mx-auto flex max-w-fit gap-8 xl:gap-12'
     : 'relative flex gap-8 xl:gap-12';
-  const articleClassName = variant === 'tour' ? 'min-w-0 w-[920px] max-w-full' : 'min-w-0 w-[960px] max-w-full';
+  const articleClassName = variant === 'tour' ? 'min-w-0 w-[1280px] max-w-full' : 'min-w-0 w-[960px] max-w-full';
 
   const scrollToId = useCallback((id: string) => {
     const el = document.getElementById(id);
@@ -88,10 +80,10 @@ export default function ContentShell({
         )}
 
         {toc.length > 0 && (
-          <aside className="hidden xl:block w-[260px] shrink-0">
+          <aside className="hidden xl:block w-[320px] shrink-0">
             <div className="sticky top-24 rounded-[1.6rem] border border-slate-200/90 bg-white/92 p-5 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.42)] backdrop-blur">
-              <div className="mb-4 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">{tocTitle}</div>
-              <nav className="space-y-1.5">
+              <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">{tocTitle}</div>
+              <nav className="space-y-1">
                 {toc.map((item) => (
                   <a
                     key={item.id}
@@ -100,9 +92,9 @@ export default function ContentShell({
                       event.preventDefault();
                       scrollToId(item.id);
                     }}
-                    className={`block rounded-xl px-3 py-2 text-sm leading-6 text-slate-600 transition hover:bg-slate-50 hover:text-slate-950 ${
-                      item.level > 1 ? 'pl-6 text-[13px]' : ''
-                    } ${item.level > 2 ? 'pl-9 text-[12px] text-slate-500' : ''}`}
+                    className={`block rounded-xl px-3 py-1.5 text-[13px] leading-5 text-slate-600 transition hover:bg-slate-50 hover:text-slate-950 ${
+                      item.level > 1 ? 'pl-5 text-[12px]' : ''
+                    } ${item.level > 2 ? 'pl-7 text-[12px] text-slate-500' : ''}`}
                   >
                     {item.text}
                   </a>
