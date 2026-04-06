@@ -6,6 +6,7 @@ import (
 	"log"
 	"tour-guide-blog-backend/api/routers"
 	"tour-guide-blog-backend/internal/dao"
+	"tour-guide-blog-backend/internal/version"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
@@ -13,7 +14,13 @@ import (
 
 func main() {
 	debug := flag.Bool("d", false, "enable debug mode")
+	printVersion := flag.Bool("v", false, "print version and exit")
 	flag.Parse()
+
+	if *printVersion {
+		fmt.Println(version.Version)
+		return
+	}
 
 	if *debug {
 		gin.SetMode(gin.DebugMode)
@@ -39,6 +46,7 @@ func main() {
 
 	// 启动服务器
 	port := viper.GetString("server.port")
+	log.Printf("Starting backend version=%s", version.Version)
 	fmt.Printf("Server is running on port %s\n", port)
 	r.Run(":" + port)
 }

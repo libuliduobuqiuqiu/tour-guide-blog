@@ -8,6 +8,7 @@ SHELL := /bin/bash
 # 可覆盖变量（本地）
 # ==============================
 NEXT_PUBLIC_API_URL ?= http://localhost:8080
+PROJECT_VERSION ?= $(shell git describe --tags --long 2>/dev/null || git rev-parse --short=12 HEAD)
 
 DB_HOST ?= 127.0.0.1
 DB_PORT ?= 3306
@@ -48,6 +49,7 @@ SCP := scp -P $(SSH_PORT) $(SSH_OPTS)
 
 .PHONY: \
 	help \
+	version-info \
 	dev-frontend dev-backend-amd64 dev-backend-arm64 \
 	test-frontend test-backend-unit test-backend-integration test-backend test-all \
 	quality-frontend quality-backend quality-all check-all \
@@ -66,6 +68,7 @@ help:
 	@echo "Tour Guide Blog Make Targets";
 	@echo "";
 	@echo "[1] 本地开发";
+	@echo "  version-info             输出当前后端注入版本号";
 	@echo "  dev-frontend             启动前端开发服务";
 	@echo "  dev-backend-amd64        启动后端（linux/amd64）";
 	@echo "  dev-backend-arm64        启动后端（darwin/arm64）";
@@ -107,10 +110,15 @@ dev-frontend:
 	cd frontend && NEXT_PUBLIC_API_URL=$(NEXT_PUBLIC_API_URL) npm run dev
 
 dev-backend-amd64:
-	cd backend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go run ./cmd/main.go -d
+	cd backend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go run -ldflags "\
+		-X 'tour-guide-blog-backend/internal/version.Version=$(PROJECT_VERSION)'" ./cmd/main.go -d
 
 dev-backend-arm64:
-	cd backend && CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go run ./cmd/main.go -d
+	cd backend && CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go run -ldflags "\
+		-X 'tour-guide-blog-backend/internal/version.Version=$(PROJECT_VERSION)'" ./cmd/main.go -d
+
+version-info:
+	@echo $(PROJECT_VERSION)
 
 test-backend-unit:
 	cd backend && GOCACHE=/tmp/go-build-cache go test ./... -cover
@@ -147,8 +155,10 @@ build-backend:
 	@set -e; \
 	mkdir -p $(DIST_DIR)/backend; \
 	echo "Building backend..."; \
-	cd backend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ../$(DIST_DIR)/backend/tour-guide-backend ./cmd/main.go; \
-	cp -a backend/configs $(DIST_DIR)/backend/; \
+	cd backend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "\
+		-X 'tour-guide-blog-backend/internal/version.Version=$(PROJECT_VERSION)'" -o ../$(DIST_DIR)/backend/tour-guide-backend ./cmd/main.go; \
+	cd ../ && cp -a backend/configs $(DIST_DIR)/backend/; \
+	printf '%s\n' 'version=$(PROJECT_VERSION)' > $(DIST_DIR)/backend/VERSION; \
 	echo "Backend build output: $(DIST_DIR)/backend"
 
 build-frontend:
@@ -157,6 +167,7 @@ build-frontend:
 	cd frontend && npm ci && npm run build; \
 	rm -rf $(DIST_DIR)/frontend; \
 	mkdir -p $(DIST_DIR)/frontend/.next; \
+	cd ../;
 	cp -a frontend/.next/standalone/. $(DIST_DIR)/frontend/; \
 	cp -a frontend/.next/static $(DIST_DIR)/frontend/.next/; \
 	cp -a frontend/public $(DIST_DIR)/frontend/; \
