@@ -228,8 +228,8 @@ a {
 }
 
 .content {
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .content pre {
@@ -242,7 +242,13 @@ a {
 
 .content code {
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
   word-break: break-word;
+}
+
+.content a,
+.content pre {
+  overflow-wrap: anywhere;
 }
 
 .content table {
@@ -287,6 +293,22 @@ a {
 .article-content p,
 .article-content li {
   color: #334155;
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+  text-wrap: pretty;
+}
+
+.article-content h1,
+.article-content h2,
+.article-content h3,
+.article-content h4 {
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+  text-wrap: pretty;
 }
 
 .article-content p {
@@ -382,6 +404,8 @@ a {
 
 .article-content-tour {
   max-width: 100%;
+  width: 100%;
+  min-width: 0;
 }
 
 .article-frame {
@@ -406,7 +430,42 @@ a {
 }
 
 .tour-route-content {
-  max-width: none;
+  max-width: 100%;
+  width: 100%;
+  min-width: 0;
+  overflow-x: visible;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: normal;
+  display: flow-root;
+  contain: inline-size;
+}
+
+.tour-route-content,
+.tour-route-content > * {
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.tour-route-content p,
+.tour-route-content li,
+.tour-route-content blockquote,
+.tour-route-content ul,
+.tour-route-content ol,
+.tour-route-content h1,
+.tour-route-content h2,
+.tour-route-content h3,
+.tour-route-content h4 {
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: normal;
+  max-inline-size: 100%;
+}
+
+.tour-route-content a,
+.tour-route-content code {
+  overflow-wrap: anywhere;
 }
 
 .tour-route-content .article-heading-1,

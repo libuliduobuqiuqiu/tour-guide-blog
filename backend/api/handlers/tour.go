@@ -10,13 +10,29 @@ import (
 )
 
 func ListTours(c *gin.Context) {
+	listTours(c, false)
+}
+
+func ListAdminTours(c *gin.Context) {
+	listTours(c, true)
+}
+
+func listTours(c *gin.Context, includeDrafts bool) {
 	withContent := c.Query("with_content") == "true"
 	var tours []*model.Tour
 	var err error
 	if withContent {
-		tours, err = service.Tour.List()
+		if includeDrafts {
+			tours, err = service.Tour.ListAll()
+		} else {
+			tours, err = service.Tour.ListPublished()
+		}
 	} else {
-		tours, err = service.Tour.ListLite()
+		if includeDrafts {
+			tours, err = service.Tour.ListLiteAll()
+		} else {
+			tours, err = service.Tour.ListLitePublished()
+		}
 	}
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -26,9 +42,25 @@ func ListTours(c *gin.Context) {
 }
 
 func GetTour(c *gin.Context) {
+	getTour(c, false)
+}
+
+func GetAdminTour(c *gin.Context) {
+	getTour(c, true)
+}
+
+func getTour(c *gin.Context, includeDrafts bool) {
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)
-	tour, err := service.Tour.GetByID(uint(id))
+	var (
+		tour *model.Tour
+		err error
+	)
+	if includeDrafts {
+		tour, err = service.Tour.GetAdminByID(uint(id))
+	} else {
+		tour, err = service.Tour.GetPublishedByID(uint(id))
+	}
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Tour not found"})
 		return

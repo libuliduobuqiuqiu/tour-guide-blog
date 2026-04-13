@@ -26,6 +26,39 @@ type TourRoutePoint struct {
 }
 
 type TourRoutePoints []TourRoutePoint
+type TourDraftData struct {
+	Title        string           `json:"title"`
+	Description  string           `json:"description"`
+	Content      string           `json:"content"`
+	RoutePoints  TourRoutePoints  `json:"route_points"`
+	Highlights   StringList       `json:"highlights"`
+	Places       StringList       `json:"places"`
+	BookingTag   string           `json:"booking_tag"`
+	BookingNote  string           `json:"booking_note"`
+	MaxBookings  int              `json:"max_bookings"`
+	Availability TourAvailability `json:"availability"`
+	CoverImage   string           `json:"cover_image"`
+	Price        float64          `json:"price"`
+	Duration     string           `json:"duration"`
+	Location     string           `json:"location"`
+}
+
+func (d TourDraftData) IsZero() bool {
+	return d.Title == "" &&
+		d.Description == "" &&
+		d.Content == "" &&
+		len(d.RoutePoints) == 0 &&
+		len(d.Highlights) == 0 &&
+		len(d.Places) == 0 &&
+		d.BookingTag == "" &&
+		d.BookingNote == "" &&
+		d.MaxBookings == 0 &&
+		len(d.Availability) == 0 &&
+		d.CoverImage == "" &&
+		d.Price == 0 &&
+		d.Duration == "" &&
+		d.Location == ""
+}
 
 func (s StringList) Value() (driver.Value, error) {
 	if len(s) == 0 {
@@ -150,6 +183,47 @@ func (p *TourRoutePoints) Scan(value interface{}) error {
 	return nil
 }
 
+func (d TourDraftData) Value() (driver.Value, error) {
+	if d.IsZero() {
+		return nil, nil
+	}
+
+	data, err := json.Marshal(d)
+	if err != nil {
+		return nil, err
+	}
+	return string(data), nil
+}
+
+func (d *TourDraftData) Scan(value interface{}) error {
+	if value == nil {
+		*d = TourDraftData{}
+		return nil
+	}
+
+	var raw []byte
+	switch v := value.(type) {
+	case []byte:
+		raw = v
+	case string:
+		raw = []byte(v)
+	default:
+		return errors.New("unsupported scan type for TourDraftData")
+	}
+
+	if len(raw) == 0 {
+		*d = TourDraftData{}
+		return nil
+	}
+
+	var parsed TourDraftData
+	if err := json.Unmarshal(raw, &parsed); err != nil {
+		return err
+	}
+	*d = parsed
+	return nil
+}
+
 // Tour 行程详情
 type Tour struct {
 	ID           uint             `gorm:"primaryKey" json:"id"`
@@ -159,6 +233,7 @@ type Tour struct {
 	RoutePoints  TourRoutePoints  `gorm:"type:json" json:"route_points"`
 	Highlights   StringList       `gorm:"type:json" json:"highlights"`
 	Places       StringList       `gorm:"type:json" json:"places"`
+	BookingTag   string           `gorm:"column:booking_tag_1;size:255" json:"booking_tag"`
 	BookingNote  string           `gorm:"column:booking_tag_2;size:255" json:"booking_note"`
 	MaxBookings  int              `gorm:"default:0" json:"max_bookings"`
 	Availability TourAvailability `gorm:"type:json" json:"availability"`
@@ -166,6 +241,8 @@ type Tour struct {
 	Price        float64          `gorm:"type:decimal(10,2)" json:"price"`
 	Duration     string           `gorm:"size:100" json:"duration"`
 	Location     string           `gorm:"size:255" json:"location"`
+	Status       string           `gorm:"size:20;not null;default:published" json:"status"`
+	DraftData    TourDraftData    `gorm:"type:json" json:"draft_data"`
 	SortOrder    int              `gorm:"default:0" json:"sort_order"`
 	CreatedAt    time.Time        `json:"created_at"`
 	UpdatedAt    time.Time        `json:"updated_at"`

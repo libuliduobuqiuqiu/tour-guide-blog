@@ -8,6 +8,7 @@ import { createPortal } from 'react-dom';
 import { forwardRef, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { ComponentProps } from 'react';
 import { uploadAdminImage } from '@/lib/admin-upload';
+import { normalizeRichTextHtml } from '@/lib/content';
 import 'react-quill-new/dist/quill.snow.css';
 
 type ReactQuillComponent = typeof import('react-quill-new').default;
@@ -88,7 +89,7 @@ export default function Editor({ value, onChange }: EditorProps) {
   const syncEditorHtml = useCallback(() => {
     const editor = quillRef.current?.getEditor?.();
     if (!editor) return;
-    onChange(editor.root.innerHTML);
+    onChange(normalizeRichTextHtml(editor.root.innerHTML));
   }, [onChange]);
 
   const selectImage = useCallback((image: HTMLImageElement) => {
@@ -204,23 +205,33 @@ export default function Editor({ value, onChange }: EditorProps) {
 
       const html = clipboard.getData('text/html');
       const text = clipboard.getData('text/plain');
-      if (html || !looksLikeMarkdown(text)) return;
+      if (html) {
+        event.preventDefault();
+        const selection = editor.getSelection(true);
+        const index = selection ? selection.index : editor.getLength();
+        const sanitized = DOMPurify.sanitize(normalizeRichTextHtml(html));
+        editor.clipboard.dangerouslyPasteHTML(index, sanitized, 'user');
+        syncEditorHtml();
+        return;
+      }
+      if (!looksLikeMarkdown(text)) return;
 
       event.preventDefault();
 
       const selection = editor.getSelection(true);
       const index = selection ? selection.index : editor.getLength();
       const rendered = marked.parse(text);
-      const sanitized = DOMPurify.sanitize(typeof rendered === 'string' ? rendered : '');
+      const sanitized = DOMPurify.sanitize(normalizeRichTextHtml(typeof rendered === 'string' ? rendered : ''));
 
       editor.clipboard.dangerouslyPasteHTML(index, sanitized, 'user');
       const nextLength = editor.getLength();
       editor.setSelection(Math.min(nextLength, index + text.length), 0, 'silent');
+      syncEditorHtml();
     };
 
     root.addEventListener('paste', handlePaste);
     return () => root.removeEventListener('paste', handlePaste);
-  }, [insertImages]);
+  }, [insertImages, syncEditorHtml]);
 
   useEffect(() => {
     const editor = quillRef.current?.getEditor?.();

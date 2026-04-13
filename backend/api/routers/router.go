@@ -95,7 +95,8 @@ func isAllowedCORSOrigin(origin string) bool {
 }
 
 func registerAPIAdminAliases(protected *gin.RouterGroup) {
-	protected.GET("/tours", handlers.ListTours)
+	protected.GET("/tours", handlers.ListAdminTours)
+	protected.GET("/tours/:id", handlers.GetAdminTour)
 	protected.POST("/tours", handlers.CreateTour)
 	protected.POST("/tours/reorder", handlers.ReorderTours)
 	protected.PUT("/tours/:id", handlers.UpdateTour)

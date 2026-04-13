@@ -3,6 +3,102 @@
 This file is generated from the commit log documents in `docs/commit-log-*.md`.
 The format is intentionally close to Keep a Changelog: chronological releases with human-written change summaries.
 
+## 2026-04-14
+
+## This Round Summary
+
+本轮工作集中收口 Tours 的前后台细节，重点修复了草稿/发布双版本逻辑、后台状态展示、预约人数颜色提示，以及 Tour 行程正文中英文内容的富文本清洗与换行问题。
+
+主要完成：
+
+- 为 Tours 建立“发布数据 + 草稿数据”双副本机制，前台只读取正式发布数据，后台编辑优先读取草稿数据
+- 后台新增并收口 `Save Draft` / `Publish Tour` 流程，草稿状态与已发布状态按真实状态切换
+- 修复后台 Tours 列表状态标签判断，避免 `published` 数据被误标为 `Draft`
+- 在 Tours 前台详情页补充最少成团红字提示、可编辑额外 tag，以及按预约人数分级着色的 availability 日历
+- 追查并修复 Tour 行程正文英文单词换行异常的根源：清洗 `&nbsp;`、零宽字符、`span/style/class` 等富文本残留
+- 禁止后台 tour 编辑弹窗点击遮罩后直接关闭，避免编辑器意外消失
+
+## Code Changes
+
+### 1. Tours 草稿与发布双数据流
+
+Summary:
+
+- `Tour` 模型新增 `status` 与 `draft_data`
+- 已发布 Tour 保存草稿时只更新 `draft_data`，不会覆盖当前线上正式内容
+- 发布时才把草稿内容写回正式字段，并清空 `draft_data`
+- 新建草稿不会出现在前台，前台继续只显示正式发布数据
+
+Files touched:
+
+- `backend/internal/model/models.go`
+- `backend/internal/model/string_list_test.go`
+- `backend/internal/service/tour.go`
+- `backend/api/handlers/tour.go`
+- `backend/api/routers/router.go`
+- `backend/api/routers/tour.go`
+- `backend/migrations/009_add_tour_status.sql`
+- `backend/migrations/010_add_tour_draft_data.sql`
+
+### 2. Tours 后台状态与编辑体验
+
+Summary:
+
+- Tours 后台列表状态标签改为真实反映 `draft/published`
+- 去掉列表中无业务意义的 `#id` 标签
+- Tour 编辑弹窗支持 `Save Draft` 与 `Publish Tour`
+- 编辑弹窗禁用遮罩点击关闭，避免正在编辑时误关
+
+Files touched:
+
+- `frontend/app/admin/tours/page.tsx`
+- `frontend/components/admin/AdminModal.tsx`
+
+### 3. Tours 前台标签、预订提示与 availability 配色
+
+Summary:
+
+- 详情页价格区下方新增最少 6 人成团的红色加粗提示
+- 详情页与 tours 列表页都支持展示后台可编辑的额外 `booking_tag`
+- availability 浮层按已预约人数分色：少于 6 人绿色，6 人以上未满橙色，满员灰色
+
+Files touched:
+
+- `frontend/app/tours/[id]/page.tsx`
+- `frontend/app/tours/page.tsx`
+- `frontend/components/TourAvailabilityButton.tsx`
+
+### 4. Tours 富文本内容清洗与英文换行根因修复
+
+Summary:
+
+- 新增富文本规范化逻辑，清洗 `&nbsp;`、零宽字符、`<wbr>`、`span/style/class` 等编辑器残留
+- 在编辑器粘贴、编辑器输出、保存前、前台渲染前四个环节做兜底清洗
+- 收口 tour 路线正文容器宽度与块级正文换行规则，避免英文单词被中间截断或内容撑出正文框
+
+Files touched:
+
+- `frontend/lib/content.ts`
+- `frontend/components/admin/Editor.tsx`
+- `frontend/app/admin/tours/page.tsx`
+- `frontend/components/TourRouteTimeline.tsx`
+- `frontend/app/globals.css`
+- `backend/internal/service/tour.go`
+
+## Validation
+
+Checks run:
+
+- `cd backend && GOCACHE=/tmp/go-build go test ./...`
+- `cd frontend && npm run lint`
+- `cd frontend && npm run build`
+
+Results:
+
+- backend tests passed
+- frontend build passed
+- frontend lint completed with only pre-existing warnings outside this change scope
+
 ## 2026-04-06
 
 Source: `docs/commit-log-2026-04-06-tour-route-editor-upload-cleanup-and-home-review-fixes.md`

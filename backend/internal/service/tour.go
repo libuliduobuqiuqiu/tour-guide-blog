@@ -2,6 +2,7 @@ package service
 
 import (
 	"html"
+	"regexp"
 	"strings"
 	"tour-guide-blog-backend/internal/dao"
 	"tour-guide-blog-backend/internal/model"
@@ -12,6 +13,87 @@ import (
 type TourService struct{}
 
 var Tour = &TourService{}
+
+var richTextContentCleaner = strings.NewReplacer(
+	"&nbsp;", " ",
+	"&NBSP;", " ",
+	"&#160;", " ",
+	"\u00a0", " ",
+	"\u00ad", "",
+	"&#173;", "",
+	"\u200b", "",
+	"\u200c", "",
+	"\u200d", "",
+	"\ufeff", "",
+)
+
+var richTextStyleAttrPattern = regexp.MustCompile(`\sstyle\s*=\s*"[^"]*"|\sstyle\s*=\s*'[^']*'|\sstyle\s*=\s*[^\s>]+`)
+var richTextClassAttrPattern = regexp.MustCompile(`\sclass\s*=\s*"[^"]*"|\sclass\s*=\s*'[^']*'|\sclass\s*=\s*[^\s>]+`)
+var richTextSpanPattern = regexp.MustCompile(`</?span[^>]*>`)
+var richTextWbrPattern = regexp.MustCompile(`<wbr\s*/?>`)
+
+func normalizeRichTextHTML(content string) string {
+	normalized := strings.TrimSpace(content)
+	normalized = richTextContentCleaner.Replace(normalized)
+	normalized = richTextWbrPattern.ReplaceAllString(normalized, "")
+	normalized = richTextStyleAttrPattern.ReplaceAllString(normalized, "")
+	normalized = richTextClassAttrPattern.ReplaceAllString(normalized, "")
+	normalized = richTextSpanPattern.ReplaceAllString(normalized, "")
+	return normalized
+}
+
+func buildDraftDataFromTour(tour *model.Tour) model.TourDraftData {
+	return model.TourDraftData{
+		Title:        tour.Title,
+		Description:  tour.Description,
+		Content:      tour.Content,
+		RoutePoints:  tour.RoutePoints,
+		Highlights:   tour.Highlights,
+		Places:       tour.Places,
+		BookingTag:   tour.BookingTag,
+		BookingNote:  tour.BookingNote,
+		MaxBookings:  tour.MaxBookings,
+		Availability: tour.Availability,
+		CoverImage:   tour.CoverImage,
+		Price:        tour.Price,
+		Duration:     tour.Duration,
+		Location:     tour.Location,
+	}
+}
+
+func clearPublishedTourContent(tour *model.Tour) {
+	tour.Title = ""
+	tour.Description = ""
+	tour.Content = ""
+	tour.RoutePoints = model.TourRoutePoints{}
+	tour.Highlights = model.StringList{}
+	tour.Places = model.StringList{}
+	tour.BookingTag = ""
+	tour.BookingNote = ""
+	tour.MaxBookings = 0
+	tour.Availability = model.TourAvailability{}
+	tour.CoverImage = ""
+	tour.Price = 0
+	tour.Duration = ""
+	tour.Location = ""
+}
+
+func applyDraftData(tour *model.Tour, draft model.TourDraftData) {
+	tour.Title = draft.Title
+	tour.Description = draft.Description
+	tour.Content = draft.Content
+	tour.RoutePoints = draft.RoutePoints
+	tour.Highlights = draft.Highlights
+	tour.Places = draft.Places
+	tour.BookingTag = draft.BookingTag
+	tour.BookingNote = draft.BookingNote
+	tour.MaxBookings = draft.MaxBookings
+	tour.Availability = draft.Availability
+	tour.CoverImage = draft.CoverImage
+	tour.Price = draft.Price
+	tour.Duration = draft.Duration
+	tour.Location = draft.Location
+}
 
 func buildTourContentFromRoutePoints(points model.TourRoutePoints) string {
 	if len(points) == 0 {
@@ -49,7 +131,7 @@ func normalizeTourRoutePoints(points model.TourRoutePoints) model.TourRoutePoint
 	normalized := make(model.TourRoutePoints, 0, len(points))
 	for _, point := range points {
 		title := strings.TrimSpace(point.Title)
-		content := strings.TrimSpace(point.Content)
+		content := normalizeRichTextHTML(point.Content)
 		image := strings.TrimSpace(point.Image)
 		if title == "" && content == "" && image == "" {
 			continue
@@ -68,21 +150,45 @@ func prepareTourForSave(tour *model.Tour) {
 	if len(tour.RoutePoints) > 0 {
 		tour.Content = buildTourContentFromRoutePoints(tour.RoutePoints)
 	}
+	tour.BookingTag = strings.TrimSpace(tour.BookingTag)
+	tour.BookingNote = strings.TrimSpace(tour.BookingNote)
+	switch strings.ToLower(strings.TrimSpace(tour.Status)) {
+	case "draft":
+		tour.Status = "draft"
+	default:
+		tour.Status = "published"
+	}
 }
 
-func (s *TourService) List() ([]*model.Tour, error) {
+func mergeDraftIntoTour(tour *model.Tour) {
+	if tour.DraftData.IsZero() {
+		return
+	}
+	applyDraftData(tour, tour.DraftData)
+}
+
+func (s *TourService) ListPublished() ([]*model.Tour, error) {
+	var tours []*model.Tour
+	err := dao.DB.Where("status = ? OR (status = ? AND title <> '')", "published", "draft").
+		Order("sort_order ASC, created_at DESC").
+		Find(&tours).Error
+	return tours, err
+}
+
+func (s *TourService) ListAll() ([]*model.Tour, error) {
 	var tours []*model.Tour
 	err := dao.DB.Order("sort_order ASC, created_at DESC").Find(&tours).Error
 	return tours, err
 }
 
-func (s *TourService) ListLite() ([]*model.Tour, error) {
+func (s *TourService) ListLitePublished() ([]*model.Tour, error) {
 	var tours []*model.Tour
 	err := dao.DB.Select(
 		"id",
 		"title",
 		"description",
 		"route_points",
+		"booking_tag_1",
 		"booking_tag_2",
 		"max_bookings",
 		"availability",
@@ -90,10 +196,43 @@ func (s *TourService) ListLite() ([]*model.Tour, error) {
 		"price",
 		"duration",
 		"location",
+		"status",
+		"sort_order",
+		"created_at",
+		"updated_at",
+	).Where("status = ? OR (status = ? AND title <> '')", "published", "draft").
+		Order("sort_order ASC, created_at DESC").
+		Find(&tours).Error
+	return tours, err
+}
+
+func (s *TourService) ListLiteAll() ([]*model.Tour, error) {
+	var tours []*model.Tour
+	err := dao.DB.Select(
+		"id",
+		"title",
+		"description",
+		"route_points",
+		"booking_tag_1",
+		"booking_tag_2",
+		"max_bookings",
+		"availability",
+		"cover_image",
+		"price",
+		"duration",
+		"location",
+		"status",
+		"draft_data",
 		"sort_order",
 		"created_at",
 		"updated_at",
 	).Order("sort_order ASC, created_at DESC").Find(&tours).Error
+	if err != nil {
+		return nil, err
+	}
+	for _, tour := range tours {
+		mergeDraftIntoTour(tour)
+	}
 	return tours, err
 }
 
@@ -103,14 +242,81 @@ func (s *TourService) GetByID(id uint) (*model.Tour, error) {
 	return &tour, err
 }
 
+func (s *TourService) GetAdminByID(id uint) (*model.Tour, error) {
+	var tour model.Tour
+	if err := dao.DB.First(&tour, id).Error; err != nil {
+		return nil, err
+	}
+	mergeDraftIntoTour(&tour)
+	return &tour, nil
+}
+
+func (s *TourService) GetPublishedByID(id uint) (*model.Tour, error) {
+	var tour model.Tour
+	err := dao.DB.Where("(status = ? OR (status = ? AND title <> '')) AND id = ?", "published", "draft", id).First(&tour).Error
+	return &tour, err
+}
+
 func (s *TourService) Create(tour *model.Tour) error {
 	prepareTourForSave(tour)
+	if tour.Status == "draft" {
+		tour.DraftData = buildDraftDataFromTour(tour)
+		clearPublishedTourContent(tour)
+	}
 	return dao.DB.Create(tour).Error
 }
 
 func (s *TourService) Update(id uint, tour *model.Tour) error {
 	prepareTourForSave(tour)
-	return dao.DB.Model(&model.Tour{}).Where("id = ?", id).Updates(tour).Error
+	var existing model.Tour
+	if err := dao.DB.First(&existing, id).Error; err != nil {
+		return err
+	}
+
+	if tour.Status == "draft" {
+		draft := buildDraftDataFromTour(tour)
+		updates := map[string]interface{}{
+			"status":     "draft",
+			"draft_data": draft,
+		}
+		if existing.Status == "draft" && strings.TrimSpace(existing.Title) == "" {
+			updates["title"] = ""
+			updates["description"] = ""
+			updates["content"] = ""
+			updates["route_points"] = model.TourRoutePoints{}
+			updates["highlights"] = model.StringList{}
+			updates["places"] = model.StringList{}
+			updates["booking_tag_1"] = ""
+			updates["booking_tag_2"] = ""
+			updates["max_bookings"] = 0
+			updates["availability"] = model.TourAvailability{}
+			updates["cover_image"] = ""
+			updates["price"] = 0
+			updates["duration"] = ""
+			updates["location"] = ""
+		}
+		return dao.DB.Model(&model.Tour{}).Where("id = ?", id).Updates(updates).Error
+	}
+
+	updates := map[string]interface{}{
+		"title":         tour.Title,
+		"description":   tour.Description,
+		"content":       tour.Content,
+		"route_points":  tour.RoutePoints,
+		"highlights":    tour.Highlights,
+		"places":        tour.Places,
+		"booking_tag_1": tour.BookingTag,
+		"booking_tag_2": tour.BookingNote,
+		"max_bookings":  tour.MaxBookings,
+		"availability":  tour.Availability,
+		"cover_image":   tour.CoverImage,
+		"price":         tour.Price,
+		"duration":      tour.Duration,
+		"location":      tour.Location,
+		"status":        tour.Status,
+		"draft_data":    nil,
+	}
+	return dao.DB.Model(&model.Tour{}).Where("id = ?", id).Updates(updates).Error
 }
 
 func (s *TourService) Delete(id uint) error {

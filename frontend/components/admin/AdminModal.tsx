@@ -10,6 +10,7 @@ interface AdminModalProps {
   onClose: () => void;
   children: React.ReactNode;
   maxWidthClassName?: string;
+  closeOnOverlayClick?: boolean;
 }
 
 export default function AdminModal({
@@ -18,6 +19,7 @@ export default function AdminModal({
   onClose,
   children,
   maxWidthClassName = 'max-w-3xl',
+  closeOnOverlayClick = true,
 }: AdminModalProps) {
   useEffect(() => {
     if (!open) return;
@@ -42,7 +44,7 @@ export default function AdminModal({
   if (!open) return null;
 
   return createPortal(
-    <div className="admin-modal-overlay fade-in px-4 py-8 md:px-8 md:py-10" onClick={onClose}>
+    <div className="admin-modal-overlay fade-in px-4 py-8 md:px-8 md:py-10" onClick={closeOnOverlayClick ? onClose : undefined}>
       <div className={`mx-auto flex min-h-full w-full items-center ${maxWidthClassName}`}>
         <div className="admin-modal-card scale-in w-full" onClick={(event) => event.stopPropagation()}>
           <div className="flex items-center justify-between border-b border-slate-200/80 px-6 py-5 md:px-8">

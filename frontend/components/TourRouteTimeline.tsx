@@ -118,7 +118,7 @@ export default function TourRouteTimeline({ routePoints }: { routePoints: TourRo
 
                 <div className="min-w-0">
                   <h2 className="text-2xl font-semibold tracking-[0.01em] text-slate-950 md:text-[2rem] md:leading-[1.2]">{point.title}</h2>
-                  <div className="mt-5">
+                  <div className="mt-5 min-w-0 max-w-full">
                     <div className="content article-content article-content-tour tour-route-content" dangerouslySetInnerHTML={{ __html: point.contentHtml }} />
                   </div>
                 </div>

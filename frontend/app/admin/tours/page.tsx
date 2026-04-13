@@ -13,6 +13,7 @@ import TourAvailabilityEditor from '@/components/admin/TourAvailabilityEditor';
 import { uploadAdminImage } from '@/lib/admin-upload';
 import type { TourAvailabilitySlot } from '@/lib/tour-availability';
 import { withPublicOrigin } from '@/lib/url';
+import { normalizeRichTextHtml } from '@/lib/content';
 import { ArrowDown, ArrowUp, ArrowUpToLine, Edit2, GripVertical, LoaderCircle, MapPinned, Plus, Trash2 } from 'lucide-react';
 
 const LazyEditor = dynamic(() => import('@/components/admin/Editor'), {
@@ -38,6 +39,7 @@ interface Tour {
   route_points: TourRoutePoint[];
   highlights: string[];
   places: string[];
+  booking_tag: string;
   booking_note: string;
   max_bookings: number;
   availability: TourAvailabilitySlot[];
@@ -45,6 +47,8 @@ interface Tour {
   duration: string;
   location: string;
   cover_image: string;
+  status: 'draft' | 'published';
+  draft_data?: Record<string, unknown> | null;
   sort_order: number;
   created_at?: string;
 }
@@ -124,6 +128,7 @@ function createEmptyTour(sortOrder: number): Partial<TourFormState> {
     route_points: [createRoutePointDraft()],
     highlights: [],
     places: [],
+    booking_tag: '',
     booking_note: '',
     max_bookings: 0,
     availability: [],
@@ -131,6 +136,7 @@ function createEmptyTour(sortOrder: number): Partial<TourFormState> {
     duration: '',
     location: '',
     cover_image: '',
+    status: 'published',
     sort_order: sortOrder,
   };
 }
@@ -145,6 +151,7 @@ export default function ToursAdmin() {
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [routePointImageFiles, setRoutePointImageFiles] = useState<Record<string, File | null>>({});
   const [loading, setLoading] = useState(false);
+  const [saveMode, setSaveMode] = useState<'draft' | 'published'>('published');
   const [isSavingOrder, setIsSavingOrder] = useState(false);
   const [draggingId, setDraggingId] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -176,6 +183,7 @@ export default function ToursAdmin() {
       setEditing(createEmptyTour(tours.length + 1));
       setCoverImageFile(null);
       setRoutePointImageFiles({});
+      setSaveMode('published');
       consumeNewAction();
     }
   }, [action, consumeNewAction, editing, tours.length]);
@@ -195,28 +203,31 @@ export default function ToursAdmin() {
     setEditing(null);
     setCoverImageFile(null);
     setRoutePointImageFiles({});
+    setSaveMode('published');
     consumeNewAction();
   };
 
   const handleEdit = async (id: number) => {
     try {
-      const res = await api.get(`/api/tours/${id}`);
+      const res = await api.get(`/api/admin/tours/${id}`);
       setEditing({
         ...res.data,
         route_points: normalizeRoutePointsForEditor(res.data?.route_points, res.data?.content, res.data?.title, res.data?.cover_image),
       });
       setCoverImageFile(null);
       setRoutePointImageFiles({});
+      setSaveMode(res.data?.status === 'draft' ? 'draft' : 'published');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load tour details';
       alert(message);
     }
   };
 
-  const handleSave = async (event: React.FormEvent) => {
+  const handleSave = async (event: React.SyntheticEvent, nextStatus: 'draft' | 'published') => {
     event.preventDefault();
     if (!editing) return;
 
+    setSaveMode(nextStatus);
     setLoading(true);
     try {
       const routePoints = await Promise.all(
@@ -225,7 +236,7 @@ export default function ToursAdmin() {
           const image = imageFile ? await uploadAdminImage(imageFile) : point.image || '';
           return {
             title: point.title.trim(),
-            content: point.content.trim(),
+            content: normalizeRichTextHtml(point.content.trim()),
             image: image.trim(),
           };
         }),
@@ -235,6 +246,7 @@ export default function ToursAdmin() {
       let payload: Partial<Tour> = {
         ...editing,
         content: '',
+        status: nextStatus,
         route_points: normalizeRoutePointsForSave(routePoints),
         max_bookings: maxBookings,
         availability: Array.isArray(editing.availability)
@@ -330,6 +342,7 @@ export default function ToursAdmin() {
             setEditing(createEmptyTour(tours.length + 1));
             setCoverImageFile(null);
             setRoutePointImageFiles({});
+            setSaveMode('published');
           }}
           className="btn-primary inline-flex items-center gap-2 px-4 py-2"
         >
@@ -392,10 +405,22 @@ export default function ToursAdmin() {
                 </div>
 
                 <div className="min-w-0 flex-1">
+                  {(() => {
+                    const isDraft = tour.status === 'draft';
+                    return (
                   <div className="flex flex-wrap items-center gap-3">
                     <h3 className="text-xl font-semibold text-slate-900">{tour.title}</h3>
-                    <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">#{tour.id}</span>
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] ${isDraft ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>
+                      {isDraft ? 'Draft' : 'Published'}
+                    </span>
+                    {editing?.id === tour.id && saveMode === 'draft' && (
+                      <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-blue-800">
+                        Editing Draft
+                      </span>
+                    )}
                   </div>
+                    );
+                  })()}
                   <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-500">
                     <span className="inline-flex items-center gap-2">
                       <MapPinned size={14} />
@@ -434,8 +459,17 @@ export default function ToursAdmin() {
         onNext={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
       />
 
-      <AdminModal open={Boolean(editing)} title={editing?.id ? 'Edit Tour' : 'Create Tour'} onClose={closeEditor} maxWidthClassName="max-w-6xl">
-        <form onSubmit={handleSave} className="space-y-6">
+      <AdminModal
+        open={Boolean(editing)}
+        title={editing?.id ? 'Edit Tour' : 'Create Tour'}
+        onClose={closeEditor}
+        maxWidthClassName="max-w-6xl"
+        closeOnOverlayClick={false}
+      >
+        <form
+          onSubmit={(event) => handleSave(event, 'published')}
+          className="space-y-6"
+        >
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div className="md:col-span-2">
               <label className="mb-2 block text-sm font-medium text-slate-700">Title</label>
@@ -477,6 +511,16 @@ export default function ToursAdmin() {
                 parser="float"
                 value={editing?.price}
                 onValueChange={(value) => setEditing((current) => ({ ...current!, price: value }))}
+                className="w-full px-4 py-3"
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Extra Tag</label>
+              <input
+                type="text"
+                value={editing?.booking_tag || ''}
+                onChange={(event) => setEditing((current) => ({ ...current!, booking_tag: event.target.value }))}
+                placeholder="Private group / Weekend note"
                 className="w-full px-4 py-3"
               />
             </div>
@@ -708,8 +752,16 @@ export default function ToursAdmin() {
             <button type="button" onClick={closeEditor} className="btn-secondary px-5 py-2.5">
               Cancel
             </button>
+            <button
+              type="button"
+              disabled={loading}
+              onClick={(event) => void handleSave(event, 'draft')}
+              className="rounded-[0.8rem] border border-amber-200 bg-amber-50 px-5 py-2.5 font-semibold text-amber-800 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading && saveMode === 'draft' ? 'Saving Draft...' : 'Save Draft'}
+            </button>
             <button type="submit" disabled={loading} className="btn-primary px-5 py-2.5 disabled:cursor-not-allowed disabled:opacity-60">
-              {loading ? 'Saving...' : 'Save Tour'}
+              {loading && saveMode === 'published' ? 'Publishing...' : 'Publish Tour'}
             </button>
           </div>
         </form>

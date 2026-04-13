@@ -10,6 +10,7 @@ interface TourAvailabilityButtonProps {
 }
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MINIMUM_GUESTS = 6;
 
 export default function TourAvailabilityButton({ availability, maxBookings }: TourAvailabilityButtonProps) {
   const slots = useMemo(() => normalizeAvailability(availability), [availability]);
@@ -76,7 +77,7 @@ export default function TourAvailabilityButton({ availability, maxBookings }: To
                 <div className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-700">Availability</div>
                 <h3 className="mt-2 text-2xl font-semibold text-slate-950">Choose an open date</h3>
                 <p className="mt-2 text-sm leading-7 text-slate-600">
-                  Hover on an open date to see booked guests. Fully booked dates are greyed out.
+                  Hover on an open date to see booked guests. Fewer than 6 guests shows in green, 6 or more shows in orange, and full dates are grey.
                 </p>
               </div>
               <button type="button" onClick={() => setOpen(false)} className="rounded-full border border-slate-200 p-2 text-slate-500 hover:text-slate-950">
@@ -85,7 +86,8 @@ export default function TourAvailabilityButton({ availability, maxBookings }: To
             </div>
 
             <div className="mt-6 flex flex-wrap items-center gap-3 text-xs text-slate-600">
-              <span className="inline-flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-emerald-400" />Open</span>
+              <span className="inline-flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-emerald-400" />Below 6 guests</span>
+              <span className="inline-flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-amber-400" />6+ guests</span>
               <span className="inline-flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-slate-300" />Full</span>
               <span className="inline-flex items-center gap-2"><span className="h-3 w-3 rounded-full border border-slate-300 bg-white" />Closed</span>
               {maxBookings > 0 && <span>Max {maxBookings} guests per date</span>}
@@ -112,9 +114,11 @@ export default function TourAvailabilityButton({ availability, maxBookings }: To
                 {monthCells.map((cell) => {
                   const slot = slotMap.get(cell.dateKey);
                   const isOpen = Boolean(slot?.is_open);
-                  const isFull = isOpen && maxBookings > 0 && (slot?.booked_count ?? 0) >= maxBookings;
+                  const bookedCount = slot?.booked_count ?? 0;
+                  const isFull = isOpen && maxBookings > 0 && bookedCount >= maxBookings;
+                  const isWarm = isOpen && !isFull && bookedCount >= MINIMUM_GUESTS;
                   const title = isOpen
-                    ? `${cell.dateKey}: ${slot?.booked_count ?? 0}${maxBookings > 0 ? `/${maxBookings}` : ''} booked`
+                    ? `${cell.dateKey}: ${bookedCount}${maxBookings > 0 ? `/${maxBookings}` : ''} booked`
                     : `${cell.dateKey}: closed`;
 
                   return (
@@ -126,7 +130,8 @@ export default function TourAvailabilityButton({ availability, maxBookings }: To
                       className={[
                         'min-h-14 rounded-2xl border text-sm transition',
                         cell.inMonth ? '' : 'opacity-35',
-                        isOpen && !isFull ? 'border-emerald-300 bg-emerald-100 text-slate-950 hover:bg-emerald-200' : '',
+                        isOpen && !isFull && !isWarm ? 'border-emerald-300 bg-emerald-100 text-slate-950 hover:bg-emerald-200' : '',
+                        isWarm ? 'border-amber-300 bg-amber-100 text-slate-950 hover:bg-amber-200' : '',
                         isFull ? 'cursor-not-allowed border-slate-300 bg-slate-300 text-slate-600' : '',
                         !isOpen ? 'cursor-default border-slate-200 bg-white text-slate-400' : '',
                       ].join(' ')}
@@ -134,7 +139,7 @@ export default function TourAvailabilityButton({ availability, maxBookings }: To
                       <div className="font-medium">{cell.day}</div>
                       {isOpen && (
                         <div className="mt-1 text-[11px] text-slate-600">
-                          {slot?.booked_count ?? 0}
+                          {bookedCount}
                           {maxBookings > 0 ? `/${maxBookings}` : ''} booked
                         </div>
                       )}

@@ -66,6 +66,7 @@ export default async function TourDetailPage({ params }: { params: Promise<{ id:
     : [];
   const highlights = Array.isArray(tour.highlights) ? tour.highlights.filter(Boolean) : [];
   const places = Array.isArray(tour.places) ? tour.places.filter(Boolean) : [];
+  const bookingTag = typeof tour.booking_tag === 'string' ? tour.booking_tag.trim() : '';
   const bookingNote = typeof tour.booking_note === 'string' ? tour.booking_note.trim() : '';
   const asideCards = (
     <>
@@ -109,6 +110,7 @@ export default async function TourDetailPage({ params }: { params: Promise<{ id:
                 <span className="ml-2 text-base font-semibold text-slate-500 md:text-lg">/ person</span>
               </div>
               {bookingNote && <div className="mt-3 text-base font-normal text-slate-600 md:text-lg">{bookingNote}</div>}
+              <div className="mt-2 text-base font-bold text-red-600 md:text-lg">Tour runs with a minimum of 6 guests</div>
               <TourAvailabilityButton availability={tour.availability} maxBookings={tour.max_bookings ?? 0} />
             </div>
           </div>
@@ -116,6 +118,7 @@ export default async function TourDetailPage({ params }: { params: Promise<{ id:
           <div className="mt-7 flex flex-wrap gap-3 text-slate-700">
             <span className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium">Duration: {tour.duration}</span>
             <span className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium">Location: {tour.location}</span>
+            {bookingTag && <span className="rounded-full border border-blue-200 bg-blue-200 px-4 py-2 text-sm font-medium text-slate-950">{bookingTag}</span>}
           </div>
         </section>
       </div>

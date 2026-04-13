@@ -10,7 +10,8 @@ func RegisterTourRoutes(rg *gin.RouterGroup, protected *gin.RouterGroup) {
 	rg.GET("/tours", handlers.ListTours)
 	rg.GET("/tours/:id", handlers.GetTour)
 
-	protected.GET("/tours", handlers.ListTours)
+	protected.GET("/tours", handlers.ListAdminTours)
+	protected.GET("/tours/:id", handlers.GetAdminTour)
 	protected.POST("/tours", handlers.CreateTour)
 	protected.POST("/tours/reorder", handlers.ReorderTours)
 	protected.PUT("/tours/:id", handlers.UpdateTour)

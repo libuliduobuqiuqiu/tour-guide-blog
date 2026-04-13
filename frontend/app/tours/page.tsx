@@ -8,6 +8,7 @@ interface Tour {
   description: string;
   price: number;
   cover_image?: string;
+  booking_tag?: string;
 }
 
 export default async function ToursPage() {
@@ -41,6 +42,13 @@ export default async function ToursPage() {
               </div>
               <div className="p-6 flex-1 flex flex-col">
                 <h3 className="text-xl font-semibold mb-2 text-slate-900 line-clamp-2">{tour.title}</h3>
+                {tour.booking_tag?.trim() && (
+                  <div className="mb-3 flex flex-wrap gap-2">
+                    <span className="rounded-full border border-blue-200 bg-blue-200 px-3 py-1 text-xs font-medium text-slate-950">
+                      {tour.booking_tag.trim()}
+                    </span>
+                  </div>
+                )}
                 <p className="text-slate-600 mb-5 line-clamp-4">{tour.description}</p>
                 <div className="flex justify-between items-center mt-auto">
                   <span className="text-blue-700 font-semibold">${tour.price} / person</span>
