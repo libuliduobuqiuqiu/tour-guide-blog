@@ -1,3 +1,5 @@
+import { getServerApiBaseUrl } from '@/lib/server-api';
+
 type SiteSettings = {
   social_tiktok?: string;
   social_instagram?: string;
@@ -19,8 +21,7 @@ function PoliceBadgeIcon() {
 }
 
 const Footer = async () => {
-  const API_HOST = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'http://127.0.0.1:8080';
-  const API_BASE_URL = API_HOST.endsWith('/api') ? API_HOST : `${API_HOST}/api`;
+  const API_BASE_URL = getServerApiBaseUrl();
   let settings: SiteSettings = {};
 
   try {
@@ -60,7 +61,7 @@ const Footer = async () => {
         <div className="fade-up px-2 py-2 md:px-4">
           <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
             <div className="max-w-xl">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-200">Janet Tours</div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-200">Tour Janet</div>
               <h3 className="mt-3 text-2xl font-semibold tracking-wide text-white md:text-[2rem]">{footerTitle}</h3>
               <p className="mt-3 text-sm leading-7 text-slate-200 md:text-base">{footerDescription}</p>
             </div>
@@ -97,7 +98,7 @@ const Footer = async () => {
 
           <div className="mt-8 border-t border-white/10 pt-5">
             <div className="flex flex-col gap-3 text-sm text-slate-300 md:flex-row md:items-center md:justify-between">
-              <p>© 2026 Janet Tours. All rights reserved.</p>
+              <p>© 2026 Tour Janet. All rights reserved.</p>
 
               {(settings.icp_number || settings.public_security_beian) && (
                 <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">

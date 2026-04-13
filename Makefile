@@ -7,7 +7,7 @@ SHELL := /bin/bash
 # ==============================
 # 可覆盖变量（本地）
 # ==============================
-NEXT_PUBLIC_API_URL ?= http://localhost:8080
+NEXT_PUBLIC_API_URL ?= http://localhost:8090
 PROJECT_VERSION ?= $(shell git describe --tags --long 2>/dev/null || git rev-parse --short=12 HEAD)
 
 DB_HOST ?= 127.0.0.1

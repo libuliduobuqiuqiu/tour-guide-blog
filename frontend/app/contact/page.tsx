@@ -71,9 +71,7 @@ export default function Contact() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const API_HOST = process.env.NEXT_PUBLIC_API_URL || '';
-        const API_BASE_URL = API_HOST ? (API_HOST.endsWith('/api') ? API_HOST : `${API_HOST}/api`) : '/api';
-        const res = await fetch(`${API_BASE_URL}/config/site_settings`);
+        const res = await fetch('/api/config/site_settings');
         if (!res.ok) return;
         const data = await res.json();
         setSiteSettings((prev) => ({ ...prev, ...data }));

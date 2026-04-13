@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { getServerApiBaseUrl } from '@/lib/server-api';
 import { withPublicOrigin } from '@/lib/url';
 
 type AboutPayload = {
@@ -8,8 +9,7 @@ type AboutPayload = {
 };
 
 export default async function About() {
-  const API_HOST = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'http://127.0.0.1:8080';
-  const API_BASE_URL = API_HOST.endsWith('/api') ? API_HOST : `${API_HOST}/api`;
+  const API_BASE_URL = getServerApiBaseUrl();
   let about: AboutPayload = {
     name: 'Janet',
     bio: 'A professional tour guide in Chongqing & Chengdu.',

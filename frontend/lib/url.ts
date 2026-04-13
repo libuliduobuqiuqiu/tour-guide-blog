@@ -1,10 +1,11 @@
-export const PUBLIC_ORIGIN = process.env.NEXT_PUBLIC_API_URL || '';
+function normalizeRelativePath(path: string) {
+  return path.startsWith('/') ? path : `/${path}`;
+}
 
 export function withPublicOrigin(path: string) {
   if (!path) return path;
   if (path.startsWith('http')) return path;
-  if (!PUBLIC_ORIGIN) return path.startsWith('/') ? path : `/${path}`;
-  return `${PUBLIC_ORIGIN}${path.startsWith('/') ? '' : '/'}${path}`;
+  return normalizeRelativePath(path);
 }
 
 export function withSocialImageProxy(path: string) {
@@ -12,5 +13,5 @@ export function withSocialImageProxy(path: string) {
   if (!path.startsWith('http')) return withPublicOrigin(path);
 
   const proxyPath = `/api/social/image?url=${encodeURIComponent(path)}`;
-  return withPublicOrigin(proxyPath);
+  return normalizeRelativePath(proxyPath);
 }
