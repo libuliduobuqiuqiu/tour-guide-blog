@@ -4,16 +4,64 @@ import { useEffect, useState } from 'react';
 import api from '@/lib/axios';
 import { uploadAdminImage } from '@/lib/admin-upload';
 import AdminNumberInput from '@/components/admin/AdminNumberInput';
+import ImageCropInline from '@/components/admin/ImageCropInline';
+import { HOME_HERO_IMAGE_HEIGHT, HOME_HERO_IMAGE_WIDTH } from '@/lib/hero-image';
 import { Save, RefreshCcw } from 'lucide-react';
 import { withPublicOrigin } from '@/lib/url';
 import type { Review } from '@/lib/reviews';
 import type { SocialAdminSettings, SocialStatus } from '@/lib/social';
 
-const defaultSettings = {
+interface WhyChooseMeCard {
+  title: string;
+  description: string;
+}
+
+interface SiteSettings {
+  home_hero_title: string;
+  home_hero_subtitle: string;
+  home_static_image: string;
+  home_featured_review_ids: number[];
+  why_choose_me_cards: WhyChooseMeCard[];
+  about_content: string;
+  about_image: string;
+  contact_email: string;
+  contact_phone: string;
+  wechat_id: string;
+  contact_location: string;
+  wechat_qr_image: string;
+  whatsapp_qr_image: string;
+  social_tiktok: string;
+  social_instagram: string;
+  social_xiaohongshu: string;
+  social_youtube: string;
+  social_x: string;
+  footer_title: string;
+  footer_description: string;
+  icp_number: string;
+  public_security_beian: string;
+}
+
+const defaultWhyChooseMeCards: WhyChooseMeCard[] = [
+  {
+    title: 'Local Insider, Deeper Access',
+    description: 'I grew up here and stay current with the city’s hidden lanes, best viewpoints, and real local food spots.',
+  },
+  {
+    title: 'Smart, Flexible Itineraries',
+    description: 'Routes are built around your pace and interests, with real-time adjustments to weather, crowds, and energy.',
+  },
+  {
+    title: 'Service That Feels Personal',
+    description: 'Clear communication, thoughtful details, and a calm, friendly pace so you feel cared for at every step.',
+  },
+];
+
+const defaultSettings: SiteSettings = {
   home_hero_title: 'Professional Tour Guide in Chongqing & Chengdu',
   home_hero_subtitle: 'Discover the hidden gems of Southwest China with Janet.',
   home_static_image: '',
   home_featured_review_ids: [0, 0, 0, 0],
+  why_choose_me_cards: defaultWhyChooseMeCards,
   about_content: '',
   about_image: '',
   contact_email: 'janet@example.com',
@@ -91,12 +139,30 @@ function normalizeFeaturedReviewIds(value: unknown) {
   return ids;
 }
 
+function normalizeWhyChooseMeCards(value: unknown) {
+  const rawCards = Array.isArray(value) ? value : [];
+  const cards = rawCards.slice(0, 3).map((item, index) => {
+    const fallback = defaultWhyChooseMeCards[index];
+    return {
+      title: typeof item?.title === 'string' ? item.title : fallback.title,
+      description: typeof item?.description === 'string' ? item.description : fallback.description,
+    };
+  });
+
+  while (cards.length < 3) {
+    cards.push(defaultWhyChooseMeCards[cards.length]);
+  }
+
+  return cards;
+}
+
 export default function SettingsAdmin() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [homeStaticCropFile, setHomeStaticCropFile] = useState<File | null>(null);
   const [syncingPlatform, setSyncingPlatform] = useState<string | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [settings, setSettings] = useState(defaultSettings);
+  const [settings, setSettings] = useState<SiteSettings>(defaultSettings);
   const [socialSettings, setSocialSettings] = useState<SocialAdminSettings>(defaultSocialSettings);
   const [socialStatus, setSocialStatus] = useState<SocialStatus>(defaultSocialStatus);
   const activeReviews = reviews.filter((review) => review.is_active !== false);
@@ -118,6 +184,7 @@ export default function SettingsAdmin() {
             ...defaultSettings,
             ...parsed,
             home_featured_review_ids: normalizeFeaturedReviewIds(parsed?.home_featured_review_ids),
+            why_choose_me_cards: normalizeWhyChooseMeCards(parsed?.why_choose_me_cards),
           });
         }
 
@@ -165,10 +232,15 @@ export default function SettingsAdmin() {
 
   const handleHomeStaticImageUpload = async (file?: File | null) => {
     if (!file) return;
+    setHomeStaticCropFile(file);
+  };
+
+  const handleCroppedHomeStaticImageUpload = async (file: File) => {
     setUploading(true);
     try {
       const url = await uploadAdminImage(file);
       setSettings((prev) => ({ ...prev, home_static_image: url }));
+      setHomeStaticCropFile(null);
     } catch (err) {
       alert('Failed to upload image');
     } finally {
@@ -232,6 +304,13 @@ export default function SettingsAdmin() {
     const next = [...settings.home_featured_review_ids];
     next[index] = Number.parseInt(value, 10) || 0;
     setSettings({ ...settings, home_featured_review_ids: next });
+  };
+
+  const updateWhyChooseMeCard = (index: number, field: keyof WhyChooseMeCard, value: string) => {
+    const next = settings.why_choose_me_cards.map((card, cardIndex) =>
+      cardIndex === index ? { ...card, [field]: value } : card,
+    );
+    setSettings({ ...settings, why_choose_me_cards: next });
   };
 
   const updateSocialPlatform = (
@@ -325,12 +404,23 @@ export default function SettingsAdmin() {
                   className="flex-1 px-4 py-2"
                 />
               </div>
+              <p className="text-xs text-gray-500 mt-2">Upload image will open an inline crop area here. Target size: 1920 × 720px, matching the current desktop homepage hero window.</p>
+              {homeStaticCropFile && (
+                <ImageCropInline
+                  file={homeStaticCropFile}
+                  title="Crop Home Hero Image"
+                  outputWidth={HOME_HERO_IMAGE_WIDTH}
+                  outputHeight={HOME_HERO_IMAGE_HEIGHT}
+                  onCancel={() => setHomeStaticCropFile(null)}
+                  onConfirm={handleCroppedHomeStaticImageUpload}
+                />
+              )}
               {settings.home_static_image && (
                 <div className="mt-4">
                   <img
                     src={withPublicOrigin(settings.home_static_image)}
                     alt="Home static preview"
-                    className="w-full max-w-md h-44 rounded-2xl object-cover border"
+                    className="w-full max-w-[720px] aspect-[8/3] rounded-2xl object-cover object-top border"
                   />
                 </div>
               )}
@@ -379,6 +469,44 @@ export default function SettingsAdmin() {
                 className="w-full px-4 py-2"
                 placeholder="Tell your story..."
               />
+            </div>
+          </div>
+        </section>
+
+        <section className="admin-panel p-8">
+          <h2 className="text-lg font-semibold mb-6 border-b pb-2 text-sky-700">Why Choose Me Cards</h2>
+          <div className="space-y-5">
+            <div>
+              <p className="text-sm text-gray-700">Edit the 3 cards shown in the Why Choose Me section on the homepage.</p>
+              <p className="text-xs text-gray-500 mt-1">Card order here matches the homepage display order.</p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
+              {settings.why_choose_me_cards.map((card, index) => (
+                <div key={index} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5">
+                  <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">Card {index + 1}</h3>
+                  <div className="mt-4 space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                      <input
+                        type="text"
+                        value={card.title}
+                        onChange={(e) => updateWhyChooseMeCard(index, 'title', e.target.value)}
+                        className="w-full px-4 py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                      <textarea
+                        rows={5}
+                        value={card.description}
+                        onChange={(e) => updateWhyChooseMeCard(index, 'description', e.target.value)}
+                        className="w-full px-4 py-2"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -499,7 +627,7 @@ export default function SettingsAdmin() {
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Sync Item Count</label>
                       <AdminNumberInput
-                        key={`${platform}-post-limit-${platformSettings.post_limit}`}
+                        key={`${platform}-post-limit`}
                         min={1}
                         max={24}
                         step={1}

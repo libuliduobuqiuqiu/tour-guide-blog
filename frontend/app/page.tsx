@@ -8,12 +8,49 @@ import { withPublicOrigin } from '@/lib/url';
 import type { Review } from '@/lib/reviews';
 import type { SocialFeed } from '@/lib/social';
 
+interface WhyChooseMeCard {
+  title: string;
+  description: string;
+}
+
 interface Tour {
   id: number;
   title: string;
   description: string;
   cover_image?: string;
   price: number;
+}
+
+const defaultWhyChooseMeCards: WhyChooseMeCard[] = [
+  {
+    title: 'Local Insider, Deeper Access',
+    description: 'I grew up here and stay current with the city’s hidden lanes, best viewpoints, and real local food spots.',
+  },
+  {
+    title: 'Smart, Flexible Itineraries',
+    description: 'Routes are built around your pace and interests, with real-time adjustments to weather, crowds, and energy.',
+  },
+  {
+    title: 'Service That Feels Personal',
+    description: 'Clear communication, thoughtful details, and a calm, friendly pace so you feel cared for at every step.',
+  },
+];
+
+function normalizeWhyChooseMeCards(value: unknown): WhyChooseMeCard[] {
+  const rawCards = Array.isArray(value) ? value : [];
+  const cards = rawCards.slice(0, 3).map((item, index) => {
+    const fallback = defaultWhyChooseMeCards[index];
+    return {
+      title: typeof item?.title === 'string' ? item.title : fallback.title,
+      description: typeof item?.description === 'string' ? item.description : fallback.description,
+    };
+  });
+
+  while (cards.length < 3) {
+    cards.push(defaultWhyChooseMeCards[cards.length]);
+  }
+
+  return cards;
 }
 
 function normalizeSocialFeed(value: Partial<SocialFeed> | null | undefined): SocialFeed {
@@ -32,6 +69,7 @@ export default async function Home() {
     home_hero_subtitle: 'Explore the Pearl River and vibrant Cantonese culture.',
     home_static_image: '',
     home_featured_review_ids: [] as number[],
+    why_choose_me_cards: defaultWhyChooseMeCards,
   };
 
   try {
@@ -44,10 +82,18 @@ export default async function Home() {
     tours = toursData.slice(0, 3);
     reviews = reviewsData;
     socialFeed = normalizeSocialFeed(socialFeedData);
-    if (settingsRes) settings = { ...settings, ...settingsRes };
+    if (settingsRes) {
+      settings = {
+        ...settings,
+        ...settingsRes,
+        why_choose_me_cards: normalizeWhyChooseMeCards(settingsRes?.why_choose_me_cards),
+      };
+    }
   } catch (error) {
     console.error('Failed to fetch data:', error);
   }
+
+  const whyChooseMeCards = normalizeWhyChooseMeCards(settings.why_choose_me_cards);
 
   const selectedReviewIds = Array.isArray(settings.home_featured_review_ids)
     ? Array.from(
@@ -144,39 +190,37 @@ export default async function Home() {
             </p>
           </Reveal>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Reveal className="elevated-card p-8 flex items-start gap-5" delay={60}>
-              <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 shrink-0">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold mb-3">Local Insider, Deeper Access</h3>
-                <p className="text-slate-600">
-                  I grew up here and stay current with the city’s hidden lanes, best viewpoints, and real local food spots.
-                </p>
-              </div>
-            </Reveal>
-            <Reveal className="elevated-card p-8 flex items-start gap-5" delay={200}>
-              <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center text-green-600 shrink-0">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold mb-3">Smart, Flexible Itineraries</h3>
-                <p className="text-slate-600">
-                  Routes are built around your pace and interests, with real-time adjustments to weather, crowds, and energy.
-                </p>
-              </div>
-            </Reveal>
-            <Reveal className="elevated-card p-8 flex items-start gap-5" delay={340}>
-              <div className="w-16 h-16 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-600 shrink-0">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold mb-3">Service That Feels Personal</h3>
-                <p className="text-slate-600">
-                  Clear communication, thoughtful details, and a calm, friendly pace so you feel cared for at every step.
-                </p>
-              </div>
-            </Reveal>
+            {whyChooseMeCards.map((card, index) => {
+              const styles = [
+                {
+                  delay: 60,
+                  iconClassName: 'bg-blue-100 text-blue-600',
+                  icon: <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>,
+                },
+                {
+                  delay: 200,
+                  iconClassName: 'bg-green-100 text-green-600',
+                  icon: <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>,
+                },
+                {
+                  delay: 340,
+                  iconClassName: 'bg-amber-100 text-amber-600',
+                  icon: <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>,
+                },
+              ][index];
+
+              return (
+                <Reveal key={`${card.title}-${index}`} className="elevated-card p-8 flex items-start gap-5" delay={styles.delay}>
+                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 ${styles.iconClassName}`}>
+                    {styles.icon}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold mb-3">{card.title}</h3>
+                    <p className="text-slate-600">{card.description}</p>
+                  </div>
+                </Reveal>
+              );
+            })}
           </div>
         </div>
       </section>

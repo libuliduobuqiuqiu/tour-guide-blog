@@ -504,7 +504,7 @@ export default function ToursAdmin() {
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">Price</label>
               <AdminNumberInput
-                key={`tour-price-${editing?.id ?? 'new'}-${editing?.price ?? 'empty'}`}
+                key={`tour-price-${editing?.id ?? 'new'}`}
                 min={0}
                 step={0.01}
                 required
@@ -537,7 +537,7 @@ export default function ToursAdmin() {
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">Max Bookings</label>
               <AdminNumberInput
-                key={`tour-max-bookings-${editing?.id ?? 'new'}-${editing?.max_bookings ?? 'empty'}`}
+                key={`tour-max-bookings-${editing?.id ?? 'new'}`}
                 min={0}
                 value={editing?.max_bookings}
                 onValueChange={(value) => setEditing((current) => ({ ...current!, max_bookings: value }))}

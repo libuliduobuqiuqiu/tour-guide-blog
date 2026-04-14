@@ -104,7 +104,7 @@ func seedSiteSettings() {
 	if count > 0 {
 		return
 	}
-	value := `{"home_hero_title":"Professional Tour Guide in Guangzhou","home_hero_subtitle":"Explore the Pearl River and vibrant Cantonese culture.","icp_number":""}`
+	value := `{"home_hero_title":"Professional Tour Guide in Guangzhou","home_hero_subtitle":"Explore the Pearl River and vibrant Cantonese culture.","why_choose_me_cards":[{"title":"Local Insider, Deeper Access","description":"I grew up here and stay current with the city’s hidden lanes, best viewpoints, and real local food spots."},{"title":"Smart, Flexible Itineraries","description":"Routes are built around your pace and interests, with real-time adjustments to weather, crowds, and energy."},{"title":"Service That Feels Personal","description":"Clear communication, thoughtful details, and a calm, friendly pace so you feel cared for at every step."}],"icp_number":""}`
 	item := model.Config{Key: "site_settings", Value: value}
 	if err := dao.DB.Create(&item).Error; err != nil {
 		log.Printf("Failed to seed site settings: %v", err)

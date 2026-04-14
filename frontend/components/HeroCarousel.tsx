@@ -2,6 +2,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import Reveal from '@/components/Reveal';
+import { HOME_HERO_IMAGE_OBJECT_POSITION, HOME_HERO_IMAGE_RATIO } from '@/lib/hero-image';
 import { withPublicOrigin } from '@/lib/url';
 
 interface HeroCarouselProps {
@@ -22,11 +23,16 @@ export default function HeroCarousel({ defaultSettings }: HeroCarouselProps) {
     ? normalizeImageUrl(defaultSettings.image)
     : 'https://images.unsplash.com/photo-1535598745644-bc791f07d6a5?auto=format&fit=crop&w=1800&q=80';
 
+  const heroAspectRatio = `${HOME_HERO_IMAGE_RATIO} / 1`;
+
   return (
     <section
       className="w-full relative overflow-hidden"
     >
-      <div className="w-full h-[66vh] max-h-[720px] min-h-[460px] md:min-h-[540px] relative">
+      <div
+        className="relative w-full"
+        style={{ aspectRatio: heroAspectRatio }}
+      >
         {heroImage && (
           <Image
             src={heroImage}
@@ -34,6 +40,7 @@ export default function HeroCarousel({ defaultSettings }: HeroCarouselProps) {
             fill
             unoptimized
             className="absolute inset-0 object-cover"
+            style={{ objectPosition: HOME_HERO_IMAGE_OBJECT_POSITION }}
             priority
           />
         )}

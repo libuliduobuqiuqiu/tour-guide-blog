@@ -7,6 +7,71 @@ The format is intentionally close to Keep a Changelog: chronological releases wi
 
 ## This Round Summary
 
+本轮工作主要围绕后台配置可编辑性与首页 Hero 图片上传体验收口展开，重点解决了 Tours 后台数字输入体验、Why Choose Me 卡片配置落库，以及首页图片裁剪与前台展示不一致的问题。
+
+主要完成：
+
+- 修复后台 Tours / Settings 中数字输入框连续输入多位数字时被重置的问题
+- Settings 新增 Why Choose Me 三张卡片的后台编辑能力，并持久化到 `site_settings`
+- 首页 Why Choose Me 区块改为从配置读取，移除前台写死内容
+- Settings 首页 Hero 图片上传改为内嵌式裁剪流程，接入主流固定裁剪框交互
+- 统一首页 Hero 图片的后台裁剪尺寸、预览比例与前台显示规则，避免上传后前台再次被额外裁切
+- 首页 Hero 最终改为全宽且按固定比例渲染，前后台展示结果保持一致
+
+## Code Changes
+
+### 1. 后台数字输入与 Tours 编辑体验修复
+
+Summary:
+
+- 修正后台 `AdminNumberInput` 在父组件重渲染时的使用方式
+- 去掉 Tours 价格、最大预约人数、availability 已预约人数等输入项上按当前值重挂载的 `key`
+- 数字输入现在支持连续输入多位数，不会出现“每次只能输入一位”的问题
+
+Files touched:
+
+- `frontend/components/admin/AdminNumberInput.tsx`
+- `frontend/app/admin/tours/page.tsx`
+- `frontend/components/admin/TourAvailabilityEditor.tsx`
+- `frontend/app/admin/settings/page.tsx`
+
+### 2. Why Choose Me 改为后台配置
+
+Summary:
+
+- Settings 新增 Why Choose Me 三张卡片的标题与描述编辑区
+- 配置通过 `site_settings.why_choose_me_cards` 保存
+- 首页 Why Choose Me 区块改为读取配置，并为历史数据提供默认回退值
+- site settings seed 补齐默认 Why Choose Me 数据
+
+Files touched:
+
+- `frontend/app/admin/settings/page.tsx`
+- `frontend/app/page.tsx`
+- `backend/internal/seed/seed.go`
+
+### 3. 首页 Hero 图片裁剪与显示一致性调整
+
+Summary:
+
+- Settings 首页图片上传改为字段内嵌裁剪，而不是整页弹层
+- 裁剪器改用 `react-easy-crop`，支持固定裁剪框、拖拽图片与精确像素导出
+- 去掉裁剪界面的导航栏虚影提示，保留更简洁的裁剪交互
+- 首页 Hero 图片显示位置固定为 `top center`
+- 首页 Hero 容器改为全宽并按统一比例渲染，避免后台裁好后前台再次被裁切
+- 抽出共享的 Hero 图片尺寸与显示常量，统一后台裁剪、后台预览和前台展示
+
+Files touched:
+
+- `frontend/package.json`
+- `frontend/package-lock.json`
+- `frontend/components/admin/ImageCropInline.tsx`
+- `frontend/lib/hero-image.ts`
+- `frontend/app/admin/settings/page.tsx`
+- `frontend/components/HeroCarousel.tsx`
+
+## This Round Summary
+
 本轮工作集中收口 Tours 的前后台细节，重点修复了草稿/发布双版本逻辑、后台状态展示、预约人数颜色提示，以及 Tour 行程正文中英文内容的富文本清洗与换行问题。
 
 主要完成：

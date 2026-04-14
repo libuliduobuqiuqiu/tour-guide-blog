@@ -134,7 +134,7 @@ export default function TourAvailabilityEditor({ value, maxBookings, onChange }:
               </p>
               <label className="mt-5 block text-sm font-medium text-slate-700">Booked Guests</label>
               <AdminNumberInput
-                key={`${selectedSlot.date}-${selectedSlot.booked_count}-${maxBookings}`}
+                key={selectedSlot.date}
                 min={0}
                 max={maxBookings > 0 ? maxBookings : undefined}
                 value={selectedSlot.booked_count}
