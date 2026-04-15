@@ -1,4 +1,4 @@
-import { fetchTour } from '@/lib/api';
+import { fetchConfig, fetchTour } from '@/lib/api';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -6,6 +6,7 @@ import ContentRenderer from '@/components/ContentRenderer';
 import TourContentWithAside from '@/components/TourContentWithAside';
 import TourRouteTimeline from '@/components/TourRouteTimeline';
 import TourAvailabilityButton from '@/components/TourAvailabilityButton';
+import { defaultTourDisplaySettings, normalizeTourDisplaySettings, splitPolicyLines } from '@/lib/tour-settings';
 import { withPublicOrigin } from '@/lib/url';
 
 interface TourRoutePoint {
@@ -25,6 +26,26 @@ function renderInfoCard(title: string, items: string[]) {
       <div className="space-y-2.5">
         {items.map((item, index) => (
           <div key={`${title}-${index}`} className="text-sm leading-7 text-slate-700">
+            {item}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function renderPolicyCard(title: string, content: string) {
+  const lines = splitPolicyLines(content);
+  if (lines.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="fade-up rounded-[1.6rem] border border-rose-200/90 bg-[linear-gradient(180deg,rgba(255,244,246,0.98)_0%,rgba(255,236,239,0.98)_100%)] p-5 shadow-[0_24px_60px_-42px_rgba(159,18,57,0.28)] backdrop-blur">
+      <div className="mb-4 text-[15px] font-black uppercase tracking-[0.24em] text-rose-700 md:text-[17px]">{title}</div>
+      <div className="space-y-2.5">
+        {lines.map((item, index) => (
+          <div key={`${title}-${index}`} className="text-sm leading-7 text-rose-950/85">
             {item}
           </div>
         ))}
@@ -54,8 +75,16 @@ function renderBookingCard() {
 export default async function TourDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   let tour;
+  let tourSettings = defaultTourDisplaySettings;
   try {
-    tour = await fetchTour(String(id));
+    const [tourData, settingsRes] = await Promise.all([
+      fetchTour(String(id)),
+      fetchConfig('site_settings').catch(() => null),
+    ]);
+    tour = tourData;
+    if (settingsRes) {
+      tourSettings = normalizeTourDisplaySettings(settingsRes);
+    }
   } catch (error) {
     console.error('Failed to fetch tour:', error);
     return notFound();
@@ -68,10 +97,12 @@ export default async function TourDetailPage({ params }: { params: Promise<{ id:
   const places = Array.isArray(tour.places) ? tour.places.filter(Boolean) : [];
   const bookingTag = typeof tour.booking_tag === 'string' ? tour.booking_tag.trim() : '';
   const bookingNote = typeof tour.booking_note === 'string' ? tour.booking_note.trim() : '';
+  const cancellationPolicy = tourSettings.tour_cancellation_policy.trim();
   const asideCards = (
     <>
       {renderInfoCard('Highlights', highlights)}
       {renderInfoCard('Places to Visit', places)}
+      {renderPolicyCard('Cancellation Policy', cancellationPolicy)}
     </>
   );
 
@@ -107,10 +138,14 @@ export default async function TourDetailPage({ params }: { params: Promise<{ id:
             <div className="flex flex-col items-start lg:items-end">
               <div className="text-[2.8rem] font-black leading-none text-slate-950 md:text-[3.5rem]">
                 ${tour.price}
-                <span className="ml-2 text-base font-semibold text-slate-500 md:text-lg">/ person</span>
+                {tourSettings.tour_price_suffix && (
+                  <span className="ml-2 text-base font-semibold text-slate-500 md:text-lg">{tourSettings.tour_price_suffix}</span>
+                )}
               </div>
               {bookingNote && <div className="mt-3 text-base font-normal text-slate-600 md:text-lg">{bookingNote}</div>}
-              <div className="mt-2 text-base font-bold text-red-600 md:text-lg">Tour runs with a minimum of 6 guests</div>
+              {tourSettings.tour_minimum_notice && (
+                <div className="mt-2 text-base font-bold text-red-600 md:text-lg">{tourSettings.tour_minimum_notice}</div>
+              )}
               <TourAvailabilityButton availability={tour.availability} maxBookings={tour.max_bookings ?? 0} />
             </div>
           </div>
@@ -125,7 +160,7 @@ export default async function TourDetailPage({ params }: { params: Promise<{ id:
 
       <div className="pt-10">
         <div className="mx-auto max-w-[1280px] px-4 md:px-6 lg:px-8">
-          <TourContentWithAside aside={highlights.length > 0 || places.length > 0 ? asideCards : undefined}>
+          <TourContentWithAside aside={highlights.length > 0 || places.length > 0 || Boolean(cancellationPolicy) ? asideCards : undefined}>
               {routePoints.length > 0 ? (
                 <TourRouteTimeline routePoints={routePoints} />
               ) : (

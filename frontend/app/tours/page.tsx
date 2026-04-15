@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { fetchTours } from '@/lib/api';
+import { fetchConfig, fetchTours } from '@/lib/api';
+import { defaultTourDisplaySettings, normalizeTourDisplaySettings } from '@/lib/tour-settings';
 import { withPublicOrigin } from '@/lib/url';
 
 interface Tour {
@@ -13,8 +14,16 @@ interface Tour {
 
 export default async function ToursPage() {
   let tours: Tour[] = [];
+  let tourSettings = defaultTourDisplaySettings;
   try {
-    tours = await fetchTours();
+    const [toursData, settingsRes] = await Promise.all([
+      fetchTours(),
+      fetchConfig('site_settings').catch(() => null),
+    ]);
+    tours = toursData;
+    if (settingsRes) {
+      tourSettings = normalizeTourDisplaySettings(settingsRes);
+    }
   } catch (error) {
     console.error('Failed to fetch tours:', error);
   }
@@ -51,7 +60,10 @@ export default async function ToursPage() {
                 )}
                 <p className="text-slate-600 mb-5 line-clamp-4">{tour.description}</p>
                 <div className="flex justify-between items-center mt-auto">
-                  <span className="text-blue-700 font-semibold">${tour.price} / person</span>
+                  <span className="text-blue-700 font-semibold">
+                    ${tour.price}
+                    {tourSettings.tour_price_suffix ? ` ${tourSettings.tour_price_suffix}` : ''}
+                  </span>
                   <Link href={`/tours/${tour.id}`} className="btn-secondary px-4 py-2 text-sm">
                     Details
                   </Link>
