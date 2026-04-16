@@ -3,6 +3,22 @@
 This file is generated from the commit log documents in `docs/commit-log-*.md`.
 The format is intentionally close to Keep a Changelog: chronological releases with human-written change summaries.
 
+## 2026-04-17
+
+Source: `docs/commit-log-2026-04-17-mobile-polish-and-review-modal-fixes.md`
+
+## This Round Summary
+
+本轮主要围绕前台移动端体验收口，重点修复 Tours 详情页信息结构、首页 Hero 在手机上的显示问题，以及 Reviews 详情弹窗在移动端无法滚动和关闭的问题。
+
+主要完成：
+
+- 调整 Tours 详情页标题卡位置，并将原有右侧三张信息卡合并为标题区下方的一体式信息面板
+- 修复首页 Hero 在手机上的标题、副标题和 `Explore` 按钮被裁切的问题，同时保留原始图片亮度
+- 收紧手机端导航栏排布，尽量保持菜单项单行展示
+- 修复 Reviews 详情弹窗在移动端内容过长时只能滚动背景页的问题
+- 将 Reviews 提交表单中的 `Country` 从下拉选择改为自由输入框
+
 ## 2026-04-16
 
 Source: `docs/commit-log-2026-04-16-tour-per-item-display-and-layout.md`

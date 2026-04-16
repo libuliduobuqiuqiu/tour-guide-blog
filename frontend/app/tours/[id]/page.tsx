@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import ContentRenderer from '@/components/ContentRenderer';
-import TourContentWithAside from '@/components/TourContentWithAside';
 import TourRouteTimeline from '@/components/TourRouteTimeline';
 import TourAvailabilityButton from '@/components/TourAvailabilityButton';
 import { defaultTourDisplaySettings, normalizeTourDisplaySettings, splitPolicyLines } from '@/lib/tour-settings';
@@ -15,38 +14,42 @@ interface TourRoutePoint {
   image: string;
 }
 
-function renderInfoCard(title: string, items: string[]) {
-  if (items.length === 0) {
+function renderInfoPanel(highlights: string[], places: string[], cancellationPolicy: string) {
+  const policyLines = splitPolicyLines(cancellationPolicy);
+  const sections = [
+    { title: 'Highlights', items: highlights },
+    { title: 'Places to Visit', items: places },
+    { title: 'Cancellation Policy', items: policyLines },
+  ].filter((section) => section.items.length > 0);
+
+  if (sections.length === 0) {
     return null;
   }
 
   return (
-    <section className="fade-up rounded-[1.6rem] border border-slate-200/90 bg-white/96 p-5 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.36)] backdrop-blur">
-      <div className="mb-4 text-[15px] font-black uppercase tracking-[0.24em] text-blue-700 md:text-[17px]">{title}</div>
-      <div className="space-y-2.5">
-        {items.map((item, index) => (
-          <div key={`${title}-${index}`} className="text-sm leading-7 text-slate-700">
-            {item}
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function renderPolicyCard(title: string, content: string) {
-  const lines = splitPolicyLines(content);
-  if (lines.length === 0) {
-    return null;
-  }
-
-  return (
-    <section className="fade-up rounded-[1.6rem] border border-rose-200/90 bg-[linear-gradient(180deg,rgba(255,244,246,0.98)_0%,rgba(255,236,239,0.98)_100%)] p-5 shadow-[0_24px_60px_-42px_rgba(159,18,57,0.28)] backdrop-blur">
-      <div className="mb-4 text-[15px] font-black uppercase tracking-[0.24em] text-rose-700 md:text-[17px]">{title}</div>
-      <div className="space-y-2.5">
-        {lines.map((item, index) => (
-          <div key={`${title}-${index}`} className="text-sm leading-7 text-rose-950/85">
-            {item}
+    <section className="fade-up rounded-[1.7rem] border border-slate-200/90 bg-white/94 px-5 py-5 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.22)] backdrop-blur md:px-7 md:py-6">
+      <div className="grid gap-5 md:gap-6 lg:grid-cols-3">
+        {sections.map((section, sectionIndex) => (
+          <div
+            key={section.title}
+            className={`min-w-0 ${
+              sectionIndex < sections.length - 1 ? 'lg:border-r lg:border-slate-200/80 lg:pr-6' : ''
+            }`}
+          >
+            <div
+              className={`mb-3 text-[13px] font-black uppercase tracking-[0.2em] md:text-[14px] ${
+                section.title === 'Cancellation Policy' ? 'text-rose-700' : 'text-blue-700'
+              }`}
+            >
+              {section.title}
+            </div>
+            <div className="space-y-1.5">
+              {section.items.map((item, index) => (
+                <div key={`${section.title}-${index}`} className="text-sm leading-6 text-slate-700 md:text-[15px] md:leading-6">
+                  {item}
+                </div>
+              ))}
+            </div>
           </div>
         ))}
       </div>
@@ -109,13 +112,7 @@ export default async function TourDetailPage({ params }: { params: Promise<{ id:
     typeof tour.cancellation_policy === 'string' && tour.cancellation_policy.trim()
       ? tour.cancellation_policy.trim()
       : tourSettings.tour_cancellation_policy.trim();
-  const asideCards = (
-    <>
-      {renderInfoCard('Highlights', highlights)}
-      {renderInfoCard('Places to Visit', places)}
-      {renderPolicyCard('Cancellation Policy', cancellationPolicy)}
-    </>
-  );
+  const infoPanel = renderInfoPanel(highlights, places, cancellationPolicy);
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-[linear-gradient(180deg,#f7fbff_0%,#eef5fb_52%,#e9f1f8_100%)]">
@@ -139,7 +136,7 @@ export default async function TourDetailPage({ params }: { params: Promise<{ id:
         </div>
       </div>
 
-      <div className="mx-auto -mt-14 max-w-[1200px] px-4 md:-mt-16 md:px-6 lg:px-8">
+      <div className="mx-auto -mt-40 max-w-[1200px] px-4 md:-mt-48 md:px-6 lg:px-8">
         <section className="scale-in relative z-10 rounded-[2rem] border border-white/75 bg-white/88 px-5 py-7 shadow-[0_32px_90px_-52px_rgba(15,23,42,0.52)] backdrop-blur md:px-8 md:py-9">
           <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_max-content] lg:items-end">
             <div className="max-w-[42rem]">
@@ -175,19 +172,19 @@ export default async function TourDetailPage({ params }: { params: Promise<{ id:
         </section>
       </div>
 
-      <div className="pt-9 md:pt-10">
+      {infoPanel ? (
+        <div className="pt-6 md:pt-7">
+          <div className="mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8">{infoPanel}</div>
+        </div>
+      ) : null}
+
+      <div className="pt-6 md:pt-8">
         <div className="mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8">
-          <TourContentWithAside aside={highlights.length > 0 || places.length > 0 || Boolean(cancellationPolicy) ? asideCards : undefined}>
-              {routePoints.length > 0 ? (
-                <TourRouteTimeline routePoints={routePoints} />
-              ) : (
-                <ContentRenderer
-                  content={tour.content || ''}
-                  toc={false}
-                  variant="tour"
-                />
-              )}
-          </TourContentWithAside>
+          {routePoints.length > 0 ? (
+            <TourRouteTimeline routePoints={routePoints} />
+          ) : (
+            <ContentRenderer content={tour.content || ''} toc={false} variant="tour" />
+          )}
         </div>
       </div>
 

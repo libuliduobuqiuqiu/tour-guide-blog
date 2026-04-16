@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { LoaderCircle, Star, Upload, X } from 'lucide-react';
 import { submitReview, uploadReviewPhoto } from '@/lib/api';
-import { COUNTRIES } from '@/lib/countries';
 
 const MAX_REVIEW_PHOTOS = 3;
 const MAX_REVIEW_PHOTO_SIZE = 4 * 1024 * 1024;
@@ -172,19 +171,16 @@ export default function ReviewSubmissionModal({
 
             <div>
               <label className="mb-2 block text-sm font-semibold text-slate-800">Country</label>
-              <select
+              <input
+                type="text"
                 required
+                minLength={2}
+                maxLength={100}
                 value={formData.country}
                 onChange={(event) => updateField('country', event.target.value)}
                 className="w-full px-4 py-3"
-              >
-                <option value="">Select your country</option>
-                {COUNTRIES.map((country) => (
-                  <option key={country} value={country}>
-                    {country}
-                  </option>
-                ))}
-              </select>
+                placeholder="Your country"
+              />
             </div>
           </div>
 

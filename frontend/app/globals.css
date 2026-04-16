@@ -67,6 +67,15 @@ a {
   border-bottom: 1px solid rgba(215, 226, 244, 0.9);
 }
 
+.nav-scroll-row {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.nav-scroll-row::-webkit-scrollbar {
+  display: none;
+}
+
 .btn-primary {
   background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%);
   color: #fff;

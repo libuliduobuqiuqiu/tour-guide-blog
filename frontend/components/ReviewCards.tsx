@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Star, X, ZoomIn } from 'lucide-react';
 import type { Review } from '@/lib/reviews';
 import { formatReviewMonth, getReviewInitial } from '@/lib/reviews';
@@ -30,6 +30,20 @@ export default function ReviewCards({
     if (selectedId === null) return null;
     return items.find((item) => item.id === selectedId) || null;
   }, [items, selectedId]);
+
+  useEffect(() => {
+    if (!selected && !zoomedPhoto) {
+      return;
+    }
+
+    const { body } = document;
+    const previousOverflow = body.style.overflow;
+    body.style.overflow = 'hidden';
+
+    return () => {
+      body.style.overflow = previousOverflow;
+    };
+  }, [selected, zoomedPhoto]);
 
   if (items.length === 0) {
     return (
@@ -91,97 +105,99 @@ export default function ReviewCards({
 
       {selected && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4"
+          className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/60 p-3 sm:p-4"
           onClick={() => setSelectedId(null)}
         >
           <div
-            className="relative w-full max-w-5xl overflow-hidden rounded-[2rem] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] shadow-[0_28px_90px_-34px_rgba(15,23,42,0.6)]"
+            className="relative mx-auto my-4 flex min-h-[calc(100vh-1.5rem)] w-full max-w-5xl items-center sm:my-6 sm:min-h-[calc(100vh-2rem)]"
             onClick={(event) => event.stopPropagation()}
           >
-            <button
-              type="button"
-              onClick={() => setSelectedId(null)}
-              className="absolute right-5 top-5 z-10 rounded-full border border-slate-200 bg-white/95 p-2 text-slate-500 transition-colors hover:text-slate-900"
-              aria-label="Close"
-            >
-              <X size={18} />
-            </button>
+            <div className="relative max-h-[calc(100vh-1.5rem)] w-full overflow-y-auto overscroll-contain rounded-[1.6rem] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] shadow-[0_28px_90px_-34px_rgba(15,23,42,0.6)] sm:max-h-[calc(100vh-2rem)] sm:rounded-[2rem]">
+              <button
+                type="button"
+                onClick={() => setSelectedId(null)}
+                className="absolute right-4 top-4 z-20 rounded-full border border-slate-200 bg-white/95 p-2 text-slate-500 transition-colors hover:text-slate-900 sm:right-5 sm:top-5"
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
 
-            <div className={selected.photos?.length ? 'grid gap-0 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]' : 'block'}>
-              <div className={`bg-[radial-gradient(circle_at_top,rgba(14,165,233,0.12),transparent_38%),linear-gradient(180deg,#ffffff_0%,#f9fbff_100%)] p-7 md:p-10 ${selected.photos?.length ? 'border-b border-slate-200/80 lg:border-b-0 lg:border-r' : ''}`}>
-                <div className="mb-8 flex items-start justify-between gap-6 pr-12">
-                  <div className="flex min-w-0 items-center gap-4">
-                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-700 to-sky-500 text-lg font-semibold text-white">
-                      {getReviewInitial(selected.username)}
+              <div className={selected.photos?.length ? 'grid gap-0 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]' : 'block'}>
+                <div className={`bg-[radial-gradient(circle_at_top,rgba(14,165,233,0.12),transparent_38%),linear-gradient(180deg,#ffffff_0%,#f9fbff_100%)] p-5 sm:p-7 md:p-10 ${selected.photos?.length ? 'border-b border-slate-200/80 lg:border-b-0 lg:border-r' : ''}`}>
+                  <div className="mb-6 flex items-start justify-between gap-4 pr-10 sm:mb-8 sm:gap-6 sm:pr-12">
+                    <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-700 to-sky-500 text-base font-semibold text-white sm:h-16 sm:w-16 sm:text-lg">
+                        {getReviewInitial(selected.username)}
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">{selected.username}</h3>
+                        <p className="mt-1 text-sm text-slate-500 sm:mt-2 sm:text-base">{selected.country || 'Unknown country'}</p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <h3 className="text-3xl font-semibold tracking-tight text-slate-900">{selected.username}</h3>
-                      <p className="mt-2 text-base text-slate-500">{selected.country || 'Unknown country'}</p>
-                    </div>
-                  </div>
 
-                  <div className="flex shrink-0 flex-col items-end gap-3">
-                    <div className="flex gap-1.5 text-amber-500">
-                      {renderStars(selected.rating, 18)}
-                    </div>
-                    <p className="text-xs font-medium uppercase tracking-[0.28em] text-slate-400">
-                      {formatReviewMonth(selected.review_date)}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="rounded-[1.6rem] border border-slate-200/80 bg-white/85 px-6 py-7 shadow-[0_16px_50px_-35px_rgba(15,23,42,0.4)]">
-                  <p className="mb-4 text-xs font-semibold uppercase tracking-[0.26em] text-sky-700/75">
-                    Guest Story
-                  </p>
-                  <div className="space-y-5 text-[1.02rem] leading-8 text-slate-700">
-                    {selected.content
-                      .split(/\n+/)
-                      .map((paragraph) => paragraph.trim())
-                      .filter(Boolean)
-                      .map((paragraph, index) => (
-                        <p key={`${selected.id}-${index}`}>{paragraph}</p>
-                      ))}
-                  </div>
-                </div>
-              </div>
-
-              {selected.photos?.length ? (
-                <div className="bg-[linear-gradient(180deg,#f8fbff_0%,#edf5ff_100%)] p-7 md:p-10">
-                  <div className="mb-4 flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-400">Photos</p>
-                      <p className="mt-2 text-sm text-slate-500">
-                        Click any image to view it larger.
+                    <div className="flex shrink-0 flex-col items-end gap-2 sm:gap-3">
+                      <div className="flex gap-1.5 text-amber-500">
+                        {renderStars(selected.rating, 18)}
+                      </div>
+                      <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400 sm:text-xs sm:tracking-[0.28em]">
+                        {formatReviewMonth(selected.review_date)}
                       </p>
                     </div>
                   </div>
 
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    {selected.photos.map((photo, photoIndex) => (
-                      <button
-                        key={`${selected.id}-${photoIndex}`}
-                        type="button"
-                        onClick={() => setZoomedPhoto(withPublicOrigin(photo))}
-                        className="group relative overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white text-left shadow-[0_18px_45px_-34px_rgba(15,23,42,0.45)]"
-                      >
-                        <img
-                          src={withPublicOrigin(photo)}
-                          alt={`${selected.username} review photo ${photoIndex + 1}`}
-                          className="h-56 w-full object-cover transition duration-300 group-hover:scale-[1.03]"
-                        />
-                        <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-transparent px-4 py-4 text-white">
-                          <span className="text-sm font-medium">Photo {photoIndex + 1}</span>
-                          <span className="inline-flex items-center gap-1 text-xs uppercase tracking-[0.18em] text-white/85">
-                            <ZoomIn size={14} />
-                            Expand
-                          </span>
-                        </div>
-                      </button>
-                    ))}
+                  <div className="rounded-[1.35rem] border border-slate-200/80 bg-white/85 px-4 py-5 shadow-[0_16px_50px_-35px_rgba(15,23,42,0.4)] sm:rounded-[1.6rem] sm:px-6 sm:py-7">
+                    <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-700/75 sm:mb-4 sm:text-xs sm:tracking-[0.26em]">
+                      Guest Story
+                    </p>
+                    <div className="space-y-4 text-[0.96rem] leading-7 text-slate-700 sm:space-y-5 sm:text-[1.02rem] sm:leading-8">
+                      {selected.content
+                        .split(/\n+/)
+                        .map((paragraph) => paragraph.trim())
+                        .filter(Boolean)
+                        .map((paragraph, index) => (
+                          <p key={`${selected.id}-${index}`}>{paragraph}</p>
+                        ))}
+                    </div>
                   </div>
                 </div>
-              ) : null}
+
+                {selected.photos?.length ? (
+                  <div className="bg-[linear-gradient(180deg,#f8fbff_0%,#edf5ff_100%)] p-5 sm:p-7 md:p-10">
+                    <div className="mb-4 flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-400">Photos</p>
+                        <p className="mt-2 text-sm text-slate-500">
+                          Click any image to view it larger.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {selected.photos.map((photo, photoIndex) => (
+                        <button
+                          key={`${selected.id}-${photoIndex}`}
+                          type="button"
+                          onClick={() => setZoomedPhoto(withPublicOrigin(photo))}
+                          className="group relative overflow-hidden rounded-[1.35rem] border border-slate-200 bg-white text-left shadow-[0_18px_45px_-34px_rgba(15,23,42,0.45)] sm:rounded-[1.5rem]"
+                        >
+                          <img
+                            src={withPublicOrigin(photo)}
+                            alt={`${selected.username} review photo ${photoIndex + 1}`}
+                            className="h-52 w-full object-cover transition duration-300 group-hover:scale-[1.03] sm:h-56"
+                          />
+                          <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-transparent px-4 py-4 text-white">
+                            <span className="text-sm font-medium">Photo {photoIndex + 1}</span>
+                            <span className="inline-flex items-center gap-1 text-xs uppercase tracking-[0.18em] text-white/85">
+                              <ZoomIn size={14} />
+                              Expand
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
             </div>
           </div>
         </div>
