@@ -1,11 +1,11 @@
-import { fetchConfig, fetchTour } from '@/lib/api';
+import { fetchTour } from '@/lib/api';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import ContentRenderer from '@/components/ContentRenderer';
 import TourRouteTimeline from '@/components/TourRouteTimeline';
 import TourAvailabilityButton from '@/components/TourAvailabilityButton';
-import { defaultTourDisplaySettings, normalizeTourDisplaySettings, splitPolicyLines } from '@/lib/tour-settings';
+import { splitPolicyLines } from '@/lib/tour-settings';
 import { withPublicOrigin } from '@/lib/url';
 
 interface TourRoutePoint {
@@ -78,16 +78,8 @@ function renderBookingCard() {
 export default async function TourDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   let tour;
-  let tourSettings = defaultTourDisplaySettings;
   try {
-    const [tourData, settingsRes] = await Promise.all([
-      fetchTour(String(id)),
-      fetchConfig('site_settings').catch(() => null),
-    ]);
-    tour = tourData;
-    if (settingsRes) {
-      tourSettings = normalizeTourDisplaySettings(settingsRes);
-    }
+    tour = await fetchTour(String(id));
   } catch (error) {
     console.error('Failed to fetch tour:', error);
     return notFound();
@@ -100,18 +92,9 @@ export default async function TourDetailPage({ params }: { params: Promise<{ id:
   const places = Array.isArray(tour.places) ? tour.places.filter(Boolean) : [];
   const bookingTag = typeof tour.booking_tag === 'string' ? tour.booking_tag.trim() : '';
   const bookingNote = typeof tour.booking_note === 'string' ? tour.booking_note.trim() : '';
-  const priceSuffix =
-    typeof tour.price_suffix === 'string' && tour.price_suffix.trim()
-      ? tour.price_suffix.trim()
-      : tourSettings.tour_price_suffix.trim();
-  const minimumNotice =
-    typeof tour.minimum_notice === 'string' && tour.minimum_notice.trim()
-      ? tour.minimum_notice.trim()
-      : tourSettings.tour_minimum_notice.trim();
-  const cancellationPolicy =
-    typeof tour.cancellation_policy === 'string' && tour.cancellation_policy.trim()
-      ? tour.cancellation_policy.trim()
-      : tourSettings.tour_cancellation_policy.trim();
+  const priceSuffix = typeof tour.price_suffix === 'string' ? tour.price_suffix.trim() : '';
+  const minimumNotice = typeof tour.minimum_notice === 'string' ? tour.minimum_notice.trim() : '';
+  const cancellationPolicy = typeof tour.cancellation_policy === 'string' ? tour.cancellation_policy.trim() : '';
   const infoPanel = renderInfoPanel(highlights, places, cancellationPolicy);
 
   return (

@@ -5,6 +5,21 @@ The format is intentionally close to Keep a Changelog: chronological releases wi
 
 ## 2026-04-17
 
+Source: `docs/commit-log-2026-04-17-tour-optional-display-fields.md`
+
+## This Round Summary
+
+本轮继续收口 Tours 的后台编辑体验，重点解决可选文案字段在留空时仍被默认值或占位文案干扰的问题，确保后台留空即可在前台真正隐藏对应信息。
+
+主要完成：
+
+- 去掉 Tours 后台多个可选输入框中的默认占位文案，避免误导为必须填写
+- `Price Suffix`、`Minimum Guest Notice`、`Cancellation Policy`、`Booking Note`、`Extra Tag` 允许留空
+- Tours 详情页、Tours 列表页、首页精选 Tours 不再对这些字段自动回退默认展示文案
+- 后台 `Cancellation Policy` 字段补充更明确的“留空即隐藏”提示
+
+## 2026-04-17
+
 Source: `docs/commit-log-2026-04-17-mobile-polish-and-review-modal-fixes.md`
 
 ## This Round Summary

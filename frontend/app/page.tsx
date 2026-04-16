@@ -161,7 +161,7 @@ export default async function Home() {
                     <div className="flex justify-between items-center">
                       <span className="text-blue-700 font-semibold">
                         ${tour.price}
-                        {tour.price_suffix?.trim() ? ` ${tour.price_suffix.trim()}` : ' / person'}
+                        {tour.price_suffix?.trim() ? ` ${tour.price_suffix.trim()}` : ''}
                       </span>
                       <Link href={`/tours/${tour.id}`} className="btn-secondary px-3 py-1.5 text-sm">
                         Know More →

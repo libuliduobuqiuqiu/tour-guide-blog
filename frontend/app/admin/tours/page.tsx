@@ -526,7 +526,6 @@ export default function ToursAdmin() {
                 type="text"
                 value={editing?.booking_tag || ''}
                 onChange={(event) => setEditing((current) => ({ ...current!, booking_tag: event.target.value }))}
-                placeholder="Private group / Weekend note"
                 className="w-full px-4 py-3"
               />
             </div>
@@ -536,7 +535,6 @@ export default function ToursAdmin() {
                 type="text"
                 value={editing?.booking_note || ''}
                 onChange={(event) => setEditing((current) => ({ ...current!, booking_note: event.target.value }))}
-                placeholder="Group of 6–8 people"
                 className="w-full px-4 py-3"
               />
             </div>
@@ -546,7 +544,6 @@ export default function ToursAdmin() {
                 type="text"
                 value={editing?.price_suffix || ''}
                 onChange={(event) => setEditing((current) => ({ ...current!, price_suffix: event.target.value }))}
-                placeholder="/ person"
                 className="w-full px-4 py-3"
               />
             </div>
@@ -556,7 +553,6 @@ export default function ToursAdmin() {
                 type="text"
                 value={editing?.minimum_notice || ''}
                 onChange={(event) => setEditing((current) => ({ ...current!, minimum_notice: event.target.value }))}
-                placeholder="Tour runs with a minimum of 6 guests."
                 className="w-full px-4 py-3"
               />
             </div>
@@ -590,10 +586,9 @@ export default function ToursAdmin() {
                 rows={5}
                 value={editing?.cancellation_policy || ''}
                 onChange={(event) => setEditing((current) => ({ ...current!, cancellation_policy: event.target.value }))}
-                placeholder="One paragraph or one line per policy item"
                 className="w-full px-4 py-3"
               />
-              <p className="mt-2 text-xs text-slate-500">Saved per tour. Each new line becomes one row in the red Cancellation Policy card on the frontend.</p>
+              <p className="mt-2 text-xs text-slate-500">Optional. Leave blank to hide it on the frontend. Each new line becomes one row in the red Cancellation Policy card.</p>
             </div>
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">Highlights</label>
