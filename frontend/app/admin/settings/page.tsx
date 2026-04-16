@@ -6,7 +6,6 @@ import { uploadAdminImage } from '@/lib/admin-upload';
 import AdminNumberInput from '@/components/admin/AdminNumberInput';
 import ImageCropInline from '@/components/admin/ImageCropInline';
 import { HOME_HERO_IMAGE_HEIGHT, HOME_HERO_IMAGE_WIDTH } from '@/lib/hero-image';
-import { defaultTourDisplaySettings, normalizeTourDisplaySettings } from '@/lib/tour-settings';
 import { Save, RefreshCcw } from 'lucide-react';
 import { withPublicOrigin } from '@/lib/url';
 import type { Review } from '@/lib/reviews';
@@ -40,9 +39,6 @@ interface SiteSettings {
   footer_description: string;
   icp_number: string;
   public_security_beian: string;
-  tour_price_suffix: string;
-  tour_minimum_notice: string;
-  tour_cancellation_policy: string;
 }
 
 const defaultWhyChooseMeCards: WhyChooseMeCard[] = [
@@ -83,7 +79,6 @@ const defaultSettings: SiteSettings = {
   footer_description: 'Your professional tour guide in Guangzhou, Chongqing and Chengdu.',
   icp_number: '',
   public_security_beian: '',
-  ...defaultTourDisplaySettings,
 };
 
 const defaultSocialSettings: SocialAdminSettings = {
@@ -185,12 +180,17 @@ export default function SettingsAdmin() {
 
         if (settingsRes?.data) {
           const parsed = typeof settingsRes.data === 'string' ? JSON.parse(settingsRes.data) : settingsRes.data;
+          const parsedWithoutLegacyTourSettings = {
+            ...((parsed && typeof parsed === 'object' ? parsed : {}) as Record<string, unknown>),
+          };
+          delete parsedWithoutLegacyTourSettings.tour_price_suffix;
+          delete parsedWithoutLegacyTourSettings.tour_minimum_notice;
+          delete parsedWithoutLegacyTourSettings.tour_cancellation_policy;
           setSettings({
             ...defaultSettings,
-            ...parsed,
-            home_featured_review_ids: normalizeFeaturedReviewIds(parsed?.home_featured_review_ids),
-            why_choose_me_cards: normalizeWhyChooseMeCards(parsed?.why_choose_me_cards),
-            ...normalizeTourDisplaySettings(parsed),
+            ...parsedWithoutLegacyTourSettings,
+            home_featured_review_ids: normalizeFeaturedReviewIds(parsedWithoutLegacyTourSettings?.home_featured_review_ids),
+            why_choose_me_cards: normalizeWhyChooseMeCards(parsedWithoutLegacyTourSettings?.why_choose_me_cards),
           });
         }
 
@@ -271,9 +271,13 @@ export default function SettingsAdmin() {
     e.preventDefault();
     setLoading(true);
     try {
+      const settingsPayload = { ...(settings as SiteSettings & Record<string, unknown>) };
+      delete settingsPayload.tour_price_suffix;
+      delete settingsPayload.tour_minimum_notice;
+      delete settingsPayload.tour_cancellation_policy;
       await Promise.all([
         api.put('/api/admin/config/site_settings', {
-          value: JSON.stringify(settings)
+          value: JSON.stringify(settingsPayload)
         }),
         api.put('/api/admin/config/social_settings', {
           value: JSON.stringify(socialSettings)
@@ -545,48 +549,6 @@ export default function SettingsAdmin() {
                   </select>
                 </div>
               ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="admin-panel p-8">
-          <h2 className="text-lg font-semibold mb-6 border-b pb-2 text-rose-700">Tours Display</h2>
-          <div className="space-y-5">
-            <p className="text-sm text-gray-700">Manage the shared text shown on the Tours list and Tour detail pages.</p>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Price Suffix</label>
-              <input
-                type="text"
-                value={settings.tour_price_suffix}
-                onChange={(e) => setSettings({ ...settings, tour_price_suffix: e.target.value })}
-                placeholder="/ person"
-                className="w-full px-4 py-2"
-              />
-              <p className="mt-2 text-xs text-gray-500">Shown after the price, for example `/ person`.</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Minimum Guest Notice</label>
-              <input
-                type="text"
-                value={settings.tour_minimum_notice}
-                onChange={(e) => setSettings({ ...settings, tour_minimum_notice: e.target.value })}
-                placeholder="Tour runs with a minimum of 6 guests."
-                className="w-full px-4 py-2"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Cancellation Policy</label>
-              <textarea
-                rows={5}
-                value={settings.tour_cancellation_policy}
-                onChange={(e) => setSettings({ ...settings, tour_cancellation_policy: e.target.value })}
-                placeholder="One paragraph or one line per policy item"
-                className="w-full px-4 py-2"
-              />
-              <p className="mt-2 text-xs text-gray-500">Displayed in a red highlight card below Places to Visit on the tour detail page. Each new line becomes a separate row.</p>
             </div>
           </div>
         </section>

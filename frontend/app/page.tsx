@@ -19,6 +19,7 @@ interface Tour {
   description: string;
   cover_image?: string;
   price: number;
+  price_suffix?: string;
 }
 
 const defaultWhyChooseMeCards: WhyChooseMeCard[] = [
@@ -116,7 +117,7 @@ export default async function Home() {
     ...activeReviews.filter((review) => !selectedReviewIds.includes(review.id)),
   ].slice(0, 4);
 
-  const sectionShellClass = 'mx-auto max-w-[1520px] px-4 md:px-6 lg:px-8';
+  const sectionShellClass = 'mx-auto max-w-[1320px] px-4 md:px-6 lg:px-8';
 
   return (
     <div className="flex flex-col items-center">
@@ -131,9 +132,9 @@ export default async function Home() {
 
       {/* Featured Tours */}
       <section className="w-full bg-[linear-gradient(180deg,rgba(247,251,255,0.86)_0%,rgba(237,244,255,0.88)_100%)]">
-        <div className={`${sectionShellClass} py-24`}>
+        <div className={`${sectionShellClass} py-16 md:py-20 xl:py-24`}>
           <Reveal as="div" className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-semibold mb-4 tracking-wide">Featured Tours</h2>
+            <h2 className="text-3xl md:text-4xl 2xl:text-5xl font-semibold mb-4 tracking-wide">Featured Tours</h2>
             <p className="text-slate-600">Curated routes with local insights and premium service.</p>
           </Reveal>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -158,7 +159,10 @@ export default async function Home() {
                     <h3 className="text-xl font-semibold mb-2 text-slate-900">{tour.title}</h3>
                     <p className="text-slate-600 mb-4 line-clamp-2">{tour.description}</p>
                     <div className="flex justify-between items-center">
-                      <span className="text-blue-700 font-semibold">${tour.price} / person</span>
+                      <span className="text-blue-700 font-semibold">
+                        ${tour.price}
+                        {tour.price_suffix?.trim() ? ` ${tour.price_suffix.trim()}` : ' / person'}
+                      </span>
                       <Link href={`/tours/${tour.id}`} className="btn-secondary px-3 py-1.5 text-sm">
                         Know More →
                       </Link>
@@ -182,9 +186,9 @@ export default async function Home() {
 
       {/* Why Choose Me */}
       <section className="w-full bg-[linear-gradient(180deg,#f8fbff_0%,#edf4ff_100%)]">
-        <div className={`${sectionShellClass} py-24`}>
+        <div className={`${sectionShellClass} py-16 md:py-20 xl:py-24`}>
           <Reveal as="div" className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-semibold mb-4 tracking-wide">Why Choose Me?</h2>
+            <h2 className="text-3xl md:text-4xl 2xl:text-5xl font-semibold mb-4 tracking-wide">Why Choose Me?</h2>
             <p className="text-slate-600">
               From planning to on-the-ground support, every detail is curated to give you an effortless, memorable journey.
             </p>
@@ -226,9 +230,9 @@ export default async function Home() {
       </section>
 
       <section className="w-full bg-[linear-gradient(180deg,rgba(247,251,255,0.88)_0%,rgba(236,244,255,0.92)_100%)]">
-        <div className={`${sectionShellClass} py-24`}>
+        <div className={`${sectionShellClass} py-16 md:py-20 xl:py-24`}>
           <Reveal as="div" className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-semibold mb-4 tracking-wide">Reviews</h2>
+            <h2 className="text-3xl md:text-4xl 2xl:text-5xl font-semibold mb-4 tracking-wide">Reviews</h2>
             <p className="text-slate-600">
               Stories from guests who explored the city with a flexible pace, local insight, and tailored support.
             </p>
@@ -248,7 +252,7 @@ export default async function Home() {
 
       {/* Latest Blog */}
       <section className="w-full bg-[linear-gradient(180deg,#f8fbff_0%,#edf4ff_100%)]">
-        <div className={`${sectionShellClass} py-24`}>
+        <div className={`${sectionShellClass} py-16 md:py-20 xl:py-24`}>
           <Reveal as="div" delay={60}>
             <SocialShowcase
               instagramItems={socialFeed.instagram}

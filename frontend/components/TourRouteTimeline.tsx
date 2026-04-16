@@ -82,9 +82,9 @@ export default function TourRouteTimeline({ routePoints }: { routePoints: TourRo
         />
       )}
 
-      <div className="relative space-y-10 md:space-y-14">
+      <div className="relative space-y-8 md:space-y-12">
         {items.map((point, index) => (
-          <section key={`${point.title}-${index}`} className="grid gap-6 md:grid-cols-[280px_minmax(0,1fr)] md:gap-8">
+          <section key={`${point.title}-${index}`} className="grid gap-5 md:grid-cols-[240px_minmax(0,1fr)] md:gap-7 lg:grid-cols-[260px_minmax(0,1fr)]">
             <div className="md:pr-1">
               <div className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-slate-100 shadow-[0_22px_50px_-42px_rgba(15,23,42,0.42)]">
                 <div className="relative aspect-[4/3]">
@@ -117,8 +117,8 @@ export default function TourRouteTimeline({ routePoints }: { routePoints: TourRo
                 </div>
 
                 <div className="min-w-0">
-                  <h2 className="text-2xl font-semibold tracking-[0.01em] text-slate-950 md:text-[2rem] md:leading-[1.2]">{point.title}</h2>
-                  <div className="mt-5 min-w-0 max-w-full">
+                  <h2 className="text-xl font-semibold tracking-[0.01em] text-slate-950 md:text-2xl lg:text-[1.75rem] md:leading-[1.2]">{point.title}</h2>
+                  <div className="mt-4 min-w-0 max-w-full">
                     <div className="content article-content article-content-tour tour-route-content" dangerouslySetInnerHTML={{ __html: point.contentHtml }} />
                   </div>
                 </div>

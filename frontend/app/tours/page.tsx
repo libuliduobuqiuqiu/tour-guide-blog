@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { fetchConfig, fetchTours } from '@/lib/api';
-import { defaultTourDisplaySettings, normalizeTourDisplaySettings } from '@/lib/tour-settings';
+import { fetchTours } from '@/lib/api';
+import { defaultTourDisplaySettings } from '@/lib/tour-settings';
 import { withPublicOrigin } from '@/lib/url';
 
 interface Tour {
@@ -10,20 +10,13 @@ interface Tour {
   price: number;
   cover_image?: string;
   booking_tag?: string;
+  price_suffix?: string;
 }
 
 export default async function ToursPage() {
   let tours: Tour[] = [];
-  let tourSettings = defaultTourDisplaySettings;
   try {
-    const [toursData, settingsRes] = await Promise.all([
-      fetchTours(),
-      fetchConfig('site_settings').catch(() => null),
-    ]);
-    tours = toursData;
-    if (settingsRes) {
-      tourSettings = normalizeTourDisplaySettings(settingsRes);
-    }
+    tours = await fetchTours();
   } catch (error) {
     console.error('Failed to fetch tours:', error);
   }
@@ -62,7 +55,11 @@ export default async function ToursPage() {
                 <div className="flex justify-between items-center mt-auto">
                   <span className="text-blue-700 font-semibold">
                     ${tour.price}
-                    {tourSettings.tour_price_suffix ? ` ${tourSettings.tour_price_suffix}` : ''}
+                    {tour.price_suffix?.trim()
+                      ? ` ${tour.price_suffix.trim()}`
+                      : defaultTourDisplaySettings.tour_price_suffix
+                        ? ` ${defaultTourDisplaySettings.tour_price_suffix}`
+                        : ''}
                   </span>
                   <Link href={`/tours/${tour.id}`} className="btn-secondary px-4 py-2 text-sm">
                     Details

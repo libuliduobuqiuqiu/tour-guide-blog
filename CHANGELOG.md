@@ -3,6 +3,22 @@
 This file is generated from the commit log documents in `docs/commit-log-*.md`.
 The format is intentionally close to Keep a Changelog: chronological releases with human-written change summaries.
 
+## 2026-04-16
+
+Source: `docs/commit-log-2026-04-16-tour-per-item-display-and-layout.md`
+
+## This Round Summary
+
+本轮完成 Tours/Blog 响应式排版收口，并将 Tours 的 `Price Suffix`、`Minimum Guest Notice`、`Cancellation Policy` 从全局 Settings 改为每个 Tour 独立字段，且全部支持草稿暂存与发布。
+
+主要变化：
+
+- 修复笔记本尺寸下详情页比例过大、侧栏挤压正文与卡片遮挡问题
+- 统一调整详情页标题区与正文布局，`Minimum Guest Notice` 在桌面端不换行
+- 新增 Tours 独立字段：`price_suffix`、`minimum_notice`、`cancellation_policy`
+- 三项字段已接入后端 draft/publish 流程与前端 Tours 编辑器
+- Settings 页面移除对应全局输入项，并清理历史遗留键
+
 ## 2026-04-15
 
 Source: `docs/commit-log-2026-04-15-tour-display-settings-and-draft-safeguard.md`

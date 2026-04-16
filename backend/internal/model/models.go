@@ -27,20 +27,23 @@ type TourRoutePoint struct {
 
 type TourRoutePoints []TourRoutePoint
 type TourDraftData struct {
-	Title        string           `json:"title"`
-	Description  string           `json:"description"`
-	Content      string           `json:"content"`
-	RoutePoints  TourRoutePoints  `json:"route_points"`
-	Highlights   StringList       `json:"highlights"`
-	Places       StringList       `json:"places"`
-	BookingTag   string           `json:"booking_tag"`
-	BookingNote  string           `json:"booking_note"`
-	MaxBookings  int              `json:"max_bookings"`
-	Availability TourAvailability `json:"availability"`
-	CoverImage   string           `json:"cover_image"`
-	Price        float64          `json:"price"`
-	Duration     string           `json:"duration"`
-	Location     string           `json:"location"`
+	Title              string           `json:"title"`
+	Description        string           `json:"description"`
+	Content            string           `json:"content"`
+	RoutePoints        TourRoutePoints  `json:"route_points"`
+	Highlights         StringList       `json:"highlights"`
+	Places             StringList       `json:"places"`
+	PriceSuffix        string           `json:"price_suffix"`
+	BookingTag         string           `json:"booking_tag"`
+	BookingNote        string           `json:"booking_note"`
+	MinimumNotice      string           `json:"minimum_notice"`
+	CancellationPolicy string           `json:"cancellation_policy"`
+	MaxBookings        int              `json:"max_bookings"`
+	Availability       TourAvailability `json:"availability"`
+	CoverImage         string           `json:"cover_image"`
+	Price              float64          `json:"price"`
+	Duration           string           `json:"duration"`
+	Location           string           `json:"location"`
 }
 
 func (d TourDraftData) IsZero() bool {
@@ -50,8 +53,11 @@ func (d TourDraftData) IsZero() bool {
 		len(d.RoutePoints) == 0 &&
 		len(d.Highlights) == 0 &&
 		len(d.Places) == 0 &&
+		d.PriceSuffix == "" &&
 		d.BookingTag == "" &&
 		d.BookingNote == "" &&
+		d.MinimumNotice == "" &&
+		d.CancellationPolicy == "" &&
 		d.MaxBookings == 0 &&
 		len(d.Availability) == 0 &&
 		d.CoverImage == "" &&
@@ -226,27 +232,30 @@ func (d *TourDraftData) Scan(value interface{}) error {
 
 // Tour 行程详情
 type Tour struct {
-	ID           uint             `gorm:"primaryKey" json:"id"`
-	Title        string           `gorm:"size:255;not null" json:"title"`
-	Description  string           `gorm:"type:text" json:"description"`
-	Content      string           `gorm:"type:longtext" json:"content"`
-	RoutePoints  TourRoutePoints  `gorm:"type:json" json:"route_points"`
-	Highlights   StringList       `gorm:"type:json" json:"highlights"`
-	Places       StringList       `gorm:"type:json" json:"places"`
-	BookingTag   string           `gorm:"column:booking_tag_1;size:255" json:"booking_tag"`
-	BookingNote  string           `gorm:"column:booking_tag_2;size:255" json:"booking_note"`
-	MaxBookings  int              `gorm:"default:0" json:"max_bookings"`
-	Availability TourAvailability `gorm:"type:json" json:"availability"`
-	CoverImage   string           `gorm:"size:255" json:"cover_image"`
-	Price        float64          `gorm:"type:decimal(10,2)" json:"price"`
-	Duration     string           `gorm:"size:100" json:"duration"`
-	Location     string           `gorm:"size:255" json:"location"`
-	Status       string           `gorm:"size:20;not null;default:published" json:"status"`
-	DraftData    TourDraftData    `gorm:"type:json" json:"draft_data"`
-	SortOrder    int              `gorm:"default:0" json:"sort_order"`
-	CreatedAt    time.Time        `json:"created_at"`
-	UpdatedAt    time.Time        `json:"updated_at"`
-	DeletedAt    gorm.DeletedAt   `gorm:"index" json:"-"`
+	ID                 uint             `gorm:"primaryKey" json:"id"`
+	Title              string           `gorm:"size:255;not null" json:"title"`
+	Description        string           `gorm:"type:text" json:"description"`
+	Content            string           `gorm:"type:longtext" json:"content"`
+	RoutePoints        TourRoutePoints  `gorm:"type:json" json:"route_points"`
+	Highlights         StringList       `gorm:"type:json" json:"highlights"`
+	Places             StringList       `gorm:"type:json" json:"places"`
+	PriceSuffix        string           `gorm:"column:price_suffix;size:100" json:"price_suffix"`
+	BookingTag         string           `gorm:"column:booking_tag_1;size:255" json:"booking_tag"`
+	BookingNote        string           `gorm:"column:booking_tag_2;size:255" json:"booking_note"`
+	MinimumNotice      string           `gorm:"column:minimum_notice;size:255" json:"minimum_notice"`
+	CancellationPolicy string           `gorm:"column:cancellation_policy;type:text" json:"cancellation_policy"`
+	MaxBookings        int              `gorm:"default:0" json:"max_bookings"`
+	Availability       TourAvailability `gorm:"type:json" json:"availability"`
+	CoverImage         string           `gorm:"size:255" json:"cover_image"`
+	Price              float64          `gorm:"type:decimal(10,2)" json:"price"`
+	Duration           string           `gorm:"size:100" json:"duration"`
+	Location           string           `gorm:"size:255" json:"location"`
+	Status             string           `gorm:"size:20;not null;default:published" json:"status"`
+	DraftData          TourDraftData    `gorm:"type:json" json:"draft_data"`
+	SortOrder          int              `gorm:"default:0" json:"sort_order"`
+	CreatedAt          time.Time        `json:"created_at"`
+	UpdatedAt          time.Time        `json:"updated_at"`
+	DeletedAt          gorm.DeletedAt   `gorm:"index" json:"-"`
 }
 
 // Post 博客文章

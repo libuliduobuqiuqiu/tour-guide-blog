@@ -12,7 +12,6 @@ import ImageUpload from '@/components/admin/ImageUpload';
 import TourAvailabilityEditor from '@/components/admin/TourAvailabilityEditor';
 import { uploadAdminImage } from '@/lib/admin-upload';
 import type { TourAvailabilitySlot } from '@/lib/tour-availability';
-import { defaultTourDisplaySettings, normalizeTourDisplaySettings } from '@/lib/tour-settings';
 import { withPublicOrigin } from '@/lib/url';
 import { normalizeRichTextHtml } from '@/lib/content';
 import { ArrowDown, ArrowUp, ArrowUpToLine, Edit2, GripVertical, LoaderCircle, MapPinned, Plus, Trash2 } from 'lucide-react';
@@ -40,8 +39,11 @@ interface Tour {
   route_points: TourRoutePoint[];
   highlights: string[];
   places: string[];
+  price_suffix: string;
   booking_tag: string;
   booking_note: string;
+  minimum_notice: string;
+  cancellation_policy: string;
   max_bookings: number;
   availability: TourAvailabilitySlot[];
   price: number;
@@ -56,12 +58,6 @@ interface Tour {
 
 interface TourFormState extends Omit<Tour, 'route_points'> {
   route_points: TourRoutePointDraft[];
-}
-
-interface TourDisplaySettings {
-  tour_price_suffix: string;
-  tour_minimum_notice: string;
-  tour_cancellation_policy: string;
 }
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -135,8 +131,11 @@ function createEmptyTour(sortOrder: number): Partial<TourFormState> {
     route_points: [createRoutePointDraft()],
     highlights: [],
     places: [],
+    price_suffix: '',
     booking_tag: '',
     booking_note: '',
+    minimum_notice: '',
+    cancellation_policy: '',
     max_bookings: 0,
     availability: [],
     price: 0,
@@ -163,19 +162,11 @@ export default function ToursAdmin() {
   const [draggingId, setDraggingId] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const [tourDisplaySettings, setTourDisplaySettings] = useState<TourDisplaySettings>(defaultTourDisplaySettings);
-  const [siteSettingsValue, setSiteSettingsValue] = useState<Record<string, unknown>>({});
 
   const fetchTours = async () => {
     try {
-      const [toursRes, settingsRes] = await Promise.all([
-        api.get('/api/admin/tours?with_content=false'),
-        api.get('/api/config/site_settings').catch(() => null),
-      ]);
+      const toursRes = await api.get('/api/admin/tours?with_content=false');
       setTours(Array.isArray(toursRes.data) ? toursRes.data : []);
-      const settingsPayload = settingsRes?.data ? (typeof settingsRes.data === 'string' ? JSON.parse(settingsRes.data) : settingsRes.data) : null;
-      setSiteSettingsValue(settingsPayload && typeof settingsPayload === 'object' ? settingsPayload : {});
-      setTourDisplaySettings(normalizeTourDisplaySettings(settingsPayload));
     } catch (err) {
       console.error('Failed to fetch tours', err);
     }
@@ -282,16 +273,6 @@ export default function ToursAdmin() {
         await api.put(`/api/admin/tours/${editing.id}`, payload);
       } else {
         await api.post('/api/admin/tours', payload);
-      }
-
-      if (nextStatus === 'published') {
-        const nextSiteSettings = {
-          ...siteSettingsValue,
-          ...tourDisplaySettings,
-        };
-        await api.put('/api/admin/config/site_settings', {
-          value: JSON.stringify(nextSiteSettings),
-        });
       }
 
       closeEditor();
@@ -563,8 +544,8 @@ export default function ToursAdmin() {
               <label className="mb-2 block text-sm font-medium text-slate-700">Price Suffix</label>
               <input
                 type="text"
-                value={tourDisplaySettings.tour_price_suffix}
-                onChange={(event) => setTourDisplaySettings((current) => ({ ...current, tour_price_suffix: event.target.value }))}
+                value={editing?.price_suffix || ''}
+                onChange={(event) => setEditing((current) => ({ ...current!, price_suffix: event.target.value }))}
                 placeholder="/ person"
                 className="w-full px-4 py-3"
               />
@@ -573,8 +554,8 @@ export default function ToursAdmin() {
               <label className="mb-2 block text-sm font-medium text-slate-700">Minimum Guest Notice</label>
               <input
                 type="text"
-                value={tourDisplaySettings.tour_minimum_notice}
-                onChange={(event) => setTourDisplaySettings((current) => ({ ...current, tour_minimum_notice: event.target.value }))}
+                value={editing?.minimum_notice || ''}
+                onChange={(event) => setEditing((current) => ({ ...current!, minimum_notice: event.target.value }))}
                 placeholder="Tour runs with a minimum of 6 guests."
                 className="w-full px-4 py-3"
               />
@@ -607,12 +588,12 @@ export default function ToursAdmin() {
               <label className="mb-2 block text-sm font-medium text-slate-700">Cancellation Policy</label>
               <textarea
                 rows={5}
-                value={tourDisplaySettings.tour_cancellation_policy}
-                onChange={(event) => setTourDisplaySettings((current) => ({ ...current, tour_cancellation_policy: event.target.value }))}
+                value={editing?.cancellation_policy || ''}
+                onChange={(event) => setEditing((current) => ({ ...current!, cancellation_policy: event.target.value }))}
                 placeholder="One paragraph or one line per policy item"
                 className="w-full px-4 py-3"
               />
-              <p className="mt-2 text-xs text-slate-500">This is a shared tour-page setting. Each new line becomes one row in the red Cancellation Policy card on the frontend.</p>
+              <p className="mt-2 text-xs text-slate-500">Saved per tour. Each new line becomes one row in the red Cancellation Policy card on the frontend.</p>
             </div>
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">Highlights</label>

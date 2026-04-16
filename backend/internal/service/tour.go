@@ -44,20 +44,23 @@ func normalizeRichTextHTML(content string) string {
 
 func buildDraftDataFromTour(tour *model.Tour) model.TourDraftData {
 	return model.TourDraftData{
-		Title:        tour.Title,
-		Description:  tour.Description,
-		Content:      tour.Content,
-		RoutePoints:  tour.RoutePoints,
-		Highlights:   tour.Highlights,
-		Places:       tour.Places,
-		BookingTag:   tour.BookingTag,
-		BookingNote:  tour.BookingNote,
-		MaxBookings:  tour.MaxBookings,
-		Availability: tour.Availability,
-		CoverImage:   tour.CoverImage,
-		Price:        tour.Price,
-		Duration:     tour.Duration,
-		Location:     tour.Location,
+		Title:              tour.Title,
+		Description:        tour.Description,
+		Content:            tour.Content,
+		RoutePoints:        tour.RoutePoints,
+		Highlights:         tour.Highlights,
+		Places:             tour.Places,
+		PriceSuffix:        tour.PriceSuffix,
+		BookingTag:         tour.BookingTag,
+		BookingNote:        tour.BookingNote,
+		MinimumNotice:      tour.MinimumNotice,
+		CancellationPolicy: tour.CancellationPolicy,
+		MaxBookings:        tour.MaxBookings,
+		Availability:       tour.Availability,
+		CoverImage:         tour.CoverImage,
+		Price:              tour.Price,
+		Duration:           tour.Duration,
+		Location:           tour.Location,
 	}
 }
 
@@ -68,8 +71,11 @@ func clearPublishedTourContent(tour *model.Tour) {
 	tour.RoutePoints = model.TourRoutePoints{}
 	tour.Highlights = model.StringList{}
 	tour.Places = model.StringList{}
+	tour.PriceSuffix = ""
 	tour.BookingTag = ""
 	tour.BookingNote = ""
+	tour.MinimumNotice = ""
+	tour.CancellationPolicy = ""
 	tour.MaxBookings = 0
 	tour.Availability = model.TourAvailability{}
 	tour.CoverImage = ""
@@ -85,8 +91,11 @@ func applyDraftData(tour *model.Tour, draft model.TourDraftData) {
 	tour.RoutePoints = draft.RoutePoints
 	tour.Highlights = draft.Highlights
 	tour.Places = draft.Places
+	tour.PriceSuffix = draft.PriceSuffix
 	tour.BookingTag = draft.BookingTag
 	tour.BookingNote = draft.BookingNote
+	tour.MinimumNotice = draft.MinimumNotice
+	tour.CancellationPolicy = draft.CancellationPolicy
 	tour.MaxBookings = draft.MaxBookings
 	tour.Availability = draft.Availability
 	tour.CoverImage = draft.CoverImage
@@ -150,8 +159,11 @@ func prepareTourForSave(tour *model.Tour) {
 	if len(tour.RoutePoints) > 0 {
 		tour.Content = buildTourContentFromRoutePoints(tour.RoutePoints)
 	}
+	tour.PriceSuffix = strings.TrimSpace(tour.PriceSuffix)
 	tour.BookingTag = strings.TrimSpace(tour.BookingTag)
 	tour.BookingNote = strings.TrimSpace(tour.BookingNote)
+	tour.MinimumNotice = strings.TrimSpace(tour.MinimumNotice)
+	tour.CancellationPolicy = strings.TrimSpace(tour.CancellationPolicy)
 	switch strings.ToLower(strings.TrimSpace(tour.Status)) {
 	case "draft":
 		tour.Status = "draft"
@@ -188,8 +200,11 @@ func (s *TourService) ListLitePublished() ([]*model.Tour, error) {
 		"title",
 		"description",
 		"route_points",
+		"price_suffix",
 		"booking_tag_1",
 		"booking_tag_2",
+		"minimum_notice",
+		"cancellation_policy",
 		"max_bookings",
 		"availability",
 		"cover_image",
@@ -213,8 +228,11 @@ func (s *TourService) ListLiteAll() ([]*model.Tour, error) {
 		"title",
 		"description",
 		"route_points",
+		"price_suffix",
 		"booking_tag_1",
 		"booking_tag_2",
+		"minimum_notice",
+		"cancellation_policy",
 		"max_bookings",
 		"availability",
 		"cover_image",
@@ -286,8 +304,11 @@ func (s *TourService) Update(id uint, tour *model.Tour) error {
 			updates["route_points"] = model.TourRoutePoints{}
 			updates["highlights"] = model.StringList{}
 			updates["places"] = model.StringList{}
+			updates["price_suffix"] = ""
 			updates["booking_tag_1"] = ""
 			updates["booking_tag_2"] = ""
+			updates["minimum_notice"] = ""
+			updates["cancellation_policy"] = ""
 			updates["max_bookings"] = 0
 			updates["availability"] = model.TourAvailability{}
 			updates["cover_image"] = ""
@@ -299,22 +320,25 @@ func (s *TourService) Update(id uint, tour *model.Tour) error {
 	}
 
 	updates := map[string]interface{}{
-		"title":         tour.Title,
-		"description":   tour.Description,
-		"content":       tour.Content,
-		"route_points":  tour.RoutePoints,
-		"highlights":    tour.Highlights,
-		"places":        tour.Places,
-		"booking_tag_1": tour.BookingTag,
-		"booking_tag_2": tour.BookingNote,
-		"max_bookings":  tour.MaxBookings,
-		"availability":  tour.Availability,
-		"cover_image":   tour.CoverImage,
-		"price":         tour.Price,
-		"duration":      tour.Duration,
-		"location":      tour.Location,
-		"status":        tour.Status,
-		"draft_data":    nil,
+		"title":               tour.Title,
+		"description":         tour.Description,
+		"content":             tour.Content,
+		"route_points":        tour.RoutePoints,
+		"highlights":          tour.Highlights,
+		"places":              tour.Places,
+		"price_suffix":        tour.PriceSuffix,
+		"booking_tag_1":       tour.BookingTag,
+		"booking_tag_2":       tour.BookingNote,
+		"minimum_notice":      tour.MinimumNotice,
+		"cancellation_policy": tour.CancellationPolicy,
+		"max_bookings":        tour.MaxBookings,
+		"availability":        tour.Availability,
+		"cover_image":         tour.CoverImage,
+		"price":               tour.Price,
+		"duration":            tour.Duration,
+		"location":            tour.Location,
+		"status":              tour.Status,
+		"draft_data":          nil,
 	}
 	return dao.DB.Model(&model.Tour{}).Where("id = ?", id).Updates(updates).Error
 }

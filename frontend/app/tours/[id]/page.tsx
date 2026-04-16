@@ -56,14 +56,14 @@ function renderPolicyCard(title: string, content: string) {
 
 function renderBookingCard() {
   return (
-    <section className="mx-auto max-w-[1280px] px-4 md:px-6 lg:px-8">
+    <section className="mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8">
       <div className="fade-up flex flex-col items-center justify-center gap-6 px-4 py-7 text-center md:gap-7 md:py-9">
-        <p className="max-w-[42rem] text-[1.35rem] font-semibold leading-9 text-slate-800 md:text-[1.8rem] md:leading-[1.7]">
+        <p className="max-w-[42rem] text-[1.18rem] font-semibold leading-8 text-slate-800 md:text-[1.45rem] md:leading-[1.65]">
           Contact me to book the tour.
         </p>
         <Link
           href="/contact"
-          className="btn-primary inline-flex px-10 py-4 text-[1.05rem] font-extrabold uppercase tracking-[0.14em] md:px-12 md:py-5 md:text-[1.3rem]"
+          className="btn-primary inline-flex px-8 py-3.5 text-[0.98rem] font-extrabold uppercase tracking-[0.14em] md:px-10 md:py-4 md:text-[1.12rem]"
         >
           BOOK NOW
         </Link>
@@ -97,7 +97,18 @@ export default async function TourDetailPage({ params }: { params: Promise<{ id:
   const places = Array.isArray(tour.places) ? tour.places.filter(Boolean) : [];
   const bookingTag = typeof tour.booking_tag === 'string' ? tour.booking_tag.trim() : '';
   const bookingNote = typeof tour.booking_note === 'string' ? tour.booking_note.trim() : '';
-  const cancellationPolicy = tourSettings.tour_cancellation_policy.trim();
+  const priceSuffix =
+    typeof tour.price_suffix === 'string' && tour.price_suffix.trim()
+      ? tour.price_suffix.trim()
+      : tourSettings.tour_price_suffix.trim();
+  const minimumNotice =
+    typeof tour.minimum_notice === 'string' && tour.minimum_notice.trim()
+      ? tour.minimum_notice.trim()
+      : tourSettings.tour_minimum_notice.trim();
+  const cancellationPolicy =
+    typeof tour.cancellation_policy === 'string' && tour.cancellation_policy.trim()
+      ? tour.cancellation_policy.trim()
+      : tourSettings.tour_cancellation_policy.trim();
   const asideCards = (
     <>
       {renderInfoCard('Highlights', highlights)}
@@ -108,9 +119,9 @@ export default async function TourDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-[linear-gradient(180deg,#f7fbff_0%,#eef5fb_52%,#e9f1f8_100%)]">
-      <div className="mx-auto max-w-[1420px] px-4 pt-6 md:px-6 md:pt-8 lg:px-8">
+      <div className="mx-auto max-w-[1280px] px-4 pt-6 md:px-6 md:pt-8 lg:px-8">
         <div className="reveal-down relative overflow-hidden rounded-[2rem] border border-white/75 bg-gray-200 shadow-[0_34px_90px_-54px_rgba(15,23,42,0.52)]">
-          <div className="relative aspect-[16/9] min-h-[300px] md:aspect-[2/1] md:min-h-[520px]">
+          <div className="relative aspect-[16/9] min-h-[280px] md:aspect-[2/1] md:min-h-[460px]">
             {tour.cover_image ? (
               <Image
                 src={withPublicOrigin(tour.cover_image || '')}
@@ -128,23 +139,29 @@ export default async function TourDetailPage({ params }: { params: Promise<{ id:
         </div>
       </div>
 
-      <div className="mx-auto -mt-16 max-w-[1280px] px-4 md:px-6 lg:px-8">
-        <section className="scale-in relative z-10 rounded-[2rem] border border-white/75 bg-white/88 px-6 py-8 shadow-[0_32px_90px_-52px_rgba(15,23,42,0.52)] backdrop-blur md:px-10 md:py-10">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-3xl">
-              <h1 className="text-4xl font-semibold tracking-[0.01em] text-slate-950 md:text-5xl md:leading-[1.08]">{tour.title}</h1>
-              {tour.description && <p className="mt-5 max-w-3xl text-base leading-8 text-slate-600 md:text-lg">{tour.description}</p>}
+      <div className="mx-auto -mt-14 max-w-[1200px] px-4 md:-mt-16 md:px-6 lg:px-8">
+        <section className="scale-in relative z-10 rounded-[2rem] border border-white/75 bg-white/88 px-5 py-7 shadow-[0_32px_90px_-52px_rgba(15,23,42,0.52)] backdrop-blur md:px-8 md:py-9">
+          <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_max-content] lg:items-end">
+            <div className="max-w-[42rem]">
+              <h1 className="text-[clamp(1.45rem,1.05rem+1.55vw,2.72rem)] font-semibold tracking-[0.01em] text-slate-950 leading-[1.12]">
+                {tour.title}
+              </h1>
+              {tour.description && (
+                <p className="mt-4 max-w-3xl text-[clamp(0.9rem,0.8rem+0.34vw,1rem)] leading-[1.72] text-slate-600">
+                  {tour.description}
+                </p>
+              )}
             </div>
-            <div className="flex flex-col items-start lg:items-end">
-              <div className="text-[2.8rem] font-black leading-none text-slate-950 md:text-[3.5rem]">
+            <div className="flex flex-col items-start lg:items-end lg:min-w-[340px] xl:min-w-[380px]">
+              <div className="text-[2.25rem] font-black leading-none text-slate-950 md:text-[2.9rem] xl:text-[3.4rem]">
                 ${tour.price}
-                {tourSettings.tour_price_suffix && (
-                  <span className="ml-2 text-base font-semibold text-slate-500 md:text-lg">{tourSettings.tour_price_suffix}</span>
+                {priceSuffix && (
+                  <span className="ml-2 text-sm font-semibold text-slate-500 md:text-base">{priceSuffix}</span>
                 )}
               </div>
-              {bookingNote && <div className="mt-3 text-base font-normal text-slate-600 md:text-lg">{bookingNote}</div>}
-              {tourSettings.tour_minimum_notice && (
-                <div className="mt-2 text-base font-bold text-red-600 md:text-lg">{tourSettings.tour_minimum_notice}</div>
+              {bookingNote && <div className="mt-3 text-sm font-normal text-slate-600 md:text-base">{bookingNote}</div>}
+              {minimumNotice && (
+                <div className="mt-2 text-sm font-bold text-red-600 md:text-base lg:whitespace-nowrap">{minimumNotice}</div>
               )}
               <TourAvailabilityButton availability={tour.availability} maxBookings={tour.max_bookings ?? 0} />
             </div>
@@ -158,8 +175,8 @@ export default async function TourDetailPage({ params }: { params: Promise<{ id:
         </section>
       </div>
 
-      <div className="pt-10">
-        <div className="mx-auto max-w-[1280px] px-4 md:px-6 lg:px-8">
+      <div className="pt-9 md:pt-10">
+        <div className="mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8">
           <TourContentWithAside aside={highlights.length > 0 || places.length > 0 || Boolean(cancellationPolicy) ? asideCards : undefined}>
               {routePoints.length > 0 ? (
                 <TourRouteTimeline routePoints={routePoints} />
