@@ -14,7 +14,7 @@ import { uploadAdminImage } from '@/lib/admin-upload';
 import type { TourAvailabilitySlot } from '@/lib/tour-availability';
 import { withPublicOrigin } from '@/lib/url';
 import { normalizeRichTextHtml } from '@/lib/content';
-import { ArrowDown, ArrowUp, ArrowUpToLine, Edit2, GripVertical, LoaderCircle, MapPinned, Plus, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpToLine, Edit2, Eye, EyeOff, GripVertical, LoaderCircle, MapPinned, Plus, Trash2 } from 'lucide-react';
 
 const LazyEditor = dynamic(() => import('@/components/admin/Editor'), {
   ssr: false,
@@ -39,18 +39,19 @@ interface Tour {
   route_points: TourRoutePoint[];
   highlights: string[];
   places: string[];
+  currency_symbol: string;
   price_suffix: string;
   booking_tag: string;
   booking_note: string;
   minimum_notice: string;
   cancellation_policy: string;
-  max_bookings: number;
   availability: TourAvailabilitySlot[];
   price: number;
   duration: string;
   location: string;
   cover_image: string;
   status: 'draft' | 'published';
+  is_active: boolean;
   draft_data?: Record<string, unknown> | null;
   sort_order: number;
   created_at?: string;
@@ -131,18 +132,19 @@ function createEmptyTour(sortOrder: number): Partial<TourFormState> {
     route_points: [createRoutePointDraft()],
     highlights: [],
     places: [],
+    currency_symbol: '',
     price_suffix: '',
     booking_tag: '',
     booking_note: '',
     minimum_notice: '',
     cancellation_policy: '',
-    max_bookings: 0,
     availability: [],
     price: 0,
     duration: '',
     location: '',
     cover_image: '',
     status: 'published',
+    is_active: true,
     sort_order: sortOrder,
   };
 }
@@ -248,17 +250,15 @@ export default function ToursAdmin() {
         }),
       );
 
-      const maxBookings = Math.max(0, editing.max_bookings ?? 0);
       let payload: Partial<Tour> = {
         ...editing,
         content: '',
         status: nextStatus,
         route_points: normalizeRoutePointsForSave(routePoints),
-        max_bookings: maxBookings,
         availability: Array.isArray(editing.availability)
           ? editing.availability.map((slot) => ({
               ...slot,
-              booked_count: maxBookings > 0 ? Math.min(Math.max(0, slot.booked_count ?? 0), maxBookings) : Math.max(0, slot.booked_count ?? 0),
+              booked_count: 0,
               is_open: slot.is_open !== false,
             }))
           : [],
@@ -292,6 +292,18 @@ export default function ToursAdmin() {
       fetchTours();
     } catch {
       alert('Failed to delete tour');
+    }
+  };
+
+  const handleToggleVisibility = async (id: number, nextVisible: boolean) => {
+    const previous = tours;
+    setTours((current) => current.map((tour) => (tour.id === id ? { ...tour, is_active: nextVisible } : tour)));
+
+    try {
+      await api.patch(`/api/admin/tours/${id}/visibility`, { is_active: nextVisible });
+    } catch {
+      setTours(previous);
+      alert('Failed to update tour visibility');
     }
   };
 
@@ -419,6 +431,9 @@ export default function ToursAdmin() {
                     <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] ${isDraft ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>
                       {isDraft ? 'Draft' : 'Published'}
                     </span>
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] ${tour.is_active !== false ? 'bg-blue-100 text-blue-800' : 'bg-slate-200 text-slate-600'}`}>
+                      {tour.is_active !== false ? 'Visible' : 'Hidden'}
+                    </span>
                     {editing?.id === tour.id && saveMode === 'draft' && (
                       <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-blue-800">
                         Editing Draft
@@ -433,7 +448,7 @@ export default function ToursAdmin() {
                       {tour.location || 'No location'}
                     </span>
                     <span>{tour.duration || 'No duration'}</span>
-                    <span>${tour.price || 0}</span>
+                    <span>{tour.currency_symbol?.trim() || ''}{tour.price || 0}</span>
                     <span>{Array.isArray(tour.route_points) ? tour.route_points.length : 0} stops</span>
                   </div>
                   <p className="mt-4 line-clamp-3 text-sm leading-7 text-slate-600">{tour.description || 'No description yet.'}</p>
@@ -442,6 +457,13 @@ export default function ToursAdmin() {
                 <div className="flex gap-2 lg:justify-end">
                   <button onClick={() => handlePinToTop(tour.id)} className="text-amber-600 hover:text-amber-800" title="Pin to top">
                     <ArrowUpToLine size={16} />
+                  </button>
+                  <button
+                    onClick={() => handleToggleVisibility(tour.id, tour.is_active === false)}
+                    className={tour.is_active !== false ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-slate-700'}
+                    title={tour.is_active !== false ? 'Hide tour' : 'Show tour'}
+                  >
+                    {tour.is_active !== false ? <Eye size={16} /> : <EyeOff size={16} />}
                   </button>
                   <button onClick={() => handleEdit(tour.id)} className="text-blue-600 hover:text-blue-800" title="Edit">
                     <Edit2 size={16} />
@@ -521,6 +543,16 @@ export default function ToursAdmin() {
               />
             </div>
             <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Currency Symbol</label>
+              <input
+                type="text"
+                value={editing?.currency_symbol ?? ''}
+                onChange={(event) => setEditing((current) => ({ ...current!, currency_symbol: event.target.value }))}
+                placeholder="Leave blank if no symbol is needed"
+                className="w-full px-4 py-3"
+              />
+            </div>
+            <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">Extra Tag</label>
               <input
                 type="text"
@@ -553,17 +585,6 @@ export default function ToursAdmin() {
                 type="text"
                 value={editing?.minimum_notice || ''}
                 onChange={(event) => setEditing((current) => ({ ...current!, minimum_notice: event.target.value }))}
-                className="w-full px-4 py-3"
-              />
-            </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">Max Bookings</label>
-              <AdminNumberInput
-                key={`tour-max-bookings-${editing?.id ?? 'new'}`}
-                min={0}
-                value={editing?.max_bookings}
-                onValueChange={(value) => setEditing((current) => ({ ...current!, max_bookings: value }))}
-                placeholder="8"
                 className="w-full px-4 py-3"
               />
             </div>
@@ -613,7 +634,6 @@ export default function ToursAdmin() {
             <div className="md:col-span-2">
               <TourAvailabilityEditor
                 value={editing?.availability || []}
-                maxBookings={editing?.max_bookings ?? 0}
                 onChange={(value) => setEditing((current) => ({ ...current!, availability: value }))}
               />
             </div>

@@ -3,6 +3,23 @@
 This file is generated from the commit log documents in `docs/commit-log-*.md`.
 The format is intentionally close to Keep a Changelog: chronological releases with human-written change summaries.
 
+## 2026-04-26
+
+Source: `docs/commit-log-2026-04-26-tour-visibility-currency-and-availability.md`
+
+## This Round Summary
+
+本轮集中收口 Tours 的后台运营体验与预约日历逻辑，重点解决三个问题：价格货币符号改为每个 Tour 可独立维护、Tours 显示/隐藏改成列表中的直观眼睛按钮、预约日历去掉人数逻辑后只保留开放日期管理。
+
+主要完成：
+
+- 为 Tours 增加 `currency_symbol` 与 `is_active` 字段，并补齐迁移、后端查询过滤和草稿/发布数据流支持
+- 后台 Tours 编辑器新增可留空的 `Currency Symbol` 输入，不再强制回填默认值
+- Tours 列表页新增眼睛显隐按钮，支持不进入编辑弹窗直接切换前台显示状态
+- Tours 前台列表、首页精选和详情页价格展示改为读取每个 Tour 自身货币符号
+- 预约日历移除最大预约数与已预约人数逻辑，前后台统一只维护“日期是否开放”
+- 过去日期自动灰显，开放日期显示绿色，并统一增加 `Available` 小字提示
+
 ## 2026-04-17
 
 Source: `docs/commit-log-2026-04-17-tour-optional-display-fields.md`

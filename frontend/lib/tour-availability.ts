@@ -4,6 +4,15 @@ export interface TourAvailabilitySlot {
   is_open: boolean;
 }
 
+function padNumber(value: number) {
+  return String(value).padStart(2, '0');
+}
+
+export function getTodayDateKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${padNumber(now.getMonth() + 1)}-${padNumber(now.getDate())}`;
+}
+
 export function normalizeAvailability(slots?: TourAvailabilitySlot[]) {
   if (!Array.isArray(slots)) return [];
 

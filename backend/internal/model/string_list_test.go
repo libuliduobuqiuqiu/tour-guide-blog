@@ -60,11 +60,13 @@ func TestTourAvailabilityScanInvalidType(t *testing.T) {
 
 func TestTourDraftDataValueAndScan(t *testing.T) {
 	value, err := (TourDraftData{
-		Title:       "Draft title",
-		BookingTag:  "Blue tag",
-		BookingNote: "Group of 6-8 people",
-		MaxBookings: 8,
-		RoutePoints: TourRoutePoints{{Title: "Stop 1", Content: "<p>Draft</p>"}},
+		Title:          "Draft title",
+		CurrencySymbol: "HK$",
+		BookingTag:     "Blue tag",
+		BookingNote:    "Group of 6-8 people",
+		MaxBookings:    8,
+		RoutePoints:    TourRoutePoints{{Title: "Stop 1", Content: "<p>Draft</p>"}},
+		IsActive:       true,
 	}).Value()
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -74,7 +76,7 @@ func TestTourDraftDataValueAndScan(t *testing.T) {
 	if err := draft.Scan(value); err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
-	if draft.Title != "Draft title" || draft.BookingTag != "Blue tag" || draft.MaxBookings != 8 || len(draft.RoutePoints) != 1 {
+	if draft.Title != "Draft title" || draft.CurrencySymbol != "HK$" || draft.BookingTag != "Blue tag" || draft.MaxBookings != 8 || len(draft.RoutePoints) != 1 || !draft.IsActive {
 		t.Fatalf("unexpected draft result: %#v", draft)
 	}
 }

@@ -9,6 +9,7 @@ interface Tour {
   price: number;
   cover_image?: string;
   booking_tag?: string;
+  currency_symbol?: string;
   price_suffix?: string;
 }
 
@@ -53,7 +54,7 @@ export default async function ToursPage() {
                 <p className="text-slate-600 mb-5 line-clamp-4">{tour.description}</p>
                 <div className="flex justify-between items-center mt-auto">
                   <span className="text-blue-700 font-semibold">
-                    ${tour.price}
+                    {tour.currency_symbol?.trim() || ''}{tour.price}
                     {tour.price_suffix?.trim() ? ` ${tour.price_suffix.trim()}` : ''}
                   </span>
                   <Link href={`/tours/${tour.id}`} className="btn-secondary px-4 py-2 text-sm">

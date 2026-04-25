@@ -92,6 +92,7 @@ export default async function TourDetailPage({ params }: { params: Promise<{ id:
   const places = Array.isArray(tour.places) ? tour.places.filter(Boolean) : [];
   const bookingTag = typeof tour.booking_tag === 'string' ? tour.booking_tag.trim() : '';
   const bookingNote = typeof tour.booking_note === 'string' ? tour.booking_note.trim() : '';
+  const currencySymbol = typeof tour.currency_symbol === 'string' ? tour.currency_symbol.trim() : '';
   const priceSuffix = typeof tour.price_suffix === 'string' ? tour.price_suffix.trim() : '';
   const minimumNotice = typeof tour.minimum_notice === 'string' ? tour.minimum_notice.trim() : '';
   const cancellationPolicy = typeof tour.cancellation_policy === 'string' ? tour.cancellation_policy.trim() : '';
@@ -134,7 +135,7 @@ export default async function TourDetailPage({ params }: { params: Promise<{ id:
             </div>
             <div className="flex flex-col items-start lg:items-end lg:min-w-[340px] xl:min-w-[380px]">
               <div className="text-[2.25rem] font-black leading-none text-slate-950 md:text-[2.9rem] xl:text-[3.4rem]">
-                ${tour.price}
+                {currencySymbol}{tour.price}
                 {priceSuffix && (
                   <span className="ml-2 text-sm font-semibold text-slate-500 md:text-base">{priceSuffix}</span>
                 )}
@@ -143,7 +144,7 @@ export default async function TourDetailPage({ params }: { params: Promise<{ id:
               {minimumNotice && (
                 <div className="mt-2 text-sm font-bold text-red-600 md:text-base lg:whitespace-nowrap">{minimumNotice}</div>
               )}
-              <TourAvailabilityButton availability={tour.availability} maxBookings={tour.max_bookings ?? 0} />
+              <TourAvailabilityButton availability={tour.availability} />
             </div>
           </div>
 

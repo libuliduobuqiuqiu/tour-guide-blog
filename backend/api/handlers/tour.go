@@ -54,7 +54,7 @@ func getTour(c *gin.Context, includeDrafts bool) {
 	id, _ := strconv.Atoi(idStr)
 	var (
 		tour *model.Tour
-		err error
+		err  error
 	)
 	if includeDrafts {
 		tour, err = service.Tour.GetAdminByID(uint(id))
@@ -108,6 +108,25 @@ func DeleteTour(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Tour deleted"})
+}
+
+func UpdateTourVisibility(c *gin.Context) {
+	idStr := c.Param("id")
+	id, _ := strconv.Atoi(idStr)
+
+	var req struct {
+		IsActive bool `json:"is_active"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := service.Tour.SetVisibility(uint(id), req.IsActive); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Tour visibility updated"})
 }
 
 func ReorderTours(c *gin.Context) {

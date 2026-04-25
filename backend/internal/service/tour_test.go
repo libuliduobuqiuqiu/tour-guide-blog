@@ -19,6 +19,7 @@ func TestNormalizeRichTextHTMLRemovesEditorArtifacts(t *testing.T) {
 func TestPrepareTourForSaveNormalizesDraftRoutePoints(t *testing.T) {
 	tour := &model.Tour{
 		Status:             " DRAFT ",
+		CurrencySymbol:     " ¥ ",
 		PriceSuffix:        " per person ",
 		BookingTag:         " instant confirmation ",
 		BookingNote:        " bring passport ",
@@ -49,12 +50,26 @@ func TestPrepareTourForSaveNormalizesDraftRoutePoints(t *testing.T) {
 	if tour.Content != "<h2>Stop &amp; Go</h2>\nLine 1" {
 		t.Fatalf("unexpected content: %q", tour.Content)
 	}
-	if tour.PriceSuffix != "per person" ||
+	if tour.CurrencySymbol != "¥" ||
+		tour.PriceSuffix != "per person" ||
 		tour.BookingTag != "instant confirmation" ||
 		tour.BookingNote != "bring passport" ||
 		tour.MinimumNotice != "24 hours" ||
 		tour.CancellationPolicy != "free cancellation" {
 		t.Fatalf("unexpected trimmed fields: %#v", tour)
+	}
+}
+
+func TestPrepareTourForSaveAllowsEmptyCurrencySymbol(t *testing.T) {
+	tour := &model.Tour{
+		Status:         "published",
+		CurrencySymbol: "   ",
+	}
+
+	prepareTourForSave(tour)
+
+	if tour.CurrencySymbol != "" {
+		t.Fatalf("unexpected currency symbol: %q", tour.CurrencySymbol)
 	}
 }
 
@@ -82,6 +97,7 @@ func TestDraftHelpersRoundTrip(t *testing.T) {
 		RoutePoints:        model.TourRoutePoints{{Title: "A", Content: "B", Image: "/uploads/a.jpg"}},
 		Highlights:         model.StringList{"highlight"},
 		Places:             model.StringList{"place"},
+		CurrencySymbol:     "EUR",
 		PriceSuffix:        "per group",
 		BookingTag:         "popular",
 		BookingNote:        "note",
@@ -93,6 +109,7 @@ func TestDraftHelpersRoundTrip(t *testing.T) {
 		Price:              199.5,
 		Duration:           "3h",
 		Location:           "Shanghai",
+		IsActive:           true,
 	}
 
 	draft := buildDraftDataFromTour(original)

@@ -50,6 +50,7 @@ func buildDraftDataFromTour(tour *model.Tour) model.TourDraftData {
 		RoutePoints:        tour.RoutePoints,
 		Highlights:         tour.Highlights,
 		Places:             tour.Places,
+		CurrencySymbol:     tour.CurrencySymbol,
 		PriceSuffix:        tour.PriceSuffix,
 		BookingTag:         tour.BookingTag,
 		BookingNote:        tour.BookingNote,
@@ -61,6 +62,7 @@ func buildDraftDataFromTour(tour *model.Tour) model.TourDraftData {
 		Price:              tour.Price,
 		Duration:           tour.Duration,
 		Location:           tour.Location,
+		IsActive:           tour.IsActive,
 	}
 }
 
@@ -71,6 +73,7 @@ func clearPublishedTourContent(tour *model.Tour) {
 	tour.RoutePoints = model.TourRoutePoints{}
 	tour.Highlights = model.StringList{}
 	tour.Places = model.StringList{}
+	tour.CurrencySymbol = ""
 	tour.PriceSuffix = ""
 	tour.BookingTag = ""
 	tour.BookingNote = ""
@@ -102,6 +105,8 @@ func applyDraftData(tour *model.Tour, draft model.TourDraftData) {
 	tour.Price = draft.Price
 	tour.Duration = draft.Duration
 	tour.Location = draft.Location
+	tour.CurrencySymbol = draft.CurrencySymbol
+	tour.IsActive = draft.IsActive
 }
 
 func buildTourContentFromRoutePoints(points model.TourRoutePoints) string {
@@ -159,6 +164,7 @@ func prepareTourForSave(tour *model.Tour) {
 	if len(tour.RoutePoints) > 0 {
 		tour.Content = buildTourContentFromRoutePoints(tour.RoutePoints)
 	}
+	tour.CurrencySymbol = strings.TrimSpace(tour.CurrencySymbol)
 	tour.PriceSuffix = strings.TrimSpace(tour.PriceSuffix)
 	tour.BookingTag = strings.TrimSpace(tour.BookingTag)
 	tour.BookingNote = strings.TrimSpace(tour.BookingNote)
@@ -181,7 +187,7 @@ func mergeDraftIntoTour(tour *model.Tour) {
 
 func (s *TourService) ListPublished() ([]*model.Tour, error) {
 	var tours []*model.Tour
-	err := dao.DB.Where("status = ? OR (status = ? AND title <> '')", "published", "draft").
+	err := dao.DB.Where("is_active = ? AND (status = ? OR (status = ? AND title <> ''))", true, "published", "draft").
 		Order("sort_order ASC, created_at DESC").
 		Find(&tours).Error
 	return tours, err
@@ -200,6 +206,7 @@ func (s *TourService) ListLitePublished() ([]*model.Tour, error) {
 		"title",
 		"description",
 		"route_points",
+		"currency_symbol",
 		"price_suffix",
 		"booking_tag_1",
 		"booking_tag_2",
@@ -212,10 +219,11 @@ func (s *TourService) ListLitePublished() ([]*model.Tour, error) {
 		"duration",
 		"location",
 		"status",
+		"is_active",
 		"sort_order",
 		"created_at",
 		"updated_at",
-	).Where("status = ? OR (status = ? AND title <> '')", "published", "draft").
+	).Where("is_active = ? AND (status = ? OR (status = ? AND title <> ''))", true, "published", "draft").
 		Order("sort_order ASC, created_at DESC").
 		Find(&tours).Error
 	return tours, err
@@ -228,6 +236,7 @@ func (s *TourService) ListLiteAll() ([]*model.Tour, error) {
 		"title",
 		"description",
 		"route_points",
+		"currency_symbol",
 		"price_suffix",
 		"booking_tag_1",
 		"booking_tag_2",
@@ -241,6 +250,7 @@ func (s *TourService) ListLiteAll() ([]*model.Tour, error) {
 		"location",
 		"status",
 		"draft_data",
+		"is_active",
 		"sort_order",
 		"created_at",
 		"updated_at",
@@ -271,7 +281,7 @@ func (s *TourService) GetAdminByID(id uint) (*model.Tour, error) {
 
 func (s *TourService) GetPublishedByID(id uint) (*model.Tour, error) {
 	var tour model.Tour
-	err := dao.DB.Where("(status = ? OR (status = ? AND title <> '')) AND id = ?", "published", "draft", id).First(&tour).Error
+	err := dao.DB.Where("is_active = ? AND (status = ? OR (status = ? AND title <> '')) AND id = ?", true, "published", "draft", id).First(&tour).Error
 	return &tour, err
 }
 
@@ -304,6 +314,7 @@ func (s *TourService) Update(id uint, tour *model.Tour) error {
 			updates["route_points"] = model.TourRoutePoints{}
 			updates["highlights"] = model.StringList{}
 			updates["places"] = model.StringList{}
+			updates["currency_symbol"] = ""
 			updates["price_suffix"] = ""
 			updates["booking_tag_1"] = ""
 			updates["booking_tag_2"] = ""
@@ -315,6 +326,7 @@ func (s *TourService) Update(id uint, tour *model.Tour) error {
 			updates["price"] = 0
 			updates["duration"] = ""
 			updates["location"] = ""
+			updates["is_active"] = false
 		}
 		return dao.DB.Model(&model.Tour{}).Where("id = ?", id).Updates(updates).Error
 	}
@@ -326,6 +338,7 @@ func (s *TourService) Update(id uint, tour *model.Tour) error {
 		"route_points":        tour.RoutePoints,
 		"highlights":          tour.Highlights,
 		"places":              tour.Places,
+		"currency_symbol":     tour.CurrencySymbol,
 		"price_suffix":        tour.PriceSuffix,
 		"booking_tag_1":       tour.BookingTag,
 		"booking_tag_2":       tour.BookingNote,
@@ -337,6 +350,7 @@ func (s *TourService) Update(id uint, tour *model.Tour) error {
 		"price":               tour.Price,
 		"duration":            tour.Duration,
 		"location":            tour.Location,
+		"is_active":           tour.IsActive,
 		"status":              tour.Status,
 		"draft_data":          nil,
 	}
@@ -345,6 +359,10 @@ func (s *TourService) Update(id uint, tour *model.Tour) error {
 
 func (s *TourService) Delete(id uint) error {
 	return dao.DB.Delete(&model.Tour{}, id).Error
+}
+
+func (s *TourService) SetVisibility(id uint, visible bool) error {
+	return dao.DB.Model(&model.Tour{}).Where("id = ?", id).Update("is_active", visible).Error
 }
 
 func (s *TourService) Reorder(ids []uint) error {

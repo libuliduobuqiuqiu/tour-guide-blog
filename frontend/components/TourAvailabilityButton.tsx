@@ -2,18 +2,17 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { CalendarDays, ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { TourAvailabilitySlot, getInitialMonth, getMonthLabel, getMonthMatrix, normalizeAvailability } from '@/lib/tour-availability';
+import { TourAvailabilitySlot, getInitialMonth, getMonthLabel, getMonthMatrix, getTodayDateKey, normalizeAvailability } from '@/lib/tour-availability';
 
 interface TourAvailabilityButtonProps {
   availability?: TourAvailabilitySlot[];
-  maxBookings: number;
 }
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const MINIMUM_GUESTS = 6;
 
-export default function TourAvailabilityButton({ availability, maxBookings }: TourAvailabilityButtonProps) {
+export default function TourAvailabilityButton({ availability }: TourAvailabilityButtonProps) {
   const slots = useMemo(() => normalizeAvailability(availability), [availability]);
+  const todayDateKey = useMemo(() => getTodayDateKey(), []);
   const [open, setOpen] = useState(false);
   const [monthState, setMonthState] = useState(() => getInitialMonth(slots));
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -77,9 +76,8 @@ export default function TourAvailabilityButton({ availability, maxBookings }: To
                 <div className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-700">Availability</div>
                 <h3 className="mt-2 text-2xl font-semibold text-slate-950">Choose an open date</h3>
                 <p className="mt-2 text-sm leading-7 text-slate-600">
-                  Hover on an open date to see booked guests.
+                  Open dates are shown in green. Past or unavailable dates stay grey.
                 </p>
-                {maxBookings > 0 && <p className="mt-1 text-xs text-slate-500">Max {maxBookings} guests per date</p>}
               </div>
               <button type="button" onClick={() => setOpen(false)} className="rounded-full border border-slate-200 p-2 text-slate-500 hover:text-slate-950">
                 <X size={18} />
@@ -106,36 +104,24 @@ export default function TourAvailabilityButton({ availability, maxBookings }: To
               <div className="mt-2 grid grid-cols-7 gap-2">
                 {monthCells.map((cell) => {
                   const slot = slotMap.get(cell.dateKey);
-                  const isOpen = Boolean(slot?.is_open);
-                  const bookedCount = slot?.booked_count ?? 0;
-                  const isFull = isOpen && maxBookings > 0 && bookedCount >= maxBookings;
-                  const isWarm = isOpen && !isFull && bookedCount >= MINIMUM_GUESTS;
-                  const title = isOpen
-                    ? `${cell.dateKey}: ${bookedCount}${maxBookings > 0 ? `/${maxBookings}` : ''} booked`
-                    : `${cell.dateKey}: closed`;
+                  const isPast = cell.dateKey < todayDateKey;
+                  const isOpen = !isPast && Boolean(slot?.is_open);
+                  const title = isOpen ? `${cell.dateKey}: open` : `${cell.dateKey}: unavailable`;
 
                   return (
                     <button
                       key={cell.dateKey}
                       type="button"
                       title={title}
-                      aria-disabled={!isOpen || isFull}
+                      aria-disabled={!isOpen}
                       className={[
                         'min-h-14 rounded-2xl border text-sm transition',
                         cell.inMonth ? '' : 'opacity-35',
-                        isOpen && !isFull && !isWarm ? 'border-emerald-300 bg-emerald-100 text-slate-950 hover:bg-emerald-200' : '',
-                        isWarm ? 'border-amber-300 bg-amber-100 text-slate-950 hover:bg-amber-200' : '',
-                        isFull ? 'cursor-not-allowed border-slate-300 bg-slate-300 text-slate-600' : '',
-                        !isOpen ? 'cursor-default border-slate-200 bg-white text-slate-400' : '',
+                        isOpen ? 'border-emerald-300 bg-emerald-100 text-slate-950 hover:bg-emerald-200' : 'cursor-default border-slate-200 bg-white text-slate-400',
                       ].join(' ')}
                     >
                       <div className="font-medium">{cell.day}</div>
-                      {isOpen && (
-                        <div className="mt-1 text-[11px] text-slate-600">
-                          {bookedCount}
-                          {maxBookings > 0 ? `/${maxBookings}` : ''} booked
-                        </div>
-                      )}
+                      {isOpen && <div className="mt-1 text-[11px] font-medium text-emerald-700">Available</div>}
                     </button>
                   );
                 })}

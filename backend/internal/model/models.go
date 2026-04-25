@@ -33,6 +33,7 @@ type TourDraftData struct {
 	RoutePoints        TourRoutePoints  `json:"route_points"`
 	Highlights         StringList       `json:"highlights"`
 	Places             StringList       `json:"places"`
+	CurrencySymbol     string           `json:"currency_symbol"`
 	PriceSuffix        string           `json:"price_suffix"`
 	BookingTag         string           `json:"booking_tag"`
 	BookingNote        string           `json:"booking_note"`
@@ -44,6 +45,7 @@ type TourDraftData struct {
 	Price              float64          `json:"price"`
 	Duration           string           `json:"duration"`
 	Location           string           `json:"location"`
+	IsActive           bool             `json:"is_active"`
 }
 
 func (d TourDraftData) IsZero() bool {
@@ -53,6 +55,7 @@ func (d TourDraftData) IsZero() bool {
 		len(d.RoutePoints) == 0 &&
 		len(d.Highlights) == 0 &&
 		len(d.Places) == 0 &&
+		d.CurrencySymbol == "" &&
 		d.PriceSuffix == "" &&
 		d.BookingTag == "" &&
 		d.BookingNote == "" &&
@@ -63,7 +66,8 @@ func (d TourDraftData) IsZero() bool {
 		d.CoverImage == "" &&
 		d.Price == 0 &&
 		d.Duration == "" &&
-		d.Location == ""
+		d.Location == "" &&
+		!d.IsActive
 }
 
 func (s StringList) Value() (driver.Value, error) {
@@ -239,6 +243,7 @@ type Tour struct {
 	RoutePoints        TourRoutePoints  `gorm:"type:json" json:"route_points"`
 	Highlights         StringList       `gorm:"type:json" json:"highlights"`
 	Places             StringList       `gorm:"type:json" json:"places"`
+	CurrencySymbol     string           `gorm:"column:currency_symbol;size:20;not null;default:'$'" json:"currency_symbol"`
 	PriceSuffix        string           `gorm:"column:price_suffix;size:100" json:"price_suffix"`
 	BookingTag         string           `gorm:"column:booking_tag_1;size:255" json:"booking_tag"`
 	BookingNote        string           `gorm:"column:booking_tag_2;size:255" json:"booking_note"`
@@ -253,6 +258,7 @@ type Tour struct {
 	Status             string           `gorm:"size:20;not null;default:published" json:"status"`
 	DraftData          TourDraftData    `gorm:"type:json" json:"draft_data"`
 	SortOrder          int              `gorm:"default:0" json:"sort_order"`
+	IsActive           bool             `gorm:"column:is_active;not null;default:true" json:"is_active"`
 	CreatedAt          time.Time        `json:"created_at"`
 	UpdatedAt          time.Time        `json:"updated_at"`
 	DeletedAt          gorm.DeletedAt   `gorm:"index" json:"-"`

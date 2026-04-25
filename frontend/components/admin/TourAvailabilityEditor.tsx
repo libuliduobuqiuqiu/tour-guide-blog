@@ -1,25 +1,26 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import AdminNumberInput from '@/components/admin/AdminNumberInput';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { TourAvailabilitySlot, getInitialMonth, getMonthLabel, getMonthMatrix, normalizeAvailability } from '@/lib/tour-availability';
+import { TourAvailabilitySlot, getInitialMonth, getMonthLabel, getMonthMatrix, getTodayDateKey, normalizeAvailability } from '@/lib/tour-availability';
 
 interface TourAvailabilityEditorProps {
   value?: TourAvailabilitySlot[];
-  maxBookings: number;
   onChange: (value: TourAvailabilitySlot[]) => void;
 }
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-export default function TourAvailabilityEditor({ value, maxBookings, onChange }: TourAvailabilityEditorProps) {
+export default function TourAvailabilityEditor({ value, onChange }: TourAvailabilityEditorProps) {
   const slots = useMemo(() => normalizeAvailability(value), [value]);
   const slotMap = useMemo(() => new Map(slots.map((slot) => [slot.date, slot])), [slots]);
+  const todayDateKey = useMemo(() => getTodayDateKey(), []);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [manualMonthState, setManualMonthState] = useState<{ year: number; month: number } | null>(null);
 
-  const activeSelectedDate = selectedDate && slotMap.has(selectedDate) ? selectedDate : (slots[0]?.date || '');
+  const firstEditableSlot = slots.find((slot) => slot.date >= todayDateKey)?.date || '';
+  const activeSelectedDate =
+    selectedDate && slotMap.has(selectedDate) && selectedDate >= todayDateKey ? selectedDate : firstEditableSlot;
   const monthState = manualMonthState ?? getInitialMonth(slots);
   const selectedSlot = activeSelectedDate ? slotMap.get(activeSelectedDate) : undefined;
   const monthCells = useMemo(() => getMonthMatrix(monthState.year, monthState.month), [monthState]);
@@ -50,34 +51,19 @@ export default function TourAvailabilityEditor({ value, maxBookings, onChange }:
     setSelectedDate(date);
   };
 
-  const updateBookedCount = (nextValue: number) => {
-    if (!selectedSlot) return;
-    const safeValue = Math.max(0, nextValue);
-    updateSlots(
-      slots.map((slot) =>
-        slot.date === selectedSlot.date
-          ? {
-              ...slot,
-              booked_count: maxBookings > 0 ? Math.min(safeValue, maxBookings) : safeValue,
-            }
-          : slot,
-      ),
-    );
-  };
-
   return (
     <div className="rounded-[1.4rem] border border-slate-200/90 bg-white/80 p-4 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.2)] md:p-5">
       <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
         <div>
           <h3 className="text-base font-semibold text-slate-950">Availability Calendar</h3>
           <p className="mt-1 text-sm leading-6 text-slate-500">
-            Click a date to open or close booking. Then edit the booked guest count for that specific date.
+            Click a future date to open or close booking. Open dates are green. Closed dates and past dates stay grey.
           </p>
         </div>
-        <div className="text-xs text-slate-500">{maxBookings > 0 ? `Max ${maxBookings} guests per date` : 'No max guest limit set yet'}</div>
+        <div className="text-xs text-slate-500">Past dates are automatically unavailable.</div>
       </div>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(260px,0.9fr)]">
+      <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(240px,0.85fr)]">
         <div className="rounded-[1.3rem] border border-slate-200 bg-slate-50/80 p-4">
           <div className="mb-4 flex items-center justify-between">
             <button type="button" onClick={() => moveMonth(-1)} className="rounded-full border border-slate-200 bg-white p-2 text-slate-600 hover:text-slate-950">
@@ -98,26 +84,29 @@ export default function TourAvailabilityEditor({ value, maxBookings, onChange }:
           <div className="mt-2 grid grid-cols-7 gap-2">
             {monthCells.map((cell) => {
               const slot = slotMap.get(cell.dateKey);
-              const isOpen = Boolean(slot?.is_open);
+              const isPast = cell.dateKey < todayDateKey;
+              const isOpen = !isPast && Boolean(slot?.is_open);
               const isSelected = activeSelectedDate === cell.dateKey;
-              const isFull = isOpen && maxBookings > 0 && (slot?.booked_count ?? 0) >= maxBookings;
 
               return (
                 <button
                   key={cell.dateKey}
                   type="button"
-                  onClick={() => toggleDate(cell.dateKey)}
+                  onClick={() => {
+                    if (isPast) return;
+                    toggleDate(cell.dateKey);
+                  }}
                   className={[
                     'min-h-14 rounded-2xl border text-sm transition',
                     cell.inMonth ? '' : 'opacity-35',
-                    isOpen ? 'border-emerald-300 bg-emerald-100 text-slate-950 hover:bg-emerald-200' : 'border-slate-200 bg-white text-slate-400 hover:border-slate-300 hover:text-slate-700',
+                    isOpen ? 'border-emerald-300 bg-emerald-100 text-slate-950 hover:bg-emerald-200' : 'border-slate-200 bg-white text-slate-400',
                     isSelected ? 'ring-2 ring-slate-950/15' : '',
-                    isFull ? 'border-amber-300 bg-amber-100' : '',
+                    isPast ? 'cursor-default opacity-60' : '',
                   ].join(' ')}
-                  title={isOpen ? `${cell.dateKey}: ${slot?.booked_count ?? 0} booked` : `${cell.dateKey}: closed`}
+                  title={isOpen ? `${cell.dateKey}: open` : isPast ? `${cell.dateKey}: past date` : `${cell.dateKey}: closed`}
                 >
                   <div className="font-medium">{cell.day}</div>
-                  {isOpen && <div className="mt-1 text-[11px] text-slate-600">{slot?.booked_count ?? 0} booked</div>}
+                  {isOpen && <div className="mt-1 text-[11px] font-medium text-emerald-700">Available</div>}
                 </button>
               );
             })}
@@ -130,18 +119,8 @@ export default function TourAvailabilityEditor({ value, maxBookings, onChange }:
             <>
               <div className="mt-3 text-xl font-semibold text-slate-950">{selectedSlot.date}</div>
               <p className="mt-2 text-sm leading-6 text-slate-500">
-                This date is open. Adjust booked guests below. If booked guests reach the max, the public calendar will grey this date out.
+                This date is currently open for booking.
               </p>
-              <label className="mt-5 block text-sm font-medium text-slate-700">Booked Guests</label>
-              <AdminNumberInput
-                key={selectedSlot.date}
-                min={0}
-                max={maxBookings > 0 ? maxBookings : undefined}
-                value={selectedSlot.booked_count}
-                onValueChange={updateBookedCount}
-                className="mt-2 w-full px-4 py-3"
-              />
-              {maxBookings > 0 && <p className="mt-2 text-xs text-slate-500">Maximum guests for each date: {maxBookings}</p>}
               <button
                 type="button"
                 onClick={() => toggleDate(selectedSlot.date)}
@@ -152,7 +131,7 @@ export default function TourAvailabilityEditor({ value, maxBookings, onChange }:
             </>
           ) : (
             <p className="mt-3 text-sm leading-6 text-slate-500">
-              Click any date on the calendar to open it for booking. Open dates are shown in green.
+              Click any future date on the calendar to open it for booking. Open dates are shown in green.
             </p>
           )}
         </div>

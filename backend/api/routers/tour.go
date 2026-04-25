@@ -14,6 +14,7 @@ func RegisterTourRoutes(rg *gin.RouterGroup, protected *gin.RouterGroup) {
 	protected.GET("/tours/:id", handlers.GetAdminTour)
 	protected.POST("/tours", handlers.CreateTour)
 	protected.POST("/tours/reorder", handlers.ReorderTours)
+	protected.PATCH("/tours/:id/visibility", handlers.UpdateTourVisibility)
 	protected.PUT("/tours/:id", handlers.UpdateTour)
 	protected.DELETE("/tours/:id", handlers.DeleteTour)
 }
